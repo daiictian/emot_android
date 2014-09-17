@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal" 
+    
+    >
+    
+    <ImageView 
+        android:id="@+id/userImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        
+        android:src="@drawable/blank_user_image"
+        />
+    
+	<LinearLayout 
+	    android:id="@+id/emotsAndContents"
+	    android:layout_width="wrap_content"
+	    
+        android:layout_height="wrap_content"
+        android:weightSum="10"
+        
+        android:orientation="vertical">
+        
+    <TextView
+        android:id="@+id/user"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp" 
+        android:layout_weight="7"
+        
+        android:textSize="15sp"
+        
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
+    
+    <TextView
+        android:id="@+id/lastEmot"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp" 
+        
+        android:layout_weight="3"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
+    </LinearLayout>
+
+</LinearLayout>
