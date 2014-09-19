@@ -21,13 +21,28 @@
             android:id="@+id/enterNumber"
             android:layout_width="match_parent"
             android:layout_height="40dp" 
-            android:inputType="numberDecimal"/>
+            android:inputType="numberDecimal"
+            android:hint="@string/enterMobileNumber"/>
         
         <Button 
             android:id="@+id/submitNumber"
             android:layout_width="match_parent"
             android:layout_height="40dp" 
             android:text="submit"
+            
+            />
+         <EditText
+            android:id="@+id/verificationCode"
+            android:layout_width="match_parent"
+            android:layout_height="40dp" 
+            android:inputType="numberDecimal"
+            android:hint="@string/enterVerificationCode"/>
+         
+         <Button 
+            android:id="@+id/sendVerificationCode"
+            android:layout_width="match_parent"
+            android:layout_height="40dp" 
+            android:text="Send"
             
             />
     </LinearLayout>

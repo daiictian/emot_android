@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.emot.emotobjects.CurrentEmot;
-import com.emot.persistence.EmotHistoryContract;
+import com.emot.persistence.DBContract;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -18,18 +18,17 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	private static final String TAG = "EmotHistoryHelper";
 	private static final int DATABASE_VERSION = 1;
 	private static final String SQL_CREATE_ENTRIES = "CREATE TABLE IF NOT EXISTS " +
-			EmotHistoryContract.EmotHistoryEntry.TABLE_NAME +
-			" (" + EmotHistoryContract.EmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
-			EmotHistoryContract.EmotHistoryEntry.ENTRY_ID + " TEXT," +
-			EmotHistoryContract.EmotHistoryEntry.EMOTS + " TEXT," +
-			EmotHistoryContract.EmotHistoryEntry.DATE + " TEXT," +
-			EmotHistoryContract.EmotHistoryEntry.TIME + " TEXT" + " )";
+			DBContract.EmotHistoryEntry.TABLE_NAME +
+			" (" + DBContract.EmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
+			DBContract.EmotHistoryEntry.ENTRY_ID + " TEXT," +
+			DBContract.EmotHistoryEntry.EMOTS + " TEXT," +
+			DBContract.EmotHistoryEntry.DATE + " TEXT," +
+			DBContract.EmotHistoryEntry.TIME + " TEXT" + " )";
 	
-	private static String CREATE_EMOT_TABLE = "CREATE VIRTUAL TABLE emots USING fts3(emot_hash, tags, tokenize=porter);";
 
 
 	public EmotHistoryHelper(Context context) {
-		super(context, EmotHistoryContract.EmotHistoryEntry.DATABASE_NAME, null, DATABASE_VERSION);
+		super(context, DBContract.EmotHistoryEntry.DATABASE_NAME, null, DATABASE_VERSION);
 	}
 	
 	
@@ -37,9 +36,9 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 		Log.i(TAG,SQL_CREATE_ENTRIES );
 		SQLiteDatabase db = this.getReadableDatabase();
 		
-		Cursor emots = db.rawQuery("SELECT " + EmotHistoryContract.EmotHistoryEntry.EMOTS + " from " +
-				EmotHistoryContract.EmotHistoryEntry.TABLE_NAME + " where " + 
-				EmotHistoryContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'", null);
+		Cursor emots = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + " from " +
+				DBContract.EmotHistoryEntry.TABLE_NAME + " where " + 
+				DBContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'", null);
 		
 		//db.execSQL(CREATE_EMOT_TABLE);
 		
@@ -64,12 +63,12 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	public void insertChat(final String entryID, final String chat, final String date, final String time){
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues contentValues = new ContentValues();
-		contentValues.put(EmotHistoryContract.EmotHistoryEntry.ENTRY_ID, entryID);
-		contentValues.put(EmotHistoryContract.EmotHistoryEntry.EMOTS, chat);
-		contentValues.put(EmotHistoryContract.EmotHistoryEntry.DATE, date);	
-		contentValues.put(EmotHistoryContract.EmotHistoryEntry.TIME, time);
+		contentValues.put(DBContract.EmotHistoryEntry.ENTRY_ID, entryID);
+		contentValues.put(DBContract.EmotHistoryEntry.EMOTS, chat);
+		contentValues.put(DBContract.EmotHistoryEntry.DATE, date);	
+		contentValues.put(DBContract.EmotHistoryEntry.TIME, time);
 		
-		long i = db.insert(EmotHistoryContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
+		long i = db.insert(DBContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
 		if(i < 0){
 			Log.i(TAG,"Could not insert chat");
 		}else{
@@ -80,8 +79,8 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	
 	private  List<String> getUsers(final SQLiteDatabase db){
 		
-		String sql = "SELECT DISTINCT " + EmotHistoryContract.EmotHistoryEntry.ENTRY_ID +
-					 " from " + EmotHistoryContract.EmotHistoryEntry.TABLE_NAME;
+		String sql = "SELECT DISTINCT " + DBContract.EmotHistoryEntry.ENTRY_ID +
+					 " from " + DBContract.EmotHistoryEntry.TABLE_NAME;
 		Log.i(TAG,sql);
 		Cursor usersList = db.rawQuery(sql, null);
 		usersList.moveToFirst();
@@ -89,7 +88,7 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 		Log.i(TAG,"sersList.isAfterLast() :" + usersList.isAfterLast());
 		while(usersList.isAfterLast() == false){
 			
-			users.add(usersList.getString(usersList.getColumnIndex(EmotHistoryContract.EmotHistoryEntry.ENTRY_ID)));
+			users.add(usersList.getString(usersList.getColumnIndex(DBContract.EmotHistoryEntry.ENTRY_ID)));
 			usersList.moveToNext();
 		}
 		
@@ -114,7 +113,7 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 			sql = prepareSQLforEntryID(user);
 			userLastEmot = db.rawQuery(sql, null);
 			userLastEmot.moveToFirst();
-			chat = userLastEmot.getString(userLastEmot.getColumnIndex(EmotHistoryContract.EmotHistoryEntry.EMOTS));
+			chat = userLastEmot.getString(userLastEmot.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
 			Log.i(TAG,"chat  is " +chat);
 			currentEmot.setUserLastEmot(chat);
 			currentEmot.setUserName(user);
@@ -130,9 +129,9 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	//prepare SQL statements for user id, actually termed as entryID
 	private String prepareSQLforEntryID(final String entryID){
 		
-		String sql = "SELECT " + EmotHistoryContract.EmotHistoryEntry.EMOTS + " from " +
-				EmotHistoryContract.EmotHistoryEntry.TABLE_NAME + " where " + 
-				EmotHistoryContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'";
+		String sql = "SELECT " + DBContract.EmotHistoryEntry.EMOTS + " from " +
+				DBContract.EmotHistoryEntry.TABLE_NAME + " where " + 
+				DBContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'";
 		
 		return sql;
 	}
@@ -140,21 +139,7 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(SQL_CREATE_ENTRIES);
-		db.execSQL(CREATE_EMOT_TABLE);
-		db.execSQL("INSERT INTO emots (emot_hash, tags) VALUES('emot1', 'hello hi hmm whatsup beer')");
-		db.execSQL("INSERT INTO emots (emot_hash, tags) VALUES('emot2', 'angry laugh smile')");
 		
-		Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'hello';", null);
-		if (cursor != null) {
-		    try {
-		        if (cursor.moveToFirst()) {
-		            Log.d(TAG, cursor.getString(0));
-		        }
-		    } finally {
-		        cursor.close();
-		    }
-		}
-		Log.d(TAG, "Ran queries ...");
 	}
 
 	@Override
