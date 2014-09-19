@@ -3,13 +3,8 @@ package com.emot.screens;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.emot.adapters.CurrentEmotsAdapter;
-import com.emot.persistence.EmotHistoryContract;
-import com.emot.persistence.EmotHistoryHelper;
-
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,7 +14,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.emot.adapters.CurrentEmotsAdapter;
 import com.emot.emotobjects.CurrentEmot;
+import com.emot.persistence.EmotHistoryHelper;
 
 
 public class Emots extends Activity {
@@ -92,6 +89,7 @@ public class Emots extends Activity {
 		 emotHistoryDB = new EmotHistoryHelper(Emots.this);
 		 EmotHistoryListTask emotHistoryTask = new EmotHistoryListTask();
 		 emotHistoryTask.execute(new EmotHistoryHelper[]{emotHistoryDB});
+		 
 		
 	}
 	

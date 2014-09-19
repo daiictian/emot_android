@@ -1,4 +1,4 @@
-package com.emot.registration;
+package com.emot.api;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,33 +30,29 @@ import com.emot.constants.ApplicationConstants;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class RegistrationHTTPClient extends AsyncTask<Void, Void, Object>{
+public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
 
 	private static final String TAG = "RegistrationHTTPClient";
-	private String queryURL;
-	private long mStartTime;
 	private URL url;
 	private ArrayList<NameValuePair> reqContent;
-	private String verificationSalt;
 	private TaskCompletedRunnable taskCompletedRunnable;
 
-	public RegistrationHTTPClient(final URL pUrl){
+	public EmotHTTPClient(final URL pUrl){
 
 		this.url = pUrl;
 	}
 
-	public RegistrationHTTPClient(final URL pUrl, final ArrayList<NameValuePair> pRequestContents, final TaskCompletedRunnable pTaskCompletedRunnable){
+	public EmotHTTPClient(final URL pUrl, final ArrayList<NameValuePair> pRequestContents, final TaskCompletedRunnable pTaskCompletedRunnable){
 
 		this.url = pUrl;
 		this.reqContent = pRequestContents;
 		this.taskCompletedRunnable = pTaskCompletedRunnable;
 	}
 
-	public RegistrationHTTPClient(final URL pUrl, final ArrayList<NameValuePair> pRequestContents, final String pVerificationSalt,final TaskCompletedRunnable pTaskCompletedRunnable){
+	public EmotHTTPClient(final URL pUrl, final ArrayList<NameValuePair> pRequestContents, final String pVerificationSalt,final TaskCompletedRunnable pTaskCompletedRunnable){
 
 		this.url = pUrl;
 		this.reqContent = pRequestContents;
-		this.verificationSalt = pVerificationSalt;
 		this.taskCompletedRunnable = pTaskCompletedRunnable;
 	}
 

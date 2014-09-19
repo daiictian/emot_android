@@ -6,10 +6,6 @@ import java.net.URL;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.emot.common.TaskCompletedRunnable;
-import com.emot.constants.WebServiceConstants;
-import com.emot.registration.RegistrationHTTPClient;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +13,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.emot.api.EmotHTTPClient;
+import com.emot.common.TaskCompletedRunnable;
+import com.emot.constants.WebServiceConstants;
 
 
 
@@ -86,7 +86,7 @@ public class Registration extends Activity {
 					}
 				};
 
-				RegistrationHTTPClient registrationHTTPClient = new RegistrationHTTPClient(wsURL, null, taskCompletedRunnable);
+				EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
 				registrationHTTPClient.execute(new Void[]{});
 			}
 			

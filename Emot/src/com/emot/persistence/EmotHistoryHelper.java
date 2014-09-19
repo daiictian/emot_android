@@ -25,7 +25,7 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 			EmotHistoryContract.EmotHistoryEntry.DATE + " TEXT," +
 			EmotHistoryContract.EmotHistoryEntry.TIME + " TEXT" + " )";
 	
-
+	private static String CREATE_EMOT_TABLE = "CREATE VIRTUAL TABLE emots USING fts3(emot_hash, tags, tokenize=porter);";
 
 
 	public EmotHistoryHelper(Context context) {
@@ -40,6 +40,22 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 		Cursor emots = db.rawQuery("SELECT " + EmotHistoryContract.EmotHistoryEntry.EMOTS + " from " +
 				EmotHistoryContract.EmotHistoryEntry.TABLE_NAME + " where " + 
 				EmotHistoryContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'", null);
+		
+		//db.execSQL(CREATE_EMOT_TABLE);
+		
+		Log.d(TAG, "starttime ... ");
+		Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
+		Log.d(TAG, "querytime ... "+cursor.getCount());
+		int i = 0;
+		if (cursor != null) {
+			while (cursor.moveToNext()) {
+	    		//Log.d(TAG, cursor.getString(0));
+	    		i++;
+	    	}
+		}
+		cursor.close();
+		Log.d(TAG, "endtime ... " + i);
+		Log.d(TAG, "Ran queries ...");
 		
 		return emots;
 		
@@ -123,8 +139,22 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		db.execSQL(SQL_CREATE_ENTRIES)	;
+		db.execSQL(SQL_CREATE_ENTRIES);
+		db.execSQL(CREATE_EMOT_TABLE);
+		db.execSQL("INSERT INTO emots (emot_hash, tags) VALUES('emot1', 'hello hi hmm whatsup beer')");
+		db.execSQL("INSERT INTO emots (emot_hash, tags) VALUES('emot2', 'angry laugh smile')");
 		
+		Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'hello';", null);
+		if (cursor != null) {
+		    try {
+		        if (cursor.moveToFirst()) {
+		            Log.d(TAG, cursor.getString(0));
+		        }
+		    } finally {
+		        cursor.close();
+		    }
+		}
+		Log.d(TAG, "Ran queries ...");
 	}
 
 	@Override
