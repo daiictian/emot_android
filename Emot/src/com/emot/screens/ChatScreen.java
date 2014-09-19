@@ -28,7 +28,7 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 
-import com.emot.persistence.EmotHistoryContract;
+import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotHistoryHelper;
 
 import android.widget.Button;
@@ -55,7 +55,7 @@ public class ChatScreen extends Activity{
 			// TODO Auto-generated method stub
 			boolean valid  = result.moveToFirst();
 			if(valid && result != null && result.getCount() > 0){
-				String chat = result.getString(result.getColumnIndex(EmotHistoryContract.EmotHistoryEntry.EMOTS));
+				String chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
 				chatList.add(chat);
 				chatlistAdapter.notifyDataSetChanged();
 			}else{
