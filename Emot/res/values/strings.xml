@@ -5,4 +5,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 	<string name="emots">Emots</string>
+	<string name="enterMobileNumber">Please enter your mobile number</string>
+	<string name="enterVerificationCode">Please enter your verification code</string>
 </resources>

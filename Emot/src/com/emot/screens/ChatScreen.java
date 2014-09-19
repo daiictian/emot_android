@@ -6,14 +6,17 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
+import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
+
+import com.emot.adapters.ChatListArrayAdapter;
+import com.emot.screens.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -21,43 +24,44 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
+
+import com.emot.persistence.EmotHistoryContract;
+import com.emot.persistence.EmotHistoryHelper;
+
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.emot.adapters.ChatListArrayAdapter;
-import com.emot.persistence.EmotHistoryContract;
-import com.emot.persistence.EmotHistoryHelper;
-
 public class ChatScreen extends Activity{
-	
+
 	private Chat chat;
 	private XMPPConnection connection;
-	private String IncomingMessage;
 	private ImageView sendButton;
 	private EditText chatEntry;
 	private TextView userTitle;
 	private EmotHistoryHelper emotHistoryDB;
-	
+
 	private class EmotHistoryTask extends AsyncTask<EmotHistoryHelper, Void, Cursor>{
 
-		
+
 
 		@Override
 		protected void onPostExecute(Cursor result) {
 			// TODO Auto-generated method stub
 			boolean valid  = result.moveToFirst();
 			if(valid && result != null && result.getCount() > 0){
-			String chat = result.getString(result.getColumnIndex(EmotHistoryContract.EmotHistoryEntry.EMOTS));
-			chatList.add(chat);
-			chatlistAdapter.notifyDataSetChanged();
+				String chat = result.getString(result.getColumnIndex(EmotHistoryContract.EmotHistoryEntry.EMOTS));
+				chatList.add(chat);
+				chatlistAdapter.notifyDataSetChanged();
 			}else{
 				chatList.add("DB unfriendly");
 			}
-			
+
 		}
 
 		@Override
@@ -67,9 +71,9 @@ public class ChatScreen extends Activity{
 			return emotHistoryCursor;
 		}
 
-		
-		
-		
+
+
+
 	}
 
 	@Override
@@ -77,14 +81,14 @@ public class ChatScreen extends Activity{
 		// TODO Auto-generated method stub
 		super.onResume();
 		/**/	
-		}
-	
-	private void connectToUser(final String userName){
-		
-		
 	}
-	
-	
+
+	private void connectToUser(final String userName){
+
+
+	}
+
+
 
 	@Override
 	protected void onPause() {
@@ -103,8 +107,8 @@ public class ChatScreen extends Activity{
 		// TODO Auto-generated method stub
 		super.onDestroy();
 	}
-	
-	
+
+
 
 	private ListView chatView;
 	private Handler handler;
@@ -116,17 +120,17 @@ public class ChatScreen extends Activity{
 		super.onCreate(savedInstanceState);
 		Intent incomingIntent = getIntent();
 		String userName = "";
-		
-		
+
+
 		setContentView(R.layout.activity_chat_screen);
 		chatView = (ListView)findViewById(R.id.chatView);
 		sendButton = (ImageView)findViewById(R.id.dove_send);
 		userTitle = (TextView)findViewById(R.id.username);
 		chatEntry = (EditText)findViewById(R.id.editText1);
 		if(incomingIntent != null){
-			 userName = incomingIntent.getStringExtra("USERNAME");
-			 userTitle.setText(userName);
-			}
+			userName = incomingIntent.getStringExtra("USERNAME");
+			userTitle.setText(userName);
+		}
 		chatList = new ArrayList<String>();
 		handler = new Handler();
 		emotHistoryDB = new EmotHistoryHelper(ChatScreen.this);
@@ -138,7 +142,7 @@ public class ChatScreen extends Activity{
 			sendButton.setEnabled(false);
 		}
 		sendButton.setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				try {
@@ -148,11 +152,11 @@ public class ChatScreen extends Activity{
 					final String dateTime[] = strDate.split(" "); 
 					chat.sendMessage(chatEntry.getText().toString());
 					new Thread(new Runnable() {
-						
+
 						@Override
 						public void run() {
 							emotHistoryDB.insertChat("test2", chatEntry.getText().toString(), dateTime[0], dateTime[1]);
-							
+
 						}
 					}).start();
 					chatList.add(chatEntry.getText().toString());
@@ -160,9 +164,8 @@ public class ChatScreen extends Activity{
 					chatEntry.setText("");
 				} catch (Exception ex) { 
 				}
-				
+
 			}
-			
 		});
 		chatView.setAdapter(chatlistAdapter);
 		Thread connThread = new Thread(new Runnable() {
@@ -214,7 +217,7 @@ public class ChatScreen extends Activity{
 				try {
 					connection.login("test1","1234");
 					Log.i("androxmpp", "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
-					
+
 
 
 					//and here is my listener
@@ -229,7 +232,7 @@ public class ChatScreen extends Activity{
 								@Override
 
 								public void run() {
-									
+
 									chatList.add(message.getBody());
 									chatlistAdapter.notifyDataSetChanged();
 									//progressBar.setProgress(value);
@@ -244,17 +247,17 @@ public class ChatScreen extends Activity{
 					};
 
 					ChatManager current_chat  = connection.getChatManager();
-					 chat = current_chat.createChat("test2@emot-net", "test2@emot-net", mmlistener);
-				runOnUiThread(new Thread(new Runnable() {
-					
-					@Override
-					public void run() {
-						if(chat != null){
-							sendButton.setEnabled(true);
+					chat = current_chat.createChat("test2@emot-net", "test2@emot-net", mmlistener);
+					runOnUiThread(new Thread(new Runnable() {
+
+						@Override
+						public void run() {
+							if(chat != null){
+								sendButton.setEnabled(true);
+							}
+
 						}
-						
-					}
-				}));
+					}));
 
 
 				} catch(Exception ex){
@@ -265,10 +268,10 @@ public class ChatScreen extends Activity{
 			}
 		});
 		connThread.start();
-		startActivity(new Intent(this, ContactScreen.class));
-		
 
-		
+
+
+
 	}
 
 	private void setChatContents(final String message){
