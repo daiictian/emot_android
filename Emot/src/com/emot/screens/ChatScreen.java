@@ -6,17 +6,14 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
-import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
-
-import com.emot.adapters.ChatListArrayAdapter;
-import com.emot.screens.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -24,18 +21,16 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
-
-import com.emot.persistence.DBContract;
-import com.emot.persistence.EmotHistoryHelper;
-
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.emot.adapters.ChatListArrayAdapter;
+import com.emot.persistence.DBContract;
+import com.emot.persistence.EmotHistoryHelper;
 
 public class ChatScreen extends Activity{
 
@@ -135,7 +130,7 @@ public class ChatScreen extends Activity{
 		handler = new Handler();
 		emotHistoryDB = new EmotHistoryHelper(ChatScreen.this);
 		EmotHistoryTask eht = new EmotHistoryTask();
-		eht.execute(new EmotHistoryHelper[]{emotHistoryDB});
+		//eht.execute(new EmotHistoryHelper[]{emotHistoryDB});
 		//chatList.add("Howdy");
 		chatlistAdapter = new ChatListArrayAdapter(this, chatList);  
 		if(chat == null){
@@ -270,7 +265,7 @@ public class ChatScreen extends Activity{
 		connThread.start();
 
 
-
+		startActivity(new Intent(this, ContactScreen.class));
 
 	}
 

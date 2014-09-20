@@ -17,23 +17,13 @@ import android.util.Log;
 public class EmotHistoryHelper extends SQLiteOpenHelper {
 	private static final String TAG = "EmotHistoryHelper";
 	private static final int DATABASE_VERSION = 1;
-	private static final String SQL_CREATE_ENTRIES = "CREATE TABLE IF NOT EXISTS " +
-			DBContract.EmotHistoryEntry.TABLE_NAME +
-			" (" + DBContract.EmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
-			DBContract.EmotHistoryEntry.ENTRY_ID + " TEXT," +
-			DBContract.EmotHistoryEntry.EMOTS + " TEXT," +
-			DBContract.EmotHistoryEntry.DATE + " TEXT," +
-			DBContract.EmotHistoryEntry.TIME + " TEXT" + " )";
-	
-
 
 	public EmotHistoryHelper(Context context) {
-		super(context, DBContract.EmotHistoryEntry.DATABASE_NAME, null, DATABASE_VERSION);
+		super(context, EmotDBHelper.DATABASE_NAME, null, DATABASE_VERSION);
 	}
 	
 	
 	public Cursor getEmotHistory(final String entryID){
-		Log.i(TAG,SQL_CREATE_ENTRIES );
 		SQLiteDatabase db = this.getReadableDatabase();
 		
 		Cursor emots = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + " from " +
@@ -65,8 +55,7 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 		ContentValues contentValues = new ContentValues();
 		contentValues.put(DBContract.EmotHistoryEntry.ENTRY_ID, entryID);
 		contentValues.put(DBContract.EmotHistoryEntry.EMOTS, chat);
-		contentValues.put(DBContract.EmotHistoryEntry.DATE, date);	
-		contentValues.put(DBContract.EmotHistoryEntry.TIME, time);
+		contentValues.put(DBContract.EmotHistoryEntry.DATETIME, date);	
 		
 		long i = db.insert(DBContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
 		if(i < 0){
@@ -138,7 +127,6 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		db.execSQL(SQL_CREATE_ENTRIES);
 		
 	}
 

@@ -35,6 +35,6 @@ public class EmotApplication extends Application {
 	
 	public static String getAppID(){
 		//Replace this with shared pref value
-		return "39ed467d3cf698897d84f74820a6d053";
+		return "edd7d5d6e48a699a240b57f4e1c2478e";
 	}
 }
