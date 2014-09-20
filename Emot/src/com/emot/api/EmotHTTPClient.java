@@ -20,9 +20,6 @@ import java.util.zip.GZIPInputStream;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.ApplicationConstants;
@@ -30,9 +27,9 @@ import com.emot.constants.ApplicationConstants;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
+public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 
-	private static final String TAG = "RegistrationHTTPClient";
+	private static final String TAG = EmotHTTPClient.class.getSimpleName();
 	private URL url;
 	private ArrayList<NameValuePair> reqContent;
 	private TaskCompletedRunnable taskCompletedRunnable;
@@ -89,7 +86,7 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
 	}
 
 	@Override
-	protected Object doInBackground(Void... params) {
+	protected String doInBackground(Void... params) {
 
 
 
@@ -107,7 +104,7 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
 		reqContent.add(new BasicNameValuePair("code", "1234"));
 		reqContent.add(new BasicNameValuePair("s", "5678"));
 		reqContent.add(new BasicNameValuePair("hash", "20b75e4507a50fddd647945784bcbd96"));*/
-		JSONObject result = null;
+		String result = null;
 		String line;
 		try {
 			//url = new URL("http://192.168.0.104:8000/api/register/");
@@ -155,10 +152,9 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
 				while ((line = br.readLine()) != null) {
 					sb.append(line);
 				}
-				 result = new JSONObject(sb.toString());
-				 
-
-				System.out.println("Response String is " +sb);
+				result = sb.toString();
+				
+				Log.i(TAG, "Response String is " +sb);
 				if (contentEncoding != null
 						&& contentEncoding.equalsIgnoreCase("gzip")) {
 					in = new GZIPInputStream(in);
@@ -169,8 +165,6 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
 			e.printStackTrace();
 		} catch(IOException e){
 			e.printStackTrace();
-		} catch(JSONException e){
-			e.printStackTrace();
 		} catch(NoSuchAlgorithmException e){
 			e.printStackTrace();
 		}
@@ -179,13 +173,10 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, Object>{
 	}
 
 	@Override
-	protected void onPostExecute(Object result) {
-		
-		if(result instanceof JSONObject){
-			Log.i("Registration", "in postExecute");
-			Log.i("task Val", taskCompletedRunnable.toString());
-			taskCompletedRunnable.onTaskComplete(result);
-		}
+	protected void onPostExecute(String result) {
+		Log.i("Registration", "in postExecute");
+		Log.i("task Val", taskCompletedRunnable.toString());
+		taskCompletedRunnable.onTaskComplete(result);
 	}
 
 }

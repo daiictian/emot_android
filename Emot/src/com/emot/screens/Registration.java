@@ -47,7 +47,7 @@ public class Registration extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.layout_register_screen);
 		initializeUI();
@@ -71,36 +71,33 @@ public class Registration extends Activity {
 				try {
 					wsURL = new URL(url);
 				} catch (MalformedURLException e) {
-					
+
 					e.printStackTrace();
 				}
 				Log.d(TAG, "wsurl is  " +wsURL);
 				TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
 
 					@Override
-					public void onTaskComplete(Object result) {
+					public void onTaskComplete(String result) {
 						Log.i("Registration", "callback called");
-						if(result  instanceof JSONObject){
+						try {
+							JSONObject resultJson = new JSONObject(result);
 
-							try {
-								Log.i("TAG", "callback called");
-								String status = ((JSONObject) result).getString("status");
-								if(status.equals("true")){
-									Log.i("Registration", "status us true");
-									Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
-								}else{
-									Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
-									Log.i(TAG, "registration status is " +status);
-									Log.d(TAG, "message from server " + ((JSONObject) result).getString("message"));
+							Log.i("TAG", "callback called");
+							String status = resultJson.getString("status");
+							if(status.equals("true")){
+								Log.i("Registration", "status us true");
+								Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
+							}else{
+								Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
+								Log.i(TAG, "registration status is " +status);
+								Log.d(TAG, "message from server " + resultJson.getString("message"));
 
-								}
 							}
-							catch (JSONException e) {
-								
-								e.printStackTrace();
-							}
+						}
+						catch (JSONException e) {
 
-
+							e.printStackTrace();
 						}
 
 					}
@@ -126,7 +123,7 @@ public class Registration extends Activity {
 				try {
 					wsURL = new URL(url);
 				} catch (MalformedURLException e) {
-					
+
 					e.printStackTrace();
 				}
 				ArrayList<NameValuePair> reqContent = new ArrayList<NameValuePair>();
@@ -145,10 +142,10 @@ public class Registration extends Activity {
 				TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
 
 					@Override
-					public void onTaskComplete(Object result) {
-						if(result!= null && result instanceof JSONObject){
+					public void onTaskComplete(String result) {
 							try {
-								String status = ((JSONObject) result).getString("status");
+								JSONObject resultJson = new JSONObject(result);
+								String status = resultJson.getString("status");
 								if(status.equals("success")){
 									Thread login = new Thread(new Runnable() {
 
@@ -220,17 +217,11 @@ public class Registration extends Activity {
 									login.start();
 								}
 							} catch (JSONException e) {
-								
+
 								e.printStackTrace();
 							}
-						}else{
-
-
 						}
 
-
-
-					}
 				};
 				EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, reqContent, taskCompletedRunnable);
 				registrationHTTPClient.execute(new Void[]{});
@@ -255,7 +246,7 @@ public class Registration extends Activity {
 			}
 			//System.out.println("hastext is " +hashtext);
 		} catch (NoSuchAlgorithmException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -270,13 +261,13 @@ public class Registration extends Activity {
 		mEnterMobile = (EditText)findViewById(R.id.enterNumber);
 		mSubmitNumber = (Button)findViewById(R.id.submitNumber);
 		mEnterVerificationCode = (EditText)findViewById(R.id.verificationCode);
-	    mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
+		mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
 
 	}
 
 	@Override
 	protected void onResume() {
-		
+
 		super.onResume();
 	}
 

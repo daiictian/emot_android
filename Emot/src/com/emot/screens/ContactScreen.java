@@ -1,54 +1,47 @@
 package com.emot.screens;
 
-import java.util.ArrayList;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.database.Cursor;
-import android.os.Build;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.Contacts;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.widget.ListView;
 
-import com.emot.adapters.ContactArrayAdapter;
-import com.emot.emotobjects.Contact;
+import com.emot.common.TaskCompletedRunnable;
+import com.emot.model.EmotApplication;
+import com.emot.persistence.ContactUpdater;
+import com.emot.persistence.DBContract;
+import com.emot.persistence.EmotDBHelper;
 
 public class ContactScreen extends Activity {
 	private ListView listviewContact;
-	private ArrayList<Contact> contacts = new ArrayList<Contact>();
 	private static String TAG = ContactScreen.class.getName();
-	
-	@SuppressLint("InlinedApi")
-	private final static String[] FROM_COLUMN = {
-        Build.VERSION.SDK_INT
-                >= Build.VERSION_CODES.HONEYCOMB ?
-                Contacts.DISPLAY_NAME_PRIMARY :
-                Contacts.DISPLAY_NAME
-	};
+	private SimpleCursorAdapter contactsAdapter;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.contacts);
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
-		setContacts(this.getContentResolver());
-		ContactArrayAdapter contactAdapter = new ContactArrayAdapter(this.getApplicationContext(), R.layout.chat_row, contacts);
-		listviewContact.setAdapter(contactAdapter);
+		SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
+		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
+			
+			@Override
+			public void onTaskComplete(String result) {
+				//Contacts updated in SQLite. You might want to update UI
+			}
+		});
+		Cursor c = null;
+		
+		c = db.rawQuery("Select * from "+DBContract.ContactsDBEntry.TABLE_NAME, null);
+		Log.i(TAG, "Count of contacts " + c.getCount());
+		String[] from = {DBContract.ContactsDBEntry.CONTACT_NAME, DBContract.ContactsDBEntry.MOBILE_NUMBER, DBContract.ContactsDBEntry.CURRENT_STATUS};
+		int[] to = {R.id.text_contact_name, R.id.text_contact_number, R.id.text_contact_status};
+		contactsAdapter = new SimpleCursorAdapter (this, R.layout.contact_row, c, from, to, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+		listviewContact.setAdapter(contactsAdapter);
 	}
 	
-	public void setContacts(ContentResolver cr)
-	{
-	    Cursor phones = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null,null, null);
-	    while (phones.moveToNext())
-	    {
-	      String name=phones.getString(phones.getColumnIndex(FROM_COLUMN[0]));
-	      String mobile = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-	      Log.i(TAG,"name = " + name + ". Phone = " + mobile); 
-	      contacts.add(new Contact(name, mobile));
-	    }
-
-	}
+	
 }
