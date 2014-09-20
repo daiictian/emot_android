@@ -22,10 +22,15 @@ import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.ApplicationConstants;
 import com.emot.constants.WebServiceConstants;
 import com.emot.api.EmotHTTPClient;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -53,6 +58,18 @@ public class Registration extends Activity {
 		initializeUI();
 		setOnClickListeners();
 	}
+	
+	private boolean isNumberValid(final String pNumber){
+		boolean isValid = false;
+		PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+		try {
+			  PhoneNumber numberProto = phoneUtil.parse(pNumber, "IN");
+			  isValid = phoneUtil.isValidNumber(numberProto); 
+			} catch (NumberParseException e) {
+			  System.err.println("NumberParseException was thrown: " + e.toString());
+			}
+		return isValid;
+	}
 
 	private void setOnClickListeners() {
 
@@ -60,7 +77,9 @@ public class Registration extends Activity {
 
 			@Override
 			public void onClick(View v) {
+				
 				mMobileNumber = mEnterMobile.getText().toString();
+				if(isNumberValid(mMobileNumber)){
 				String url = WebServiceConstants.HTTP + "://"+ 
 						WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
 						+WebServiceConstants.PATH_API+WebServiceConstants.OP_SETCODE
@@ -105,6 +124,9 @@ public class Registration extends Activity {
 
 				EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
 				registrationHTTPClient.execute(new Void[]{});
+			}else{
+				Toast.makeText(Registration.this, "Mobile Number is invalid", Toast.LENGTH_LONG).show();
+			}
 			}
 
 		});

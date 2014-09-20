@@ -64,7 +64,7 @@ public class Emots extends Activity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				TextView user = (TextView)view.findViewById(R.id.user);
+				TextView user = (TextView)view.findViewById(R.id.username);
 				String userName = user.getText().toString();
 				Intent intent = new Intent(Emots.this, ChatScreen.class);
 				intent.putExtra("USERNAME", userName);
