@@ -3,11 +3,15 @@ package com.emot.persistence;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.XMPPException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,6 +21,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
@@ -26,6 +31,7 @@ import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
+import com.emot.screens.ChatScreen;
 
 public class ContactUpdater {
 
@@ -73,21 +79,8 @@ public class ContactUpdater {
 
 				SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 				try {
-					JSONArray emotters = new JSONArray(result);
-					int len = emotters.length();
-					ContentValues cvs = new ContentValues();
-					for(int i=0; i<len; i++){
-						try {
-							JSONObject emotter = emotters.getJSONObject(i);
-							cvs.put(DBContract.ContactsDBEntry.MOBILE_NUMBER, emotter.getString("mobile"));
-							cvs.put(DBContract.ContactsDBEntry.EMOT_NAME, emotter.getString("name"));
-							cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
-							cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
-							db.insert(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs);
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-					}
+					AddRoster addRoster = new AddRoster(new JSONArray(result));
+					addRoster.execute();
 				}catch (JSONException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -116,4 +109,65 @@ public class ContactUpdater {
 		}
 		return contacts;
 	}
+	
+	public static void updateProfileBitmap(String url, String mobile){
+		if(url!=null && url != ""){
+			
+		}
+	}
+	
+	public static class AddRoster extends AsyncTask<Void, Void, Void>{
+
+		private JSONArray emotters;
+		
+		public AddRoster(JSONArray emotters){
+			this.emotters = emotters;
+		}
+		
+		@Override
+		protected Void doInBackground(Void... params) {
+			int len = emotters.length();
+			while (!EmotApplication.getConnection().isAuthenticated()){
+				//Wait till connected
+				Log.i(TAG, "Wait for connection to establish");
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			Roster roster = EmotApplication.getConnection().getRoster();
+			for(int i=0; i<len; i++){
+				try {
+					
+					JSONObject emotter = emotters.getJSONObject(i);
+					
+					//Database entry
+					/*
+					ContentValues cvs = new ContentValues();
+					cvs.put(DBContract.ContactsDBEntry.MOBILE_NUMBER, emotter.getString("mobile"));
+					cvs.put(DBContract.ContactsDBEntry.EMOT_NAME, emotter.getString("name"));
+					cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
+					cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
+					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
+					db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+					updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
+					*/
+					
+					roster.createEntry(emotter.getString("mobile"), "emot-net", null);
+					
+					
+				} catch (JSONException e) {
+					e.printStackTrace();
+				} catch (XMPPException e) {
+					e.printStackTrace();
+				}
+			}
+			return null;
+		}
+		
+	}
+	
 }

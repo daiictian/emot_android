@@ -6,25 +6,21 @@
     android:orientation="horizontal" >
 
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+        android:layout_width="50dp"
+        android:layout_height="50dp" >
 
-        
         <ImageView
             android:id="@+id/image_contact_profile"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="6dp"
             android:src="@drawable/asin" />
-        
-        
+
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/frame"
             android:visibility="gone" />
-
-        
     </FrameLayout>
 
     <LinearLayout

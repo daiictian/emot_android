@@ -7,4 +7,5 @@
 	<string name="emots">Emots</string>
 	<string name="enterMobileNumber">Please enter your mobile number</string>
 	<string name="enterVerificationCode">Please enter your verification code</string>
+	<string name="edit">edit</string>
 </resources>

@@ -19,6 +19,7 @@ import com.emot.screens.R;
 public class ContactArrayAdapter extends ArrayAdapter<Contact> {
 
 	private ArrayList<Contact> contacts;
+	
 	public ContactArrayAdapter(Context context, int resource, ArrayList<Contact> contacts) {
 		super(context, resource, contacts);
 		this.contacts = contacts;

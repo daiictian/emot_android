@@ -6,13 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -21,11 +18,11 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.http.NameValuePair;
 
-import com.emot.common.TaskCompletedRunnable;
-import com.emot.constants.ApplicationConstants;
-
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.emot.common.TaskCompletedRunnable;
+import com.emot.constants.ApplicationConstants;
 
 public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 
@@ -94,16 +91,7 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 		HttpURLConnection urlConnection;
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
-		//reqContent = new ArrayList<NameValuePair>();
 
-		String VERIFICATION_SALT = ApplicationConstants.VERIFICATION_SALT;
-		/*reqContent.add(new BasicNameValuePair("request", "register"));
-		reqContent.add(new BasicNameValuePair("mobile", "9379475511"));
-		reqContent.add(new BasicNameValuePair("app_version", "1"));
-		reqContent.add(new BasicNameValuePair("client_os", "android"));
-		reqContent.add(new BasicNameValuePair("code", "1234"));
-		reqContent.add(new BasicNameValuePair("s", "5678"));
-		reqContent.add(new BasicNameValuePair("hash", "20b75e4507a50fddd647945784bcbd96"));*/
 		String result = null;
 		String line;
 		try {
@@ -111,15 +99,6 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.addRequestProperty("Content-type","application/x-www-form-urlencoded");
 			System.setProperty("http.keepAlive", "false");
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			String s = "1|"+"android|" + "1234|" + "9379475511|" + "register|"+"5678|"+VERIFICATION_SALT;
-			byte[] messageDigest = md.digest(s.getBytes());
-			BigInteger number = new BigInteger(1, messageDigest);
-			String hashtext = number.toString(16);
-			while (hashtext.length() < 32) {
-				hashtext = "0" + hashtext;
-			}
-			System.out.println("hastext is " +hashtext);
 
 			if (reqContent != null) {
 				urlConnection.setDoOutput(true);
@@ -165,9 +144,7 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 			e.printStackTrace();
 		} catch(IOException e){
 			e.printStackTrace();
-		} catch(NoSuchAlgorithmException e){
-			e.printStackTrace();
-		}
+		} 
 
 		return result;
 	}

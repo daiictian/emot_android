@@ -26,7 +26,8 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 			DBContract.ContactsDBEntry.LAST_SEEN + " DATETIME NULL," +
 			DBContract.ContactsDBEntry.EMOT_NAME + " VARCHAR(100) NULL," +
 			DBContract.ContactsDBEntry.CONTACT_NAME + " VARCHAR(100) NULL," +
-			DBContract.ContactsDBEntry.MOBILE_NUMBER + " VARCHAR(20)," +
+			DBContract.ContactsDBEntry.MOBILE_NUMBER + " VARCHAR(20) UNIQUE," +
+			DBContract.ContactsDBEntry.PROFILE_THUMB + " VARCHAR(100) NULL," +
 			DBContract.ContactsDBEntry.PROFILE_IMG + " VARCHAR(100) NULL" + " )";
 	private static EmotDBHelper emotDBHelperInstance;
 	

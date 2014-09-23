@@ -5,6 +5,7 @@ public class Contact {
 	private String mobile;
 	private String profileImgUrl;
 	private String status;
+	private byte[] avatar;
 	
 	public Contact(String name, String mobile){
 		this.setName(name);
@@ -41,5 +42,13 @@ public class Contact {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public byte[] getAvatar() {
+		return avatar;
+	}
+
+	public void setAvatar(byte[] avatar) {
+		this.avatar = avatar;
 	}
 }

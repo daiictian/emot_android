@@ -1,24 +1,43 @@
 package com.emot.screens;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.provider.PrivacyProvider;
+import org.jivesoftware.smack.provider.ProviderManager;
+import org.jivesoftware.smackx.GroupChatInvitation;
+import org.jivesoftware.smackx.PrivateDataManager;
+import org.jivesoftware.smackx.bytestreams.socks5.provider.BytestreamsProvider;
+import org.jivesoftware.smackx.packet.ChatStateExtension;
+import org.jivesoftware.smackx.packet.LastActivity;
+import org.jivesoftware.smackx.packet.OfflineMessageInfo;
+import org.jivesoftware.smackx.packet.OfflineMessageRequest;
+import org.jivesoftware.smackx.packet.SharedGroupsInfo;
+import org.jivesoftware.smackx.provider.AdHocCommandDataProvider;
+import org.jivesoftware.smackx.provider.DataFormProvider;
+import org.jivesoftware.smackx.provider.DelayInformationProvider;
+import org.jivesoftware.smackx.provider.DiscoverInfoProvider;
+import org.jivesoftware.smackx.provider.DiscoverItemsProvider;
+import org.jivesoftware.smackx.provider.MUCAdminProvider;
+import org.jivesoftware.smackx.provider.MUCOwnerProvider;
+import org.jivesoftware.smackx.provider.MUCUserProvider;
+import org.jivesoftware.smackx.provider.MessageEventProvider;
+import org.jivesoftware.smackx.provider.MultipleAddressesProvider;
+import org.jivesoftware.smackx.provider.RosterExchangeProvider;
+import org.jivesoftware.smackx.provider.StreamInitiationProvider;
+import org.jivesoftware.smackx.provider.VCardProvider;
+import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
+import org.jivesoftware.smackx.search.UserSearch;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -29,17 +48,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.emot.adapters.ChatListArrayAdapter;
+import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotHistoryHelper;
 
 public class ChatScreen extends Activity{
 
 	private Chat chat;
-	private XMPPConnection connection;
 	private ImageView sendButton;
 	private EditText chatEntry;
 	private TextView userTitle;
 	private EmotHistoryHelper emotHistoryDB;
+	private static String TAG = ChatScreen.class.getSimpleName();
 
 	private class EmotHistoryTask extends AsyncTask<EmotHistoryHelper, Void, Cursor>{
 
@@ -163,109 +183,44 @@ public class ChatScreen extends Activity{
 			}
 		});
 		chatView.setAdapter(chatlistAdapter);
-		Thread connThread = new Thread(new Runnable() {
 
+		//and here is my listener
+
+
+		MessageListener mmlistener = new MessageListener() {
 			@Override
-			public void run() {
-				int portInt = 5222;
-
-				// Create a connection
-				ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
-				connConfig.setSASLAuthenticationEnabled(true);
-				//connConfig.setCompressionEnabled(true);
-				connConfig.setSecurityMode(SecurityMode.enabled);
-
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-					connConfig.setTruststoreType("AndroidCAStore");
-					connConfig.setTruststorePassword(null);
-					connConfig.setTruststorePath(null);
-					Log.i("XMPPClient", "[XmppConnectionTask] Build Icecream");
-
-				} else {
-					connConfig.setTruststoreType("BKS");
-					String path = System.getProperty("javax.net.ssl.trustStore");
-					if (path == null)
-						path = System.getProperty("java.home") + File.separator + "etc"
-								+ File.separator + "security" + File.separator
-								+ "cacerts.bks";
-					connConfig.setTruststorePath(path);
-					Log.i("XMPPClient", "[XmppConnectionTask] Build less than Icecream ");
-
-				}
-				connConfig.setDebuggerEnabled(true);
-				XMPPConnection.DEBUG_ENABLED = true;
-				connection = new XMPPConnection(connConfig);
-
-				try {
-					connection.connect();
-					Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
-					// publishProgress("Connected to host " + HOST);
-				} catch (XMPPException ex) {
-					Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
-					Log.e("XMPPClient", ex.toString());
-					//publishProgress("Failed to connect to " + HOST);
-					//xmppClient.setConnection(null);
-				}
-
-
-
-				try {
-					connection.login("test1","1234");
-					Log.i("androxmpp", "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
-
-
-
-					//and here is my listener
-
-
-					MessageListener mmlistener = new MessageListener() {
-						@Override
-						public void processMessage(Chat chat, final Message message) {
-							Log.d("Incoming message", message.getBody());
-							handler.post(new Runnable() {
-
-								@Override
-
-								public void run() {
-
-									chatList.add(message.getBody());
-									chatlistAdapter.notifyDataSetChanged();
-									//progressBar.setProgress(value);
-
-								}
-
-							});
-
-
-
-						}
-					};
-
-					ChatManager current_chat  = connection.getChatManager();
-					chat = current_chat.createChat("test2@emot-net", "test2@emot-net", mmlistener);
-					runOnUiThread(new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							if(chat != null){
-								sendButton.setEnabled(true);
-							}
-
-						}
-					}));
-
-
-				} catch(Exception ex){
-
-					Log.i("androxmpp", "loginfails ");
-					ex.printStackTrace();
-				}
+			public void processMessage(Chat chat, final Message message) {
+				Log.d("Incoming message", message.getBody());
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						chatList.add(message.getBody());
+						chatlistAdapter.notifyDataSetChanged();
+						//progressBar.setProgress(value);
+					}
+				});
 			}
-		});
-		connThread.start();
+		};
+
+		if(EmotApplication.getConnection() != null){
+			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
+			chat = current_chat.createChat("test2@emot-net", "test2@emot-net", mmlistener);
+			runOnUiThread(new Thread(new Runnable() {
+				@Override
+				public void run() {
+					if(chat != null){
+						sendButton.setEnabled(true);
+					}
+
+				}
+			}));
+		}
+		
+		EmotApplication.startConnection();
+
+		startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
 
 
-		startActivity(new Intent(this, ContactScreen.class));
 
 	}
 
@@ -275,4 +230,5 @@ public class ChatScreen extends Activity{
 		chatlistAdapter.notifyDataSetChanged();
 		//chatView.setAdapter(chatlistAdapter);
 	}
+
 }
