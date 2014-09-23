@@ -12,14 +12,14 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 	private static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "emot.db";
 	private static final String TAG = null;
-	private static  String SQL_CREATE_TABLE_EMOTHISTORY = "CREATE TABLE IF NOT EXISTS " +
+	private static final  String SQL_CREATE_TABLE_EMOTHISTORY = "CREATE TABLE IF NOT EXISTS " +
 			DBContract.EmotHistoryEntry.TABLE_NAME +
 			" (" + DBContract.EmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
 			DBContract.EmotHistoryEntry.ENTRY_ID + " VARCHAR(20)," +
 			DBContract.EmotHistoryEntry.EMOTS + " TEXT," +
 			DBContract.EmotHistoryEntry.DATETIME + " DATETIME" + " )";
 	
-	private static String SQL_CREATE_TABLE_CONTACTDETAILS = "CREATE TABLE IF NOT EXISTS " +
+	private static final String SQL_CREATE_TABLE_CONTACTDETAILS = "CREATE TABLE IF NOT EXISTS " +
 			DBContract.ContactsDBEntry.TABLE_NAME +
 			" (" + DBContract.ContactsDBEntry._ID + " INTEGER PRIMARY KEY autoincrement," +
 			DBContract.ContactsDBEntry.CURRENT_STATUS + " VARCHAR(100) NULL," +

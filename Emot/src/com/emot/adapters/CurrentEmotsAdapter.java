@@ -55,8 +55,8 @@ public class CurrentEmotsAdapter extends BaseAdapter {
                       .getSystemService(Context.LAYOUT_INFLATER_SERVICE);  
             v = li.inflate(R.layout.emot_list_row, null);  
             viewHolder = new CompleteListViewHolder();
-            viewHolder.user = (TextView)v.findViewById(R.id.user);
-            viewHolder.lastEmot = (TextView)v.findViewById(R.id.lastEmot);
+            viewHolder.user = (TextView)v.findViewById(R.id.text_contact_name);
+            viewHolder.lastEmot = (TextView)v.findViewById(R.id.text_contact_status);
             v.setTag(viewHolder);  
        } else {  
             viewHolder = (CompleteListViewHolder) v.getTag();  

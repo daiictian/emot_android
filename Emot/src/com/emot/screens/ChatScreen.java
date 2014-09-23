@@ -49,6 +49,7 @@ import android.widget.TextView;
 
 import com.emot.adapters.ChatListArrayAdapter;
 import com.emot.model.EmotApplication;
+import com.emot.emotobjects.ChatMessage;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotHistoryHelper;
 
@@ -71,10 +72,10 @@ public class ChatScreen extends Activity{
 			boolean valid  = result.moveToFirst();
 			if(valid && result != null && result.getCount() > 0){
 				String chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
-				chatList.add(chat);
+				chatList.add(new ChatMessage(chat, false));
 				chatlistAdapter.notifyDataSetChanged();
 			}else{
-				chatList.add("DB unfriendly");
+				//chatList.add("DB unfriendly");
 			}
 
 		}
@@ -127,9 +128,11 @@ public class ChatScreen extends Activity{
 
 	private ListView chatView;
 	private Handler handler;
+	private ChatMessage mChatReceivedMessage;
+	private ChatMessage mChatSentMessage;
 
 	private ChatListArrayAdapter chatlistAdapter;
-	ArrayList<String> chatList;
+	ArrayList<ChatMessage> chatList;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -146,7 +149,7 @@ public class ChatScreen extends Activity{
 			userName = incomingIntent.getStringExtra("USERNAME");
 			userTitle.setText(userName);
 		}
-		chatList = new ArrayList<String>();
+		chatList = new ArrayList<ChatMessage>();
 		handler = new Handler();
 		emotHistoryDB = new EmotHistoryHelper(ChatScreen.this);
 		EmotHistoryTask eht = new EmotHistoryTask();
@@ -173,8 +176,8 @@ public class ChatScreen extends Activity{
 							emotHistoryDB.insertChat("test2", chatEntry.getText().toString(), dateTime[0], dateTime[1]);
 
 						}
-					}).start();
-					chatList.add(chatEntry.getText().toString());
+					}).start(); 
+					chatList.add(new ChatMessage(chatEntry.getText().toString(), true));
 					chatlistAdapter.notifyDataSetChanged();
 					chatEntry.setText("");
 				} catch (Exception ex) { 
@@ -183,8 +186,6 @@ public class ChatScreen extends Activity{
 			}
 		});
 		chatView.setAdapter(chatlistAdapter);
-
-		//and here is my listener
 
 
 		MessageListener mmlistener = new MessageListener() {
