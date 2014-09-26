@@ -7,15 +7,23 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="45dp"
         android:background="@color/orange"
         android:orientation="vertical" >
 
         <TextView
             android:id="@+id/username"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-             />
+            android:layout_height="30dp" />
+        
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="15dp" 
+            
+            android:textSize="12sp"
+            android:textColor="@color/black"/>
+        
     </LinearLayout>
 
     <LinearLayout
@@ -29,34 +37,34 @@
             android:id="@+id/chatView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:divider="@null"
-            android:layout_weight="9" />
+            android:layout_weight="9"
+            android:divider="@null" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="horizontal"
-            android:weightSum="100" >
+            android:orientation="horizontal" 
+             android:weightSum="100">
 
             <EditText
                 android:id="@+id/editText1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:background="@drawable/border"
-                android:layout_marginLeft="2dp"
                 android:layout_marginBottom="2dp"
-                android:layout_weight="80" />
+                android:layout_marginLeft="2dp"
+                android:layout_weight="80"
+                android:background="@drawable/border" />
 
             <ImageView
                 android:id="@+id/dove_send"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="20"
-                android:layout_marginRight="2dp"
                 android:layout_marginBottom="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_weight="20"
                 android:background="@drawable/border_with_left_open"
-                android:src="@drawable/dove_flying_3"/>
+                android:src="@drawable/dove_flying_3" />
         </LinearLayout>
     </LinearLayout>
 

@@ -5,10 +5,10 @@ import java.util.Collection;
 
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.packet.VCard;
-import org.jivesoftware.smackx.provider.VCardProvider;
 
 import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
@@ -18,6 +18,7 @@ import android.util.Log;
 import android.widget.ListView;
 
 import com.emot.adapters.ContactArrayAdapter;
+import com.emot.emotobjects.ConnectionQueue;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.EmotDBHelper;
@@ -27,6 +28,7 @@ public class ContactScreen extends Activity {
 	private static String TAG = ContactScreen.class.getName();
 	private ContactArrayAdapter contactsAdapter;
 	private ArrayList<Contact> contacts;
+	private XMPPConnection connection;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +50,35 @@ public class ContactScreen extends Activity {
 		contacts = new ArrayList<Contact>();
 		contactsAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		listviewContact.setAdapter(contactsAdapter);
-		new UpdateRosters().execute();
+		
+		Thread connectionThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(10000);
+					//mConnectionQueue = EmotApplication.mConnectionQueue;
+					Log.i(TAG, "b4 connection retreived " +connection + " ");
+					while(true){
+						connection = ConnectionQueue.get();
+						Log.i(TAG, "after connection retreived " +connection);
+					}
+					
+					
+					//mCurrentChat = connection.getChatManager();
+					//mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					Log.i(TAG, "Queue exception ...");
+					e.printStackTrace();
+				}
+				
+			}
+		});
+		connectionThread.setName("Connection Thread");
+		connectionThread.start();
+		
+		//new UpdateRosters().execute();
 		
 		//From DB
 		/*

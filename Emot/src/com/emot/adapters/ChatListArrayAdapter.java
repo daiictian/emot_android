@@ -62,7 +62,9 @@ public class ChatListArrayAdapter extends BaseAdapter {
           }else{
         	  mMessageContainer.setGravity(Gravity.RIGHT);  
           }
-          viewHolder.mChatText.setText(mChatMessage.getmMessage());  
+          viewHolder.mChatText.setText(mChatMessage.getmMessage());
+          viewHolder.mDateTime.setGravity(Gravity.RIGHT);
+          viewHolder.mDateTime.setText(mChatMessage.getmTime());
           
           
           return v;  
@@ -70,7 +72,9 @@ public class ChatListArrayAdapter extends BaseAdapter {
 }  
 class CompleteListViewHolder {  
      public TextView mChatText;  
+     public TextView mDateTime;
      public CompleteListViewHolder(View base) {  
     	 mChatText = (TextView) base.findViewById(R.id.chatContent);  
+    	 mDateTime = (TextView)base.findViewById(R.id.chatDate);
      }  
 }  

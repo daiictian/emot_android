@@ -11,13 +11,14 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 
 	private static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "emot.db";
-	private static final String TAG = null;
+	private static final String TAG = "EmotDBHelper";
 	private static final  String SQL_CREATE_TABLE_EMOTHISTORY = "CREATE TABLE IF NOT EXISTS " +
 			DBContract.EmotHistoryEntry.TABLE_NAME +
 			" (" + DBContract.EmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
 			DBContract.EmotHistoryEntry.ENTRY_ID + " VARCHAR(20)," +
 			DBContract.EmotHistoryEntry.EMOTS + " TEXT," +
-			DBContract.EmotHistoryEntry.DATETIME + " DATETIME" + " )";
+			DBContract.EmotHistoryEntry.DATETIME + " TEXT," +
+			DBContract.EmotHistoryEntry.EMOT_LOCATION + " TEXT " +" )";
 	
 	private static final String SQL_CREATE_TABLE_CONTACTDETAILS = "CREATE TABLE IF NOT EXISTS " +
 			DBContract.ContactsDBEntry.TABLE_NAME +
@@ -45,6 +46,52 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		return emotDBHelperInstance;
 		
 	
+	}
+	SQLiteDatabase db;
+	
+	public Cursor getEmotHistory(final String entryID){
+		 db = this.getWritableDatabase();
+		
+		Cursor cursor = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + "," +
+				DBContract.EmotHistoryEntry.EMOT_LOCATION + "," +
+				DBContract.EmotHistoryEntry.DATETIME + " from " +
+				DBContract.EmotHistoryEntry.TABLE_NAME + " where " + 
+				DBContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'", null);
+		
+		//db.execSQL(CREATE_EMOT_TABLE);
+		
+		Log.d(TAG, "starttime ... ");
+		//Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
+		Log.d(TAG, "querytime ... "+cursor.getCount());
+		int i = 0;
+		if (cursor != null) {
+			while (cursor.moveToNext()) {
+	    		//Log.d(TAG, cursor.getString(0));
+	    		i++;
+	    	}
+		}
+		//cursor.close();
+		Log.d(TAG, "endtime ... " + i);
+		Log.d(TAG, "Ran queries ...");
+		
+		return cursor;
+		
+	}
+	
+	public void insertChat(final String entryID, final String chat, final String date, final String time, final String location){
+		SQLiteDatabase db = this.getWritableDatabase();
+		ContentValues contentValues = new ContentValues();
+		contentValues.put(DBContract.EmotHistoryEntry.ENTRY_ID, entryID);
+		contentValues.put(DBContract.EmotHistoryEntry.EMOTS, chat);
+		contentValues.put(DBContract.EmotHistoryEntry.DATETIME, time);	
+		contentValues.put(DBContract.EmotHistoryEntry.EMOT_LOCATION, location);
+		long i = db.insert(DBContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
+		if(i < 0){
+			Log.i(TAG,"Could not insert chat");
+		}else{
+			Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
+		}
+
 	}
 	
 	public Cursor runQuery(final SQLiteDatabase db, final String sql){
