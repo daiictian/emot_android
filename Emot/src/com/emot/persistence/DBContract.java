@@ -13,6 +13,7 @@ public final class DBContract {
         public static final String ENTRY_ID = "mobile";
         public static final String DATETIME = "date";
         public static final String EMOTS = "emots";
+        public static final String EMOT_LOCATION = "emotlocation";
 	}
 	
 	public static abstract class ContactsDBEntry implements BaseColumns{

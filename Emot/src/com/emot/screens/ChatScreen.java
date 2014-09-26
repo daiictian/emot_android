@@ -2,6 +2,7 @@ package com.emot.screens;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 
 import org.jivesoftware.smack.Chat;
@@ -33,13 +34,29 @@ import org.jivesoftware.smackx.provider.StreamInitiationProvider;
 import org.jivesoftware.smackx.provider.VCardProvider;
 import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
 import org.jivesoftware.smackx.search.UserSearch;
+import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.RosterPacket.ItemStatus;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -51,7 +68,9 @@ import com.emot.adapters.ChatListArrayAdapter;
 import com.emot.model.EmotApplication;
 import com.emot.emotobjects.ChatMessage;
 import com.emot.persistence.DBContract;
+import com.emot.persistence.EmotDBHelper;
 import com.emot.persistence.EmotHistoryHelper;
+import com.emot.services.ChatService;
 
 public class ChatScreen extends Activity{
 
@@ -59,10 +78,10 @@ public class ChatScreen extends Activity{
 	private ImageView sendButton;
 	private EditText chatEntry;
 	private TextView userTitle;
-	private EmotHistoryHelper emotHistoryDB;
-	private static String TAG = ChatScreen.class.getSimpleName();
+	private EmotDBHelper emotHistoryDB;
+	private static String TAG = "ChatScreen";
 
-	private class EmotHistoryTask extends AsyncTask<EmotHistoryHelper, Void, Cursor>{
+	private class EmotHistoryTask extends AsyncTask<EmotDBHelper, Void, Cursor>{
 
 
 
@@ -70,10 +89,27 @@ public class ChatScreen extends Activity{
 		protected void onPostExecute(Cursor result) {
 			// TODO Auto-generated method stub
 			boolean valid  = result.moveToFirst();
+			String chat = "";
+			String location = "";
+			String datetime = "";
+			boolean emotlocation = false;
 			if(valid && result != null && result.getCount() > 0){
-				String chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
-				chatList.add(new ChatMessage(chat, false));
+				for(int i = 0; i < result.getCount(); i++){
+				 chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
+				 location = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOT_LOCATION));
+				 datetime = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
+				 result.moveToNext();
+				Log.i(TAG, "chat from DB is " +chat);
+				if(location.equals("left")){
+				chatList.add(new ChatMessage(chat,datetime, false));
+				}else if(location.equals("right")){
+					chatList.add(new ChatMessage(chat,datetime, true));
+				}
+				
+				
+				}
 				chatlistAdapter.notifyDataSetChanged();
+				result.close();
 			}else{
 				//chatList.add("DB unfriendly");
 			}
@@ -81,9 +117,9 @@ public class ChatScreen extends Activity{
 		}
 
 		@Override
-		protected Cursor doInBackground(EmotHistoryHelper... params) {
-			EmotHistoryHelper emotHistory = params[0];
-			Cursor emotHistoryCursor = emotHistory.getEmotHistory("test2");
+		protected Cursor doInBackground(EmotDBHelper... params) {
+			EmotDBHelper emotHistory = params[0];
+			Cursor emotHistoryCursor = emotHistory.getEmotHistory("test6");
 			return emotHistoryCursor;
 		}
 
@@ -116,29 +152,102 @@ public class ChatScreen extends Activity{
 	protected void onStop() {
 		// TODO Auto-generated method stub
 		super.onStop();
+	
 	}
 
 	@Override
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
 		super.onDestroy();
+		if (mMessengerServiceConnected) {
+
+            unbindService(mChatServiceConnection);
+
+            
+
+            mMessengerServiceConnected = false;
+
+}
 	}
 
 
 
 	private ListView chatView;
 	private Handler handler;
-	private ChatMessage mChatReceivedMessage;
-	private ChatMessage mChatSentMessage;
+	
+	@Override
+	protected void onStart() {
+		/*Intent serviceIntent = new Intent();
+		serviceIntent.setAction("com.emot.services.ChatService");
+		startService(serviceIntent);*/
+		super.onStart();
+		 bindService(new Intent("com.emot.services.ChatService"), mChatServiceConnection, Context.BIND_AUTO_CREATE);
+	}
 
+
+
+	private Messenger mMessengerService = null;
+	private boolean mMessengerServiceConnected = false;
 	private ChatListArrayAdapter chatlistAdapter;
 	ArrayList<ChatMessage> chatList;
+	
+	
+	private ServiceConnection mChatServiceConnection = new ServiceConnection() {
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mMessengerService = null;
+			mMessengerServiceConnected = false;
+			
+		}
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			Log.i("XMPPClient", "Activity Connected to Service");
+			mMessengerService = new Messenger(service);
+			mMessengerServiceConnected = true;
+			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
+			Log.i("XMPPClient", "meg reply to is " +msg.replyTo);
+			msg.replyTo = mMessenger;
+			try {
+			mMessengerService.send(msg);
+			} catch (RemoteException e) {
+				
+				e.printStackTrace();
+			}
+			
+		}
+	};
+	
+	
+	
+	private final Messenger mMessenger = new Messenger(new IncomingHandler());
+	class IncomingHandler extends Handler{
+
+		@Override
+		public void handleMessage(android.os.Message pMessage) {
+			// TODO Auto-generated method stub
+			super.handleMessage(pMessage);
+			Log.i("XMPPClient", "received message from service");
+			Bundle b = pMessage.getData();
+			String s = b.getString("chat");
+			String time = b.getString("time");
+			chatList.add(new ChatMessage(s,time, false));
+			chatlistAdapter.notifyDataSetChanged();
+			
+		}
+		
+		
+		
+		
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Intent incomingIntent = getIntent();
 		String userName = "";
-
+		
 
 		setContentView(R.layout.activity_chat_screen);
 		chatView = (ListView)findViewById(R.id.chatView);
@@ -151,33 +260,41 @@ public class ChatScreen extends Activity{
 		}
 		chatList = new ArrayList<ChatMessage>();
 		handler = new Handler();
-		emotHistoryDB = new EmotHistoryHelper(ChatScreen.this);
+		emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
 		EmotHistoryTask eht = new EmotHistoryTask();
-		//eht.execute(new EmotHistoryHelper[]{emotHistoryDB});
+		eht.execute(new EmotDBHelper[]{emotHistoryDB});
 		//chatList.add("Howdy");
 		chatlistAdapter = new ChatListArrayAdapter(this, chatList);  
-		if(chat == null){
-			sendButton.setEnabled(false);
-		}
+		
+			sendButton.setEnabled(true);
+		
 		sendButton.setOnClickListener(new View.OnClickListener() {
-
+			String chat;
 			@Override
 			public void onClick(View v) {
 				try {
+					Log.i("XMPPClient", "Send onClick called");
 					SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 					Date now = new Date();
 					String strDate = sdfDate.format(now);
-					final String dateTime[] = strDate.split(" "); 
-					chat.sendMessage(chatEntry.getText().toString());
+					final String dateTime[] = strDate.split(" ");
+					Bundle data = new Bundle();
+					data.putString("chat", chatEntry.getText().toString());
+					//data.putCharSequence("chat", chatEntry.getText().toString());
+					android.os.Message msg = android.os.Message.obtain();
+					msg.setData(data);
+					msg.replyTo = mMessenger;
+					mMessengerService.send(msg);
+					chat = chatEntry.getText().toString();
 					new Thread(new Runnable() {
 
 						@Override
 						public void run() {
-							emotHistoryDB.insertChat("test2", chatEntry.getText().toString(), dateTime[0], dateTime[1]);
+							emotHistoryDB.insertChat("test6", chat, dateTime[0], dateTime[1], "right");
 
 						}
 					}).start(); 
-					chatList.add(new ChatMessage(chatEntry.getText().toString(), true));
+					chatList.add(new ChatMessage(chatEntry.getText().toString(), dateTime[1],true));
 					chatlistAdapter.notifyDataSetChanged();
 					chatEntry.setText("");
 				} catch (Exception ex) { 
@@ -188,24 +305,11 @@ public class ChatScreen extends Activity{
 		chatView.setAdapter(chatlistAdapter);
 
 
-		MessageListener mmlistener = new MessageListener() {
-			@Override
-			public void processMessage(Chat chat, final Message message) {
-				Log.d("Incoming message", message.getBody());
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						chatList.add(message.getBody());
-						chatlistAdapter.notifyDataSetChanged();
-						//progressBar.setProgress(value);
-					}
-				});
-			}
-		};
+		
 
 		if(EmotApplication.getConnection() != null){
 			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
-			chat = current_chat.createChat("test2@emot-net", "test2@emot-net", mmlistener);
+			
 			runOnUiThread(new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -219,17 +323,8 @@ public class ChatScreen extends Activity{
 		
 		EmotApplication.startConnection();
 
-		startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+	//	startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
 
-
-
-	}
-
-	private void setChatContents(final String message){
-
-		chatList.add(message);
-		chatlistAdapter.notifyDataSetChanged();
-		//chatView.setAdapter(chatlistAdapter);
 	}
 
 }

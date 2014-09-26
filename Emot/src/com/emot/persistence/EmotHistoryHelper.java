@@ -26,14 +26,14 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	public Cursor getEmotHistory(final String entryID){
 		SQLiteDatabase db = this.getReadableDatabase();
 		
-		Cursor emots = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + " from " +
+		Cursor cursor = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + " from " +
 				DBContract.EmotHistoryEntry.TABLE_NAME + " where " + 
 				DBContract.EmotHistoryEntry.ENTRY_ID + " = '" + entryID  + "'", null);
 		
 		//db.execSQL(CREATE_EMOT_TABLE);
 		
 		Log.d(TAG, "starttime ... ");
-		Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
+		//Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
 		Log.d(TAG, "querytime ... "+cursor.getCount());
 		int i = 0;
 		if (cursor != null) {
@@ -42,26 +42,26 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 	    		i++;
 	    	}
 		}
-		cursor.close();
+		//cursor.close();
 		Log.d(TAG, "endtime ... " + i);
 		Log.d(TAG, "Ran queries ...");
 		
-		return emots;
+		return cursor;
 		
 	}
 	
-	public void insertChat(final String entryID, final String chat, final String date, final String time){
+	public void insertChat(final String entryID, final String chat, final String date, final String time, final String location){
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues contentValues = new ContentValues();
 		contentValues.put(DBContract.EmotHistoryEntry.ENTRY_ID, entryID);
 		contentValues.put(DBContract.EmotHistoryEntry.EMOTS, chat);
 		contentValues.put(DBContract.EmotHistoryEntry.DATETIME, date);	
-		
+		contentValues.put(DBContract.EmotHistoryEntry.EMOT_LOCATION, location);
 		long i = db.insert(DBContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
 		if(i < 0){
 			Log.i(TAG,"Could not insert chat");
 		}else{
-			Log.i(TAG,"Chat inserted successfully");
+			Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
 		}
 
 	}
@@ -127,6 +127,7 @@ public class EmotHistoryHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
+		//db.execSQL(sql)
 		
 	}
 

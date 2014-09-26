@@ -1,6 +1,8 @@
 package com.emot.model;
 
 import java.io.File;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
@@ -36,7 +38,9 @@ import org.jivesoftware.smackx.provider.VCardProvider;
 import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
 import org.jivesoftware.smackx.search.UserSearch;
 
+import com.emot.emotobjects.ConnectionQueue;
 import com.emot.screens.ContactScreen;
+import com.emot.services.ChatService;
 
 import android.app.Application;
 import android.content.Context;
@@ -53,9 +57,10 @@ public class EmotApplication extends Application {
 	private static SharedPreferences prefs;
 	private static XMPPConnection connection;
 	private static boolean connecting = false;
-
+	
 	public void onCreate() {
 		super.onCreate();
+		
 		EmotApplication.context = getApplicationContext();
 		prefs = PreferenceManager.getDefaultSharedPreferences(context
 				.getApplicationContext());
@@ -67,7 +72,7 @@ public class EmotApplication extends Application {
 				startConnection();
 			}
 		}
-
+		
 		return connection;
 	}
 
@@ -97,7 +102,9 @@ public class EmotApplication extends Application {
 
 			@Override
 			public void run() {
+				while(connection == null || connection.getHost() == null){
 				Log.i(TAG, "----------STARTING LOGIN---------");
+				
 				int portInt = 5222;
 
 				// Create a connection
@@ -138,12 +145,14 @@ public class EmotApplication extends Application {
 					//publishProgress("Failed to connect to " + HOST);
 					//xmppClient.setConnection(null);
 				}
+				Log.i("XMPPClient", "connection authenticated " +connection.isAuthenticated());
 
-
-
+				}
+				
+				
 				try {
-					connection.login("test1","1234");
-					Log.i(TAG, "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
+					connection.login("test5","1234");
+					Log.i("XMPPClient", "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
 
 					//					UserSearchManager search = new UserSearchManager(connection);
 					//					Form searchForm = search.getSearchForm("emot-net");
@@ -194,13 +203,31 @@ public class EmotApplication extends Application {
 					Log.i(TAG, "Nick name 1 = " + vCard1.getNickName());
 					 */
 
-					Log.i(TAG, "----------------- LOGIN SUCCESSFULL --------------- ");
+					Log.i("XMPPClient", "----------------- LOGIN SUCCESSFULL --------------- ");
+					
+					try{
+						boolean b = false;
+						if(connection != null && connection.isConnected()){
+							ConnectionQueue.add(connection);
+							Log.i("XMPPClient", "putting into blocking queue successful? size=");
+							
+						}
+					}catch(IllegalStateException e){
+						e.printStackTrace();
+					}
+					
+					
+					
+					
+					
 				} catch(Exception ex){
 
-					Log.i(TAG, "!!!!!!!!!!!  LOGINFAILS  !!!!!!!!!");
+					Log.i("XMPPClient", "!!!!!!!!!!!  LOGINFAILS  !!!!!!!!!");
 					ex.printStackTrace();
 				}
 				connecting = false;
+			
+				
 			}
 
 		});
