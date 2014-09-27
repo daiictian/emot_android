@@ -227,7 +227,7 @@ public class EmotApplication extends Application {
 			}
 
 		});
-		connThread.start();
+		//connThread.start();
 	}
 
 	public static void configure(ProviderManager pm) {

@@ -11,24 +11,29 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.packet.VCard;
 
-import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.emot.adapters.ContactArrayAdapter;
-import com.emot.emotobjects.ConnectionQueue;
 import com.emot.common.TaskCompletedRunnable;
+import com.emot.constants.IntentStrings;
+import com.emot.emotobjects.ConnectionQueue;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 
-public class ContactScreen extends Activity {
+public class ContactScreen extends ActionBarActivity{
 	private ListView listviewContact;
 	private static String TAG = ContactScreen.class.getName();
 	private ContactArrayAdapter contactsAdapter;
@@ -81,8 +86,8 @@ public class ContactScreen extends Activity {
 		connectionThread.start();
 		
 		//new UpdateRosters().execute();
-//		new ShowContacts().execute();
-//		new UpdateRosters().execute();
+		new ShowContacts().execute();
+		//new UpdateRosters().execute();
 		
 		//From DB
 		/*
@@ -96,6 +101,20 @@ public class ContactScreen extends Activity {
 		listviewContact.setAdapter(contactsAdapter);
 		*/
 		
+		listviewContact.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				startActivity(new Intent(EmotApplication.getAppContext(), UpdateProfileScreen.class));
+				
+				/*
+				String mobile = contacts.get(position).getMobile();
+				Intent chatIntent = new Intent(ContactScreen.this, ChatScreen.class);
+				chatIntent.putExtra(IntentStrings.CHAT_FRIEND, mobile);
+				startActivity(chatIntent);
+				*/
+			}
+		});
 
 	}
 
@@ -160,14 +179,6 @@ public class ContactScreen extends Activity {
 		@Override
 		protected Void doInBackground(Void... params) {
 			Log.i(TAG, "time 1");
-			while(!EmotApplication.getConnection().isAuthenticated()){
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
 			SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 			Cursor cursor = db.rawQuery("select * from "+DBContract.ContactsDBEntry.TABLE_NAME, null);
 			Log.i(TAG, "Cursor length "+cursor.getCount());

@@ -2,12 +2,16 @@ package com.emot.screens;
 
 import java.io.ByteArrayOutputStream;
 
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -17,13 +21,17 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.emot.model.EmotUser;
+import com.emot.services.ChatService;
+import com.emot.services.ChatService.ProfileBinder;
 
-public class UpdateProfileScreen extends Activity {
+public class UpdateProfileScreen extends ActionBarActivity {
 	private EditText editStatus;
 	private Button saveButton;
 	private ImageView imageAvatar;
 	private static final int CAMERA_REQUEST = 1;
 	private static final int PICK_FROM_GALLERY = 2;
+	private ChatService chatService;
+	boolean mBound = false;
 
 
 	@Override
@@ -40,7 +48,9 @@ public class UpdateProfileScreen extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				EmotUser.updateStatus(editStatus.getText().toString());
+				if (mBound) {
+					chatService.updateStatus(editStatus.getText().toString());
+				}
 			}
 		});
 
@@ -73,6 +83,25 @@ public class UpdateProfileScreen extends Activity {
 		});
 
 	}
+	
+	@Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(this, ChatService.class);
+        intent.putExtra("request_code", ChatService.REQUEST_PROFILE_UPDATE);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unbind from the service
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
 
 	public void callCamera() {
 		Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
@@ -116,7 +145,7 @@ public class UpdateProfileScreen extends Activity {
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
-				EmotUser.updateAvatar(yourImage);
+				chatService.updateAvatar(yourImage);
 			}
 			break;
 		case PICK_FROM_GALLERY:
@@ -129,10 +158,26 @@ public class UpdateProfileScreen extends Activity {
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
-				EmotUser.updateAvatar(yourImage);
+				chatService.updateAvatar(yourImage);
 			}
 
 			break;
 		}
 	}
+
+	private ServiceConnection mConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			// We've bound to LocalService, cast the IBinder and get LocalService instance
+			ProfileBinder binder = (ProfileBinder) service;
+			chatService = binder.getService();
+			mBound = true;
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			mBound = false;
+		}
+	};
 }

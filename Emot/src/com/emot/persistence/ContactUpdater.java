@@ -165,26 +165,16 @@ public class ContactUpdater {
 			}
 			
 			int len = emotters.length();
-			while (EmotApplication.getConnection()==null || !EmotApplication.getConnection().isAuthenticated()){
-				//Wait till connected
-				Log.i(TAG, "Wait for connection to establish");
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			final Roster roster = EmotApplication.getConnection().getRoster();
-			
-			//Adding Roster example
-//			try {
-//				roster.createEntry("test5@emot-net", "nick name", null);
-//			} catch (XMPPException e1) {
-//				Log.i(TAG, "error adding ... test 5");
-//				e1.printStackTrace();
+//			while (EmotApplication.getConnection()==null || !EmotApplication.getConnection().isAuthenticated()){
+//				//Wait till connected
+//				Log.i(TAG, "Wait for connection to establish");
+//				try {
+//					Thread.sleep(5000);
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 //			}
-			
 			
 			SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 			for(int i=0; i<len; i++){
@@ -199,52 +189,9 @@ public class ContactUpdater {
 					cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
 					//cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
 					//cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
-					
-					roster.setSubscriptionMode(SubscriptionMode.accept_all);
-					roster.addRosterListener(new RosterListener() {
-						// Ignored events public void entriesAdded(Collection<String> addresses) {}
-						public void entriesDeleted(Collection<String> addresses) {}
-						public void entriesUpdated(Collection<String> addresses) {}
-						public void presenceChanged(Presence presence) {
-							Log.i(TAG, "Type = "+presence.getType() + " status = "+presence.getStatus());
-							Log.i(TAG, "Presence changed: " + presence.getFrom() + "  " + presence + " pres = "+roster.getPresence(presence.getFrom()));
-						}
-						@Override
-						public void entriesAdded(Collection<String> arg0) {
-							
-						}
-					});
-					Presence presence = roster.getPresence(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-	                Log.i(TAG, "Presence name = " + presence.getType().name());
-	                Log.i(TAG, "Status = " + presence.getStatus());
-	                
-//	                Presence presence1 = new Presence(Presence.Type.subscribed);
-//	                presence1.setTo(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-//	                EmotApplication.getConnection().sendPacket(presence1);
-//	                
-//	                Presence presence2 = new Presence(Presence.Type.subscribe);
-//	                presence2.setTo(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-//	                EmotApplication.getConnection().sendPacket(presence2);
-	                
-	                cvs.put(DBContract.ContactsDBEntry.CURRENT_STATUS, presence.getType().name());
-	                
-	                
-	                
-					EmotApplication.configure(ProviderManager.getInstance());
-					VCard vCard = new VCard();
-					try {
-						vCard.load(EmotApplication.getConnection(), emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-						byte[] avatar = vCard.getAvatar();
-						cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
-						Log.i(TAG, "Thumb avatar = "+avatar);
-					} catch (XMPPException e) {
-						Log.i(TAG, "Error getting profile pic ....");
-						e.printStackTrace();
-					}
-					Log.i(TAG, "Nick name = " + vCard.getNickName() + " Name = " + emotter.getString("mobile"));
 					db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 					//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
-					
+					Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
 					
 				} catch (JSONException e) {
 					e.printStackTrace();
