@@ -26,6 +26,7 @@ public final class DBContract {
         public static final String PROFILE_IMG = "profile_image";
         public static final String PROFILE_THUMB = "profile_thumbnail";
         public static final String CURRENT_STATUS = "current_status";
+		public static final String SUBSCRIBED = "subscribed";
 	}
 
 }

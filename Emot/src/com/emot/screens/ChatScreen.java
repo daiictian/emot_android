@@ -2,48 +2,10 @@ package com.emot.screens;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
-import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.provider.PrivacyProvider;
-import org.jivesoftware.smack.provider.ProviderManager;
-import org.jivesoftware.smackx.GroupChatInvitation;
-import org.jivesoftware.smackx.PrivateDataManager;
-import org.jivesoftware.smackx.bytestreams.socks5.provider.BytestreamsProvider;
-import org.jivesoftware.smackx.packet.ChatStateExtension;
-import org.jivesoftware.smackx.packet.LastActivity;
-import org.jivesoftware.smackx.packet.OfflineMessageInfo;
-import org.jivesoftware.smackx.packet.OfflineMessageRequest;
-import org.jivesoftware.smackx.packet.SharedGroupsInfo;
-import org.jivesoftware.smackx.provider.AdHocCommandDataProvider;
-import org.jivesoftware.smackx.provider.DataFormProvider;
-import org.jivesoftware.smackx.provider.DelayInformationProvider;
-import org.jivesoftware.smackx.provider.DiscoverInfoProvider;
-import org.jivesoftware.smackx.provider.DiscoverItemsProvider;
-import org.jivesoftware.smackx.provider.MUCAdminProvider;
-import org.jivesoftware.smackx.provider.MUCOwnerProvider;
-import org.jivesoftware.smackx.provider.MUCUserProvider;
-import org.jivesoftware.smackx.provider.MessageEventProvider;
-import org.jivesoftware.smackx.provider.MultipleAddressesProvider;
-import org.jivesoftware.smackx.provider.RosterExchangeProvider;
-import org.jivesoftware.smackx.provider.StreamInitiationProvider;
-import org.jivesoftware.smackx.provider.VCardProvider;
-import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
-import org.jivesoftware.smackx.search.UserSearch;
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.Roster;
-import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.RosterListener;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.RosterPacket.ItemStatus;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -63,13 +25,14 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.emot.adapters.ChatListArrayAdapter;
-import com.emot.model.EmotApplication;
+import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
+import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
-import com.emot.persistence.EmotHistoryHelper;
 import com.emot.services.ChatService;
 
 public class ChatScreen extends Activity{
@@ -80,6 +43,7 @@ public class ChatScreen extends Activity{
 	private TextView userTitle;
 	private EmotDBHelper emotHistoryDB;
 	private static String TAG = "ChatScreen";
+	private String chatFriend;
 
 	private class EmotHistoryTask extends AsyncTask<EmotDBHelper, Void, Cursor>{
 
@@ -119,7 +83,7 @@ public class ChatScreen extends Activity{
 		@Override
 		protected Cursor doInBackground(EmotDBHelper... params) {
 			EmotDBHelper emotHistory = params[0];
-			Cursor emotHistoryCursor = emotHistory.getEmotHistory("test6");
+			Cursor emotHistoryCursor = emotHistory.getEmotHistory(chatFriend);
 			return emotHistoryCursor;
 		}
 
@@ -181,7 +145,8 @@ public class ChatScreen extends Activity{
 		serviceIntent.setAction("com.emot.services.ChatService");
 		startService(serviceIntent);*/
 		super.onStart();
-		 bindService(new Intent("com.emot.services.ChatService"), mChatServiceConnection, Context.BIND_AUTO_CREATE);
+		 Intent chatservice = new Intent("com.emot.services.ChatService");
+		 bindService(chatservice, mChatServiceConnection, Context.BIND_AUTO_CREATE);
 	}
 
 
@@ -247,13 +212,17 @@ public class ChatScreen extends Activity{
 		super.onCreate(savedInstanceState);
 		Intent incomingIntent = getIntent();
 		String userName = "";
-		
+		chatFriend = incomingIntent.getStringExtra(IntentStrings.CHAT_FRIEND);
+		if (chatFriend==null){
+			Toast.makeText(EmotApplication.getAppContext(), "Incorrect username", Toast.LENGTH_LONG).show();
+			finish();
+		}
 
 		setContentView(R.layout.activity_chat_screen);
 		chatView = (ListView)findViewById(R.id.chatView);
 		sendButton = (ImageView)findViewById(R.id.dove_send);
 		userTitle = (TextView)findViewById(R.id.username);
-		chatEntry = (EditText)findViewById(R.id.editText1);
+		chatEntry = (EditText)findViewById(R.id.editTextStatus);
 		if(incomingIntent != null){
 			userName = incomingIntent.getStringExtra("USERNAME");
 			userTitle.setText(userName);
@@ -279,6 +248,7 @@ public class ChatScreen extends Activity{
 					String strDate = sdfDate.format(now);
 					final String dateTime[] = strDate.split(" ");
 					Bundle data = new Bundle();
+					data.putString("chat_friend", chatFriend);
 					data.putString("chat", chatEntry.getText().toString());
 					//data.putCharSequence("chat", chatEntry.getText().toString());
 					android.os.Message msg = android.os.Message.obtain();
@@ -290,7 +260,7 @@ public class ChatScreen extends Activity{
 
 						@Override
 						public void run() {
-							emotHistoryDB.insertChat("test6", chat, dateTime[0], dateTime[1], "right");
+							emotHistoryDB.insertChat(chatFriend, chat, dateTime[0], dateTime[1], "right");
 
 						}
 					}).start(); 
@@ -304,8 +274,6 @@ public class ChatScreen extends Activity{
 		});
 		chatView.setAdapter(chatlistAdapter);
 
-
-		
 
 		if(EmotApplication.getConnection() != null){
 			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
@@ -321,10 +289,12 @@ public class ChatScreen extends Activity{
 			}));
 		}
 		
-		EmotApplication.startConnection();
+		//EmotApplication.startConnection();
 
-	//	startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+		//startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+		//startActivity(new Intent(EmotApplication.getAppContext(), UpdateProfileScreen.class));
+
+
 
 	}
-
 }
