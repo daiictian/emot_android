@@ -43,7 +43,11 @@ public class ChatScreen extends Activity{
 	private TextView userTitle;
 	private EmotDBHelper emotHistoryDB;
 	private static String TAG = "ChatScreen";
+
 	private String chatFriend;
+
+
+	private TextView mUserName;
 
 	private class EmotHistoryTask extends AsyncTask<EmotDBHelper, Void, Cursor>{
 
@@ -66,13 +70,15 @@ public class ChatScreen extends Activity{
 				Log.i(TAG, "chat from DB is " +chat);
 				if(location.equals("left")){
 				chatList.add(new ChatMessage(chat,datetime, false));
+				chatlistAdapter.notifyDataSetChanged();
 				}else if(location.equals("right")){
 					chatList.add(new ChatMessage(chat,datetime, true));
+					chatlistAdapter.notifyDataSetChanged();
 				}
 				
 				
 				}
-				chatlistAdapter.notifyDataSetChanged();
+				
 				result.close();
 			}else{
 				//chatList.add("DB unfriendly");
@@ -127,7 +133,7 @@ public class ChatScreen extends Activity{
 
             unbindService(mChatServiceConnection);
 
-            
+            chatList.clear();
 
             mMessengerServiceConnected = false;
 
@@ -141,9 +147,9 @@ public class ChatScreen extends Activity{
 	
 	@Override
 	protected void onStart() {
-		/*Intent serviceIntent = new Intent();
+		Intent serviceIntent = new Intent();
 		serviceIntent.setAction("com.emot.services.ChatService");
-		startService(serviceIntent);*/
+		startService(serviceIntent);
 		super.onStart();
 		 Intent chatservice = new Intent("com.emot.services.ChatService");
 		 bindService(chatservice, mChatServiceConnection, Context.BIND_AUTO_CREATE);
@@ -222,11 +228,18 @@ public class ChatScreen extends Activity{
 		chatView = (ListView)findViewById(R.id.chatView);
 		sendButton = (ImageView)findViewById(R.id.dove_send);
 		userTitle = (TextView)findViewById(R.id.username);
+
 		chatEntry = (EditText)findViewById(R.id.editTextStatus);
 		if(incomingIntent != null){
+
+		chatEntry = (EditText)findViewById(R.id.editText1);
+		
+		userTitle.setText("test6");
+		/*if(incomingIntent != null){
+>>>>>>> 5496e7a... Improved Chat Screen
 			userName = incomingIntent.getStringExtra("USERNAME");
 			userTitle.setText(userName);
-		}
+		}*/
 		chatList = new ArrayList<ChatMessage>();
 		handler = new Handler();
 		emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
@@ -264,9 +277,10 @@ public class ChatScreen extends Activity{
 
 						}
 					}).start(); 
-					chatList.add(new ChatMessage(chatEntry.getText().toString(), dateTime[1],true));
+					chatList.add(new ChatMessage(chat, dateTime[1],true));
 					chatlistAdapter.notifyDataSetChanged();
 					chatEntry.setText("");
+					
 				} catch (Exception ex) { 
 				}
 
@@ -297,4 +311,7 @@ public class ChatScreen extends Activity{
 
 
 	}
+	}
 }
+
+

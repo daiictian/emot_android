@@ -9,7 +9,7 @@
         android:id="@+id/messageContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="right"
+        android:layout_gravity="left"
         android:orientation="horizontal" > 
    
            <RelativeLayout
@@ -23,7 +23,7 @@
         
 
         <TextView
-            android:id="@+id/chatContent"
+            android:id="@+id/chatContentRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             
@@ -32,12 +32,12 @@
         
         
         <TextView
-            android:id="@+id/chatDate"
+            android:id="@+id/chatDateRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_below="@+id/chatContent"
-            android:layout_toRightOf="@+id/chatContent"
+            android:layout_below="@+id/chatContentRight"
+            android:layout_toRightOf="@+id/chatContentRight"
             android:textColor="@color/black"
              />
     </RelativeLayout>

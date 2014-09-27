@@ -95,19 +95,29 @@ public class ChatService extends Service{
         }
 	}
 	
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		// TODO Auto-generated method stub
+		return super.onStartCommand(intent, flags, startId);
+	}
+
+
+
+
 	//Fetch the packet and deliver to needy.
 	private PacketListener chatPacketListener = new PacketListener() {
 		
 		@Override
 		public void processPacket(Packet packet) {
 			Log.i("XMPPClient", "process packet ...in Service");
-			Log.i("XMPPClient", " packet ...in Service is " );
+			
 			String s = packet.getFrom();
-			Log.i("XMPPClient", " packet ...in Service is " +s);
+			Log.i("XMPPClient", " packet ...in Service is from " +s);
 			//Presence p = (Presence)packet;
 			//Log.i("XMPPClient", " presence ...in Service is " +p);
 			Message m = (Message)packet;
-			Log.i("XMPPClient", " packet ...in Service is " +m);
+			Log.i("XMPPClient", " packet ...in Service is " +m.getBody());
 			if(m != null){
 				
 			

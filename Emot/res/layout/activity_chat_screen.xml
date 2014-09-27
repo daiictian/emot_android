@@ -14,7 +14,8 @@
         <TextView
             android:id="@+id/username"
             android:layout_width="wrap_content"
-            android:layout_height="30dp" />
+            android:layout_height="30dp" 
+            android:textColor="@color/black"/>
         
         <TextView
             android:id="@+id/status"
@@ -29,7 +30,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="@color/chat_bg"
         android:orientation="vertical"
         android:weightSum="10" >
 
@@ -38,6 +39,8 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="9"
+            android:transcriptMode="alwaysScroll"
+            
             android:divider="@null" />
 
         <LinearLayout
