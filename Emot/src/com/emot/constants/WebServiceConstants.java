@@ -3,7 +3,7 @@ package com.emot.constants;
 public final class WebServiceConstants {
 
 	public static final String HTTP = "http";
-	public static final String SERVER_IP = "192.168.0.104";
+	public static final String SERVER_IP = "192.168.0.103";
 	public static final String SERVER_PORT = "8000";
 	public static final String OP_GET = "GET";
 	public static final String OP_POST = "POST";
@@ -13,6 +13,7 @@ public final class WebServiceConstants {
 	public static final String OP_GETCONTACT = "/getemotters/";
 	public static final String GET_QUERY = "?";
 	public static final String DEVICE_TYPE = "mobile";
+	public static final String CHAT_DOMAIN = "emot-net";
 
 
 	public final class WSRegisterParamConstants{

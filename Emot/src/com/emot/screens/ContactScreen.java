@@ -7,10 +7,12 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.packet.VCard;
 
 import android.app.Activity;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -19,8 +21,11 @@ import android.widget.ListView;
 
 import com.emot.adapters.ContactArrayAdapter;
 import com.emot.emotobjects.ConnectionQueue;
+import com.emot.common.TaskCompletedRunnable;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
+import com.emot.persistence.ContactUpdater;
+import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 
 public class ContactScreen extends Activity {
@@ -35,9 +40,7 @@ public class ContactScreen extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.contacts);
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
-		SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 		
-		/*
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 			@Override
@@ -45,7 +48,6 @@ public class ContactScreen extends Activity {
 				//Contacts updated in SQLite. You might want to update UI
 			}
 		});
-		*/
 		
 		contacts = new ArrayList<Contact>();
 		contactsAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
@@ -79,6 +81,8 @@ public class ContactScreen extends Activity {
 		connectionThread.start();
 		
 		//new UpdateRosters().execute();
+//		new ShowContacts().execute();
+//		new UpdateRosters().execute();
 		
 		//From DB
 		/*
@@ -108,34 +112,83 @@ public class ContactScreen extends Activity {
 					e.printStackTrace();
 				}
 			}
-			Log.i(TAG, "time 2");
 			Roster roster = EmotApplication.getConnection().getRoster();
-			Log.i(TAG, "time 3");
 			Collection<RosterEntry> entries = roster.getEntries();
-			Log.i(TAG, "time 4");
+			Presence presence;
 			for (RosterEntry entry : entries) {
 				Log.i(TAG, "Entry = Name: "+entry.getName() + " User: " + entry.getUser() + " Status: " + entry.getStatus() + " Type: " + entry.getName());
-				Contact contact = new Contact(entry.getName(), entry.getUser());
-				contact.setStatus(" ... ");
-				
-				EmotApplication.configure(ProviderManager.getInstance());
-				Log.i(TAG, "-------------------");
-				VCard vCard = new VCard();
-				try {
-					vCard.load(EmotApplication.getConnection(), entry.getUser());
-					byte[] avatar = vCard.getAvatar();
-					Log.i(TAG, "avatar = "+avatar);
-					contact.setAvatar(avatar);
-				} catch (XMPPException e) {
-					e.printStackTrace();
+				if(entry.getStatus()==null){
+					presence = roster.getPresence(entry.getUser());
+					Contact contact = new Contact(entry.getName(), entry.getUser());
+					contact.setStatus(presence.getStatus());
+					
+					EmotApplication.configure(ProviderManager.getInstance());
+					VCard vCard = new VCard();
+					try {
+						vCard.load(EmotApplication.getConnection(), entry.getUser());
+						byte[] avatar = vCard.getAvatar();
+						Log.i(TAG, "Avatar in update roster = "+avatar);
+						contact.setAvatar(avatar);
+					} catch (XMPPException e) {
+						e.printStackTrace();
+					}
+					Log.i(TAG, "Nick name = " + vCard.getNickName() + " Firstname = " + vCard.getFirstName());
+					
+					publishProgress(contact);
 				}
-				Log.i(TAG, "Nick name 1 = " + vCard.getNickName());
-				
-				publishProgress(contact);
 			}
 			
+			Log.i(TAG, "time 2");
+			return null;
+		}
+		
+		protected void onProgressUpdate(Contact... contact){
+			contacts.add(contact[0]);
+			contactsAdapter.notifyDataSetChanged();
+			Log.i(TAG, "Adding contact ...");
+			return;
+		}
+		
+		protected void onPostExecute(Void resp) {
 			
-			Log.i(TAG, "time 5");
+		}
+	}
+	
+	
+	public class ShowContacts extends AsyncTask<Void, Contact, Void>{
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			Log.i(TAG, "time 1");
+			while(!EmotApplication.getConnection().isAuthenticated()){
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
+			Cursor cursor = db.rawQuery("select * from "+DBContract.ContactsDBEntry.TABLE_NAME, null);
+			Log.i(TAG, "Cursor length "+cursor.getCount());
+			if (cursor.moveToFirst()){
+				   do{
+				      String name = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.CONTACT_NAME));
+				      String mobile = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.MOBILE_NUMBER));
+				      String status = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.CURRENT_STATUS));
+				      byte[] avatar = cursor.getBlob(cursor.getColumnIndex(DBContract.ContactsDBEntry.PROFILE_THUMB));
+				      Contact contact = new Contact(name, mobile);
+				      contact.setStatus(status);
+				      contact.setAvatar(avatar);
+				      Log.i(TAG, "Name = "+name + " Mobile = "+mobile+ " Avatar = "+avatar);
+				      publishProgress(contact);
+				      
+				   }while(cursor.moveToNext());
+				}
+				cursor.close();
+			
+			
+			Log.i(TAG, "time 2");
 			return null;
 		}
 		

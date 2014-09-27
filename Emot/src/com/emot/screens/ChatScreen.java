@@ -65,8 +65,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.emot.adapters.ChatListArrayAdapter;
-import com.emot.model.EmotApplication;
 import com.emot.emotobjects.ChatMessage;
+import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 import com.emot.persistence.EmotHistoryHelper;
@@ -253,7 +253,7 @@ public class ChatScreen extends Activity{
 		chatView = (ListView)findViewById(R.id.chatView);
 		sendButton = (ImageView)findViewById(R.id.dove_send);
 		userTitle = (TextView)findViewById(R.id.username);
-		chatEntry = (EditText)findViewById(R.id.editText1);
+		chatEntry = (EditText)findViewById(R.id.editTextStatus);
 		if(incomingIntent != null){
 			userName = incomingIntent.getStringExtra("USERNAME");
 			userTitle.setText(userName);
@@ -305,8 +305,6 @@ public class ChatScreen extends Activity{
 		chatView.setAdapter(chatlistAdapter);
 
 
-		
-
 		if(EmotApplication.getConnection() != null){
 			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
 			
@@ -323,8 +321,10 @@ public class ChatScreen extends Activity{
 		
 		EmotApplication.startConnection();
 
-	//	startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+		startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+		//startActivity(new Intent(EmotApplication.getAppContext(), UpdateProfileScreen.class));
+
+
 
 	}
-
 }

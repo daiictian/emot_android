@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import com.emot.screens.R;
 public class ContactArrayAdapter extends ArrayAdapter<Contact> {
 
 	private ArrayList<Contact> contacts;
+	private static final String TAG = ContactArrayAdapter.class.getSimpleName();
 	
 	public ContactArrayAdapter(Context context, int resource, ArrayList<Contact> contacts) {
 		super(context, resource, contacts);
@@ -36,10 +38,20 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> {
 	    TextView name = (TextView)view.findViewById(R.id.text_contact_name);
 	    TextView mobile = (TextView)view.findViewById(R.id.text_contact_number);
 	    ImageView profile = (ImageView)view.findViewById(R.id.image_contact_profile);
+	    TextView status = (TextView)view.findViewById(R.id.text_contact_status);
 	    name.setText(contacts.get(position).getName());
 	    mobile.setText(contacts.get(position).getMobile());
-	    Bitmap sampleIcon = BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.asin);
-	    profile.setImageBitmap(ImageHelper.getRoundedCornerBitmap(sampleIcon, 10));
+	    status.setText(contacts.get(position).getStatus());
+	    Bitmap bitmap = null;
+	    if(contacts.get(position).getAvatar()!=null){
+	    	bitmap = BitmapFactory.decodeByteArray(contacts.get(position).getAvatar() , 0, contacts.get(position).getAvatar().length);
+		    Log.i(TAG, "Bitmap  = "+bitmap);
+	    }
+	    if(bitmap==null){
+	    	bitmap = BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.blank_user_image);
+	    }
+	    
+	    profile.setImageBitmap(ImageHelper.getRoundedCornerBitmap(bitmap, 10));
 	    
 	    return view;
 	}
