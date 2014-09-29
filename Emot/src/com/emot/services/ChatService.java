@@ -249,6 +249,7 @@ public class ChatService extends Service{
 					vCard.load(connection, mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
 					byte[] avatar = vCard.getAvatar();
 					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
+					cvs.put(DBContract.ContactsDBEntry.LAST_SEEN, EmotApplication.getDateTime());
 					
 					Log.i(TAG, "Thumb avatar = "+avatar);
 					Log.i(TAG, "Nick name = " + vCard.getNickName() + " Name = " + mobile);
