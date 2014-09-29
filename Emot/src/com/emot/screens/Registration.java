@@ -18,9 +18,11 @@ import org.jivesoftware.smack.XMPPException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,15 +33,17 @@ import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.ApplicationConstants;
 import com.emot.constants.WebServiceConstants;
+import com.emot.model.EmotApplication;
+import com.emot.persistence.ContactUpdater;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 
 
-public class Registration extends Activity {
+public class Registration extends ActionBarActivity {
 
-	private static final String TAG = "Registration";
+	private static final String TAG = Registration.class.getSimpleName();
 	private EditText mEnterMobile;
 	private Button mSubmitNumber;
 	private EditText mEnterVerificationCode;
@@ -47,6 +51,9 @@ public class Registration extends Activity {
 	private String mMobileNumber;
 	private SecureRandom mRandom = new SecureRandom();
 	private String mRN;
+	private ProgressDialog pd;
+	private View viewMobileBlock;
+	private View viewVerificationBlock;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,16 +63,16 @@ public class Registration extends Activity {
 		initializeUI();
 		setOnClickListeners();
 	}
-	
+
 	private boolean isNumberValid(final String pNumber){
 		boolean isValid = false;
 		PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 		try {
-			  PhoneNumber numberProto = phoneUtil.parse(pNumber, "IN");
-			  isValid = phoneUtil.isValidNumber(numberProto); 
-			} catch (NumberParseException e) {
-			  System.err.println("NumberParseException was thrown: " + e.toString());
-			}
+			PhoneNumber numberProto = phoneUtil.parse(pNumber, "IN");
+			isValid = phoneUtil.isValidNumber(numberProto); 
+		} catch (NumberParseException e) {
+			System.err.println("NumberParseException was thrown: " + e.toString());
+		}
 		return isValid;
 	}
 
@@ -75,56 +82,59 @@ public class Registration extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				
+				pd.show();
 				mMobileNumber = mEnterMobile.getText().toString();
 				if(isNumberValid(mMobileNumber)){
-				String url = WebServiceConstants.HTTP + "://"+ 
-						WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
-						+WebServiceConstants.PATH_API+WebServiceConstants.OP_SETCODE
-						+WebServiceConstants.GET_QUERY+WebServiceConstants.DEVICE_TYPE+
-						"="+mMobileNumber;
-				URL wsURL = null;
-				Log.d(TAG, "wsurl is  " +wsURL);
-				try {
-					wsURL = new URL(url);
-				} catch (MalformedURLException e) {
+					String url = WebServiceConstants.HTTP + "://"+ 
+							WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
+							+WebServiceConstants.PATH_API+WebServiceConstants.OP_SETCODE
+							+WebServiceConstants.GET_QUERY+WebServiceConstants.DEVICE_TYPE+
+							"="+mMobileNumber;
+					URL wsURL = null;
+					Log.d(TAG, "wsurl is  " +wsURL);
+					try {
+						wsURL = new URL(url);
+					} catch (MalformedURLException e) {
 
-					e.printStackTrace();
-				}
-				Log.d(TAG, "wsurl is  " +wsURL);
-				TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
-
-					@Override
-					public void onTaskComplete(String result) {
-						Log.i("Registration", "callback called");
-						try {
-							JSONObject resultJson = new JSONObject(result);
-
-							Log.i("TAG", "callback called");
-							String status = resultJson.getString("status");
-							if(status.equals("true")){
-								Log.i("Registration", "status us true");
-								Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
-							}else{
-								Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
-								Log.i(TAG, "registration status is " +status);
-								Log.d(TAG, "message from server " + resultJson.getString("message"));
-
-							}
-						}
-						catch (JSONException e) {
-
-							e.printStackTrace();
-						}
-
+						e.printStackTrace();
 					}
-				};
+					Log.d(TAG, "wsurl is  " +wsURL);
+					TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
 
-				EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
-				registrationHTTPClient.execute(new Void[]{});
-			}else{
-				Toast.makeText(Registration.this, "Mobile Number is invalid", Toast.LENGTH_LONG).show();
-			}
+						@Override
+						public void onTaskComplete(String result) {
+							pd.hide();
+							viewMobileBlock.setVisibility(View.GONE);
+							viewVerificationBlock.setVisibility(View.VISIBLE);
+							Log.i("Registration", "callback called");
+							try {
+								JSONObject resultJson = new JSONObject(result);
+
+								Log.i("TAG", "callback called");
+								String status = resultJson.getString("status");
+								if(status.equals("true")){
+									Log.i("Registration", "status us true");
+									Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
+								}else{
+									Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
+									Log.i(TAG, "registration status is " +status);
+									Log.d(TAG, "message from server " + resultJson.getString("message"));
+
+								}
+							}
+							catch (JSONException e) {
+
+								e.printStackTrace();
+							}
+
+						}
+					};
+
+					EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
+					registrationHTTPClient.execute(new Void[]{});
+				}else{
+					Toast.makeText(Registration.this, "Mobile Number is invalid", Toast.LENGTH_LONG).show();
+				}
 			}
 
 		});
@@ -133,6 +143,7 @@ public class Registration extends Activity {
 
 			@Override
 			public void onClick(View v) {
+				pd.show();
 				String vCode = mEnterVerificationCode.getText().toString();	
 				String url = WebServiceConstants.HTTP + "://"+ 
 						WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
@@ -163,84 +174,94 @@ public class Registration extends Activity {
 
 					@Override
 					public void onTaskComplete(String result) {
-							try {
-								JSONObject resultJson = new JSONObject(result);
-								String status = resultJson.getString("status");
-								if(status.equals("success")){
-									Thread login = new Thread(new Runnable() {
+						try {
+							Log.i(TAG, result);
+							JSONObject resultJson = new JSONObject(result);
+							String status = resultJson.getString("status");
+							if(status.equals("success")){
+								Thread login = new Thread(new Runnable() {
 
-										@Override
-										public void run() {
-											XMPPConnection connection;
+									@Override
+									public void run() {
+										XMPPConnection connection;
 
-											int portInt = 5222;
+										int portInt = 5222;
 
-											// Create a connection
-											ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
-											connConfig.setSASLAuthenticationEnabled(true);
-											//connConfig.setCompressionEnabled(true);
-											connConfig.setSecurityMode(SecurityMode.enabled);
+										// Create a connection
+										ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
+										connConfig.setSASLAuthenticationEnabled(true);
+										//connConfig.setCompressionEnabled(true);
+										connConfig.setSecurityMode(SecurityMode.enabled);
 
-											if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-												connConfig.setTruststoreType("AndroidCAStore");
-												connConfig.setTruststorePassword(null);
-												connConfig.setTruststorePath(null);
-												Log.i(TAG, "[XmppConnectionTask] Build Icecream");
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+											connConfig.setTruststoreType("AndroidCAStore");
+											connConfig.setTruststorePassword(null);
+											connConfig.setTruststorePath(null);
+											Log.i(TAG, "[XmppConnectionTask] Build Icecream");
 
-											} else {
-												connConfig.setTruststoreType("BKS");
-												String path = System.getProperty("javax.net.ssl.trustStore");
-												if (path == null)
-													path = System.getProperty("java.home") + File.separator + "etc"
-															+ File.separator + "security" + File.separator
-															+ "cacerts.bks";
-												connConfig.setTruststorePath(path);
-												Log.i(TAG, "[XmppConnectionTask] Build less than Icecream ");
-
-											}
-											connConfig.setDebuggerEnabled(true);
-											XMPPConnection.DEBUG_ENABLED = true;
-											connection = new XMPPConnection(connConfig);
-
-											try {
-												connection.connect();
-												Log.i(TAG, "[SettingsDialog] Connected to " + connection.getHost());
-												// publishProgress("Connected to host " + HOST);
-											} catch (XMPPException ex) {
-												Log.e(TAG, "[SettingsDialog] Failed to connect to " + connection.getHost());
-												Log.e(TAG, ex.toString());
-												//publishProgress("Failed to connect to " + HOST);
-												//xmppClient.setConnection(null);
-											}
-
-
-
-											try {
-												connection.login(mMobileNumber,mRN);
-												if(connection.isAuthenticated()){
-													Log.i(TAG, "Authenticated : "+connection.isAuthenticated());
-													///In a UI thread launch contacts Activity
-												}else{
-
-												}
-
-
-											} catch(Exception ex){
-
-												Log.i(TAG, "loginfails ");
-												ex.printStackTrace();
-											}
-
+										} else {
+											connConfig.setTruststoreType("BKS");
+											String path = System.getProperty("javax.net.ssl.trustStore");
+											if (path == null)
+												path = System.getProperty("java.home") + File.separator + "etc"
+														+ File.separator + "security" + File.separator
+														+ "cacerts.bks";
+											connConfig.setTruststorePath(path);
+											Log.i(TAG, "[XmppConnectionTask] Build less than Icecream ");
 
 										}
-									});
-									login.start();
-								}
-							} catch (JSONException e) {
+										connConfig.setDebuggerEnabled(true);
+										XMPPConnection.DEBUG_ENABLED = true;
+										connection = new XMPPConnection(connConfig);
 
-								e.printStackTrace();
+										try {
+											connection.connect();
+											Log.i(TAG, "[SettingsDialog] Connected to " + connection.getHost());
+											// publishProgress("Connected to host " + HOST);
+										} catch (XMPPException ex) {
+											Log.e(TAG, "[SettingsDialog] Failed to connect to " + connection.getHost());
+											Log.e(TAG, ex.toString());
+											//publishProgress("Failed to connect to " + HOST);
+											//xmppClient.setConnection(null);
+										}
+
+
+
+										try {
+											connection.login(mMobileNumber,mRN);
+											if(connection.isAuthenticated()){
+												Log.i(TAG, "Authenticated : "+connection.isAuthenticated());
+												///In a UI thread launch contacts Activity
+											}else{
+
+											}
+
+
+										} catch(Exception ex){
+
+											Log.i(TAG, "loginfails ");
+											ex.printStackTrace();
+										}
+
+
+									}
+								});
+								//login.start();
+								ContactUpdater.updateContacts(new TaskCompletedRunnable() {
+
+									@Override
+									public void onTaskComplete(String result) {
+										//Contacts updated in SQLite. You might want to update UI
+										pd.cancel();
+										startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+									}
+								});
 							}
+						} catch (JSONException e) {
+
+							e.printStackTrace();
 						}
+					}
 
 				};
 				EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, reqContent, taskCompletedRunnable);
@@ -282,7 +303,10 @@ public class Registration extends Activity {
 		mSubmitNumber = (Button)findViewById(R.id.submitNumber);
 		mEnterVerificationCode = (EditText)findViewById(R.id.verificationCode);
 		mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
-
+		pd = new ProgressDialog(Registration.this);
+		pd.setMessage("loading");
+		viewMobileBlock = findViewById(R.id.viewRegisterMobileBlock);
+		viewVerificationBlock = findViewById(R.id.viewRegisterVerificationBlock);
 	}
 
 	@Override

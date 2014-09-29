@@ -180,8 +180,9 @@ public class ChatScreen extends Activity{
 			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
 			Bundle data = new Bundle();
 			data.putString("chat_friend", chatFriend);
-			Log.i("XMPPClient", "meg reply to is " +msg.replyTo);
+			Log.i("XMPPClient", "meg reply to is " +msg.replyTo + " friend = "+chatFriend);
 			msg.replyTo = mMessenger;
+			msg.setData(data);
 			try {
 			mMessengerService.send(msg);
 			} catch (RemoteException e) {

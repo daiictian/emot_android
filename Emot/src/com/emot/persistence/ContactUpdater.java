@@ -79,7 +79,7 @@ public class ContactUpdater {
 			public void onTaskComplete(String result) {
 				//Put this in database
 				//result = "[{\"hbjh\"}]";
-				Log.i(TAG, "Result "+result.toString());
+				//Log.i(TAG, "Result "+result.toString());
 
 				SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 				try {

@@ -2,49 +2,48 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     android:orientation="vertical" >
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="@color/orange"
-        android:orientation="vertical" >
-    </LinearLayout>
-
-    <LinearLayout
+        android:id="@+id/viewRegisterMobileBlock"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/chat_bg"
         android:orientation="vertical" >
 
         <EditText
             android:id="@+id/enterNumber"
             android:layout_width="match_parent"
-            android:layout_height="40dp" 
-            android:inputType="numberDecimal"
-            android:hint="@string/enterMobileNumber"/>
-        
-        <Button 
+            android:layout_height="40dp"
+            android:hint="@string/enterMobileNumber"
+            android:inputType="numberDecimal" />
+
+        <Button
             android:id="@+id/submitNumber"
             android:layout_width="match_parent"
-            android:layout_height="40dp" 
-            android:text="submit"
-            
-            />
-         <EditText
+            android:layout_height="40dp"
+            android:text="submit" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/viewRegisterVerificationBlock"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:orientation="vertical" >
+
+        <EditText
             android:id="@+id/verificationCode"
             android:layout_width="match_parent"
-            android:layout_height="40dp" 
-            android:inputType="numberDecimal"
-            android:hint="@string/enterVerificationCode"/>
-         
-         <Button 
+            android:layout_height="40dp"
+            android:hint="@string/enterVerificationCode"
+            android:inputType="numberDecimal" />
+
+        <Button
             android:id="@+id/sendVerificationCode"
             android:layout_width="match_parent"
-            android:layout_height="40dp" 
-            android:text="Send"
-            
-            />
+            android:layout_height="40dp"
+            android:text="Send" />
     </LinearLayout>
 
 </LinearLayout>

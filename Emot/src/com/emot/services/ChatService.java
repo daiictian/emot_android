@@ -249,6 +249,7 @@ public class ChatService extends Service{
 					vCard.load(connection, mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
 					byte[] avatar = vCard.getAvatar();
 					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
+					cvs.put(DBContract.ContactsDBEntry.LAST_SEEN, EmotApplication.getDateTime());
 					
 					Log.i(TAG, "Thumb avatar = "+avatar);
 					Log.i(TAG, "Nick name = " + vCard.getNickName() + " Name = " + mobile);
@@ -347,17 +348,17 @@ public class ChatService extends Service{
 				
 				ChatManager current_chat  = connection.getChatManager();
 				Log.i(TAG, "current_chat is "+current_chat);
-				chat = current_chat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
+				chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
 			
 				
 				//Roster Listener
 				roster = connection.getRoster();
-				try {
-					roster.createEntry("9342464980@emot-net", "abhi", null);
-				} catch (XMPPException e1) {
-					Log.i(TAG, "Create entry error");
-					e1.printStackTrace();
-				}
+//				try {
+//					roster.createEntry("9342464980@emot-net", "abhi", null);
+//				} catch (XMPPException e1) {
+//					Log.i(TAG, "Create entry error");
+//					e1.printStackTrace();
+//				}
 				Collection<RosterEntry> rosters = roster.getEntries();
 				Log.i(TAG, "Roster Size = "+ rosters.size());
 				roster.setSubscriptionMode(SubscriptionMode.accept_all);
@@ -442,4 +443,5 @@ public class ChatService extends Service{
 			e.printStackTrace();
 		}
 	}
+	
 }

@@ -28,15 +28,10 @@
         <activity
             android:name=".UpdateProfileScreen"
             android:label="@string/app_name" 
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:theme="@style/CustomActionBarTheme">
         </activity>
         <activity
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+            android:theme="@style/CustomActionBarTheme"
             android:name=".ContactScreen"
             android:label="@string/app_name" >
             <intent-filter>
@@ -47,7 +42,9 @@
         </activity>
         <activity
             android:name=".Registration"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:theme="@style/CustomActionBarTheme" >
+            
         </activity>
 
         <service

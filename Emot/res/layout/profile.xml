@@ -17,14 +17,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_twenty"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="@dimen/padding_five" >
 
         <EditText
             android:id="@+id/editTextStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.2"
+            android:lines="3"
             android:ems="10" >
 
             <requestFocus />
@@ -34,7 +34,6 @@
             android:id="@+id/buttonProfileSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
             android:text="@string/save" />
 
     </LinearLayout>

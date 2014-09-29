@@ -1,8 +1,9 @@
 package com.emot.model;
 
 import java.io.File;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
@@ -34,16 +35,14 @@ import org.jivesoftware.smackx.provider.VCardProvider;
 import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
 import org.jivesoftware.smackx.search.UserSearch;
 
-import com.emot.emotobjects.ConnectionQueue;
-import com.emot.screens.ContactScreen;
-import com.emot.services.ChatService;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
+import com.emot.emotobjects.ConnectionQueue;
 
 public class EmotApplication extends Application {
 
@@ -52,14 +51,14 @@ public class EmotApplication extends Application {
 	private static SharedPreferences prefs;
 	private static XMPPConnection connection;
 	private static boolean connecting = false;
-	
+
 	public void onCreate() {
 		super.onCreate();
-		
+
 		EmotApplication.context = getApplicationContext();
 		prefs = PreferenceManager.getDefaultSharedPreferences(context
 				.getApplicationContext());
-		
+
 	}
 
 	public static XMPPConnection getConnection(){
@@ -68,7 +67,7 @@ public class EmotApplication extends Application {
 				startConnection();
 			}
 		}
-		
+
 		return connection;
 	}
 
@@ -92,6 +91,13 @@ public class EmotApplication extends Application {
 		return "edd7d5d6e48a699a240b57f4e1c2478e";
 	}
 
+	public static String getDateTime() {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+		Date date = new Date();
+		return dateFormat.format(date);
+	}
+
 	public static void startConnection(){
 		connecting = true;
 		Thread connThread = new Thread(new Runnable() {
@@ -99,53 +105,53 @@ public class EmotApplication extends Application {
 			@Override
 			public void run() {
 				while(connection == null || connection.getHost() == null){
-				Log.i(TAG, "----------STARTING LOGIN---------");
-				
-				int portInt = 5222;
+					Log.i(TAG, "----------STARTING LOGIN---------");
 
-				// Create a connection
-				ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
-				connConfig.setSASLAuthenticationEnabled(true);
-				//connConfig.setCompressionEnabled(true);
-				connConfig.setSecurityMode(SecurityMode.enabled);
+					int portInt = 5222;
 
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-					connConfig.setTruststoreType("AndroidCAStore");
-					connConfig.setTruststorePassword(null);
-					connConfig.setTruststorePath(null);
-					Log.i("XMPPClient", "[XmppConnectionTask] Build Icecream");
+					// Create a connection
+					ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
+					connConfig.setSASLAuthenticationEnabled(true);
+					//connConfig.setCompressionEnabled(true);
+					connConfig.setSecurityMode(SecurityMode.enabled);
 
-				} else {
-					connConfig.setTruststoreType("BKS");
-					String path = System.getProperty("javax.net.ssl.trustStore");
-					if (path == null)
-						path = System.getProperty("java.home") + File.separator + "etc"
-								+ File.separator + "security" + File.separator
-								+ "cacerts.bks";
-					connConfig.setTruststorePath(path);
-					Log.i("XMPPClient", "[XmppConnectionTask] Build less than Icecream ");
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+						connConfig.setTruststoreType("AndroidCAStore");
+						connConfig.setTruststorePassword(null);
+						connConfig.setTruststorePath(null);
+						Log.i("XMPPClient", "[XmppConnectionTask] Build Icecream");
+
+					} else {
+						connConfig.setTruststoreType("BKS");
+						String path = System.getProperty("javax.net.ssl.trustStore");
+						if (path == null)
+							path = System.getProperty("java.home") + File.separator + "etc"
+									+ File.separator + "security" + File.separator
+									+ "cacerts.bks";
+						connConfig.setTruststorePath(path);
+						Log.i("XMPPClient", "[XmppConnectionTask] Build less than Icecream ");
+
+					}
+					connConfig.setDebuggerEnabled(true);
+					XMPPConnection.DEBUG_ENABLED = true;
+					connection = new XMPPConnection(connConfig);
+
+
+					try {
+						connection.connect();
+						Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
+						// publishProgress("Connected to host " + HOST);
+					} catch (XMPPException ex) {
+						Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
+						Log.e("XMPPClient", ex.toString());
+						//publishProgress("Failed to connect to " + HOST);
+						//xmppClient.setConnection(null);
+					}
+					Log.i("XMPPClient", "connection authenticated " +connection.isAuthenticated());
 
 				}
-				connConfig.setDebuggerEnabled(true);
-				XMPPConnection.DEBUG_ENABLED = true;
-				connection = new XMPPConnection(connConfig);
 
 
-				try {
-					connection.connect();
-					Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
-					// publishProgress("Connected to host " + HOST);
-				} catch (XMPPException ex) {
-					Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
-					Log.e("XMPPClient", ex.toString());
-					//publishProgress("Failed to connect to " + HOST);
-					//xmppClient.setConnection(null);
-				}
-				Log.i("XMPPClient", "connection authenticated " +connection.isAuthenticated());
-
-				}
-				
-				
 				try {
 					connection.login("test5","1234");
 					Log.i("XMPPClient", "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
@@ -200,30 +206,30 @@ public class EmotApplication extends Application {
 					 */
 
 					Log.i("XMPPClient", "----------------- LOGIN SUCCESSFULL --------------- ");
-					
+
 					try{
 						boolean b = false;
 						if(connection != null && connection.isConnected()){
 							ConnectionQueue.add(connection);
 							Log.i("XMPPClient", "putting into blocking queue successful? size=");
-							
+
 						}
 					}catch(IllegalStateException e){
 						e.printStackTrace();
 					}
-					
-					
-					
-					
-					
+
+
+
+
+
 				} catch(Exception ex){
 
 					Log.i("XMPPClient", "!!!!!!!!!!!  LOGINFAILS  !!!!!!!!!");
 					ex.printStackTrace();
 				}
 				connecting = false;
-			
-				
+
+
 			}
 
 		});

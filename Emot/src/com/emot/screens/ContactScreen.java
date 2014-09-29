@@ -46,13 +46,13 @@ public class ContactScreen extends ActionBarActivity{
 		setContentView(R.layout.contacts);
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
 		
-		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
-
-			@Override
-			public void onTaskComplete(String result) {
-				//Contacts updated in SQLite. You might want to update UI
-			}
-		});
+//		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
+//
+//			@Override
+//			public void onTaskComplete(String result) {
+//				//Contacts updated in SQLite. You might want to update UI
+//			}
+//		});
 		
 		contacts = new ArrayList<Contact>();
 		contactsAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
