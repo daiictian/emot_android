@@ -51,7 +51,7 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 	SQLiteDatabase db;
 	
 	public Cursor getEmotHistory(final String entryID){
-		 db = this.getWritableDatabase();
+		 db = this.getReadableDatabase();
 		
 		Cursor cursor = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + "," +
 				DBContract.EmotHistoryEntry.EMOT_LOCATION + "," +
