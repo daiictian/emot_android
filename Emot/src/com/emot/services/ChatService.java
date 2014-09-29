@@ -63,7 +63,7 @@ public class ChatService extends Service{
 	private final IBinder profileBinder = new ProfileBinder();
 	public static int REQUEST_CHAT_MESSAGE = 1;
 	public static int REQUEST_PROFILE_UPDATE = 2;
-	
+	private String mChatFriend;
 	class IncomingHandler extends Handler{
 
 		@Override
@@ -72,8 +72,11 @@ public class ChatService extends Service{
 			super.handleMessage(pMessage);
 			Log.i(TAG, "receieved in service");
 			Bundle data = pMessage.getData();
+			mChatFriend = data.getString("chat_friend");
 			String msg = (String)data.getString("chat");
+			
 			Log.i(TAG, "message receieved in service " +msg);
+			Log.i(TAG, "chatFriend in service " +mChatFriend);
 			try {
 				Log.i(TAG, "chat is " +mChat);
 				while(chat != null){
@@ -156,7 +159,7 @@ public class ChatService extends Service{
 
 				@Override
 				public void run() {
-					emotHistoryDB.insertChat("test6", message.getBody(), dateTime[0], dateTime[1], "left");
+					emotHistoryDB.insertChat(mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
 
 				}
 			}).start(); 
@@ -201,12 +204,12 @@ public class ChatService extends Service{
 //		while(mServerConnection == null){
 //		mServerConnection = EmotApplication.getConnection();
 //		Log.i(TAG, "mServerConnection is "+mServerConnection);
-//		if(mServerConnection != null){
-//			mCurrentChat = mServerConnection.getChatManager();
-//			Log.i(TAG, "current_chat is "+mCurrentChat);
-//			mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
-//			}
-//		}
+//	if(mServerConnection != null){
+	//		mCurrentChat = mServerConnection.getChatManager();
+	//	Log.i(TAG, "current_chat is "+mCurrentChat);
+	//	mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
+		//	}
+		//}
 		//mConnectionQueue = EmotApplication.mConnectionQueue;
 		
 		/*

@@ -105,14 +105,14 @@ public class ContactScreen extends ActionBarActivity{
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				startActivity(new Intent(EmotApplication.getAppContext(), UpdateProfileScreen.class));
+				//startActivity(new Intent(EmotApplication.getAppContext(), UpdateProfileScreen.class));
 				
-				/*
+				
 				String mobile = contacts.get(position).getMobile();
 				Intent chatIntent = new Intent(ContactScreen.this, ChatScreen.class);
 				chatIntent.putExtra(IntentStrings.CHAT_FRIEND, mobile);
 				startActivity(chatIntent);
-				*/
+				
 			}
 		});
 

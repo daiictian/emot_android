@@ -26,7 +26,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.emot.screens.R;
 import com.emot.adapters.ChatListArrayAdapter;
 import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
@@ -178,6 +178,8 @@ public class ChatScreen extends Activity{
 			mMessengerService = new Messenger(service);
 			mMessengerServiceConnected = true;
 			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
+			Bundle data = new Bundle();
+			data.putString("chat_friend", chatFriend);
 			Log.i("XMPPClient", "meg reply to is " +msg.replyTo);
 			msg.replyTo = mMessenger;
 			try {
@@ -203,6 +205,7 @@ public class ChatScreen extends Activity{
 			Bundle b = pMessage.getData();
 			String s = b.getString("chat");
 			String time = b.getString("time");
+			
 			chatList.add(new ChatMessage(s,time, false));
 			chatlistAdapter.notifyDataSetChanged();
 			
@@ -219,6 +222,7 @@ public class ChatScreen extends Activity{
 		Intent incomingIntent = getIntent();
 		String userName = "";
 		chatFriend = incomingIntent.getStringExtra(IntentStrings.CHAT_FRIEND);
+		Log.i(TAG, "chatFriend is " +chatFriend);
 		if (chatFriend==null){
 			Toast.makeText(EmotApplication.getAppContext(), "Incorrect username", Toast.LENGTH_LONG).show();
 			finish();
@@ -230,13 +234,9 @@ public class ChatScreen extends Activity{
 		userTitle = (TextView)findViewById(R.id.username);
 
 		chatEntry = (EditText)findViewById(R.id.editTextStatus);
-		if(incomingIntent != null){
-
-		chatEntry = (EditText)findViewById(R.id.editText1);
-		
-		userTitle.setText("test6");
+		userTitle.setText(chatFriend);
 		/*if(incomingIntent != null){
->>>>>>> 5496e7a... Improved Chat Screen
+
 			userName = incomingIntent.getStringExtra("USERNAME");
 			userTitle.setText(userName);
 		}*/
@@ -261,6 +261,7 @@ public class ChatScreen extends Activity{
 					String strDate = sdfDate.format(now);
 					final String dateTime[] = strDate.split(" ");
 					Bundle data = new Bundle();
+					
 					data.putString("chat_friend", chatFriend);
 					data.putString("chat", chatEntry.getText().toString());
 					//data.putCharSequence("chat", chatEntry.getText().toString());
@@ -312,6 +313,6 @@ public class ChatScreen extends Activity{
 
 	}
 	}
-}
+
 
 
