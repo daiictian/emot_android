@@ -246,7 +246,7 @@ public class Registration extends ActionBarActivity {
 
 									}
 								});
-								login.start();
+								//login.start();
 								ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 									@Override
