@@ -4,44 +4,50 @@
     android:layout_height="wrap_content"
     android:orientation="vertical" >
 
-   
-       <LinearLayout
-        android:id="@+id/messageContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:orientation="horizontal" > 
-   
-           <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:background="@drawable/chat_bg"
-         >
-        
-     
-        
-
-        <TextView
-            android:id="@+id/chatContent"
+        <RelativeLayout
+            android:id="@+id/messageContainerLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            
-            
-            android:textColor="@color/black" />
-        
-        
-        <TextView
-            android:id="@+id/chatDate"
+            android:layout_gravity="left"
+            android:background="@drawable/chat_bg" >
+
+            <com.emot.common.EmotTextView
+                android:id="@+id/chatContentLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/chatDateLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:textSize="8sp"
+                android:textColor="@color/dark_grey"
+                android:layout_below="@id/chatContentLeft" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/messageContainerRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@+id/chatContent"
-            android:layout_toRightOf="@+id/chatContent"
-            android:textColor="@color/black"
-             />
-    </RelativeLayout>
+            android:layout_gravity="right"
+            android:background="@drawable/chat_bg" >
 
-  </LinearLayout>   
+            <com.emot.common.EmotTextView
+                android:id="@+id/chatContentRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/chatDateRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_below="@id/chatContentRight"
+                android:textSize="8sp"
+                android:textColor="@color/dark_grey" />
+        </RelativeLayout>
 
 </LinearLayout>

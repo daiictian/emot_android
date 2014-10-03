@@ -1,13 +1,17 @@
 package com.emot.common;
 
+import java.io.ByteArrayOutputStream;
+
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Bitmap.Config;
-import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 
 public class ImageHelper {
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, int pixels) {
@@ -30,5 +34,12 @@ public class ImageHelper {
         canvas.drawBitmap(bitmap, rect, rect, paint);
 
         return output;
+    }
+    
+    public static byte[] getByteArray(Bitmap bitmap){
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] bitmapdata = stream.toByteArray();
+        return bitmapdata;
     }
 }

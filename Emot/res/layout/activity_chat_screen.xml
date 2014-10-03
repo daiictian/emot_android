@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/LinearLayout1"
-    android:layout_width="match_parent"
+    android:layout_width="fill_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
@@ -9,28 +9,27 @@
         android:layout_width="match_parent"
         android:layout_height="45dp"
         android:background="@color/orange"
-        android:orientation="vertical" >
+        android:orientation="vertical"
+        android:visibility="gone" >
 
         <TextView
             android:id="@+id/username"
             android:layout_width="wrap_content"
-            android:layout_height="30dp" 
-            android:textColor="@color/black"/>
-        
+            android:layout_height="30dp"
+            android:textColor="@color/black" />
+
         <TextView
             android:id="@+id/status"
             android:layout_width="wrap_content"
-            android:layout_height="15dp" 
-            
-            android:textSize="12sp"
-            android:textColor="@color/black"/>
-        
+            android:layout_height="15dp"
+            android:textColor="@color/black"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/chat_bg"
+        android:background="@color/white"
         android:orientation="vertical"
         android:weightSum="10" >
 
@@ -39,25 +38,51 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="9"
-            android:transcriptMode="alwaysScroll"
-            
-            android:divider="@null" />
+            android:divider="@null"
+            android:transcriptMode="alwaysScroll" />
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1dip"
+            android:background="@color/black" />
+
+        <HorizontalScrollView
+            android:id="@+id/viewEmotSuggestion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white" >
+
+            <LinearLayout
+                android:id="@+id/viewEmotSuggestionLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:orientation="horizontal" >
+
+            </LinearLayout>
+        </HorizontalScrollView>
+        
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1dip"
+            android:background="@color/black" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="horizontal" 
-             android:weightSum="100">
+            android:orientation="horizontal"
+            android:weightSum="100" >
 
-            <EditText
+            <com.emot.common.EmotEditText
                 android:id="@+id/editTextStatus"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginBottom="2dp"
                 android:layout_marginLeft="2dp"
                 android:layout_weight="80"
-                android:background="@drawable/border" />
+                android:background="@drawable/border"
+                android:inputType="textVisiblePassword" />
 
             <ImageView
                 android:id="@+id/dove_send"

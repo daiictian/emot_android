@@ -5,13 +5,18 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.BitmapFactory;
 import android.util.Log;
+
+import com.emot.common.ImageHelper;
+import com.emot.model.EmotApplication;
+import com.emot.screens.R;
 
 public class EmotDBHelper extends SQLiteOpenHelper{
 
 	private static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "emot.db";
-	private static final String TAG = "EmotDBHelper";
+	private static final String TAG = EmotDBHelper.class.getSimpleName();
 	private static final  String SQL_CREATE_TABLE_EMOTHISTORY = "CREATE TABLE IF NOT EXISTS " +
 			DBContract.EmotHistoryEntry.TABLE_NAME +
 			" (" + DBContract.EmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
@@ -31,6 +36,15 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 			DBContract.ContactsDBEntry.PROFILE_THUMB + " BLOB NULL," +
 			DBContract.ContactsDBEntry.SUBSCRIBED + " BOOLEAN DEFAULT 0 NOT NULL," +
 			DBContract.ContactsDBEntry.PROFILE_IMG + " VARCHAR(100) NULL" + " )";
+	
+	private static final String SQL_CREATE_TABLE_EMOT = "CREATE VIRTUAL TABLE" +
+			" " + DBContract.EmotsDBEntry.TABLE_NAME +
+			" USING fts3 " +
+			" (" + DBContract.EmotsDBEntry._ID + " INTEGER PRIMARY KEY autoincrement," +
+			DBContract.EmotsDBEntry.EMOT_HASH + " VARCHAR(20)," +
+			DBContract.EmotsDBEntry.EMOT_IMG + " BLOB," +
+			DBContract.EmotsDBEntry.TAGS + " TEXT" + ")";
+	
 	private static EmotDBHelper emotDBHelperInstance;
 	
 	private EmotDBHelper(Context context) {
@@ -113,9 +127,10 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		Log.d(TAG, "Tables created !!!");
 		db.execSQL(SQL_CREATE_TABLE_EMOTHISTORY);
 		db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
+		db.execSQL(SQL_CREATE_TABLE_EMOT);
+		Log.d(TAG, "Tables created !!!");
 		
 	}
 
