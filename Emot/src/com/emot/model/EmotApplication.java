@@ -1,6 +1,8 @@
 package com.emot.model;
 
 import java.io.File;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -330,4 +332,9 @@ public class EmotApplication extends Application {
 		pm.addExtensionProvider("bad-sessionid", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.BadSessionIDError());
 		pm.addExtensionProvider("session-expired", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.SessionExpiredError());
 	}
+
+	public static String randomId() {
+		return new BigInteger(130, new SecureRandom()).toString(32);
+	}
+	
 }

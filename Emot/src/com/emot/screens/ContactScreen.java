@@ -11,9 +11,11 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.packet.VCard;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -24,12 +26,11 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.emot.adapters.ContactArrayAdapter;
-import com.emot.common.TaskCompletedRunnable;
+import com.emot.common.ImageHelper;
 import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ConnectionQueue;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
-import com.emot.persistence.ContactUpdater;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 
@@ -45,7 +46,15 @@ public class ContactScreen extends ActionBarActivity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.contacts);
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
-		
+
+//		ContentValues cvs = new ContentValues();
+//		String imgHash = EmotApplication.randomId();
+//		Log.i(TAG, "Image hash  = "+ imgHash);
+//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+//		cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what");
+//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.asin)));
+//		EmotDBHelper.getInstance(ContactScreen.this).getWritableDatabase().insertWithOnConflict(DBContract.EmotsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+
 //		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 //
 //			@Override
@@ -53,6 +62,10 @@ public class ContactScreen extends ActionBarActivity{
 //				//Contacts updated in SQLite. You might want to update UI
 //			}
 //		});
+		
+		Intent chatIntent = new Intent(ContactScreen.this, ChatScreen.class);
+		chatIntent.putExtra(IntentStrings.CHAT_FRIEND, "1234567890");
+		startActivity(chatIntent);
 		
 		contacts = new ArrayList<Contact>();
 		contactsAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);

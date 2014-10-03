@@ -1,0 +1,193 @@
+package com.emot.common;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.support.v4.view.ViewPager.LayoutParams;
+import android.text.Spannable;
+import android.text.style.ImageSpan;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+
+import com.emot.constants.ApplicationConstants;
+import com.emot.model.Emot;
+import com.emot.model.EmotApplication;
+import com.emot.persistence.DBContract;
+import com.emot.persistence.EmotDBHelper;
+import com.emot.screens.R;
+
+public class EmotEditText extends EditText {
+
+	private static final String TAG = EmotEditText.class.getSimpleName();
+	private UpdateEmotSuggestions updateEmotTask;
+	private LinearLayout emotSuggestionLayout; 
+
+	public EmotEditText(Context context) {
+		super(context);
+	}
+
+	public EmotEditText(Context context, AttributeSet attrs) {
+		super(context, attrs);
+	}
+
+	public EmotEditText(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+	}
+
+//	@Override
+//	protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
+//		updateText();
+//	}
+
+	private void updateText() {
+		Log.i(TAG, getText().toString());
+		addSmiles(getContext(), getText());
+	}
+	
+	public void replaceWithEmot(int start, int end, Bitmap emot){
+		Spannable spannable = getText();
+        boolean set = true;
+        for (ImageSpan span : spannable.getSpans(start, end, ImageSpan.class)){
+            if (spannable.getSpanStart(span) >= start && spannable.getSpanEnd(span) <= end){
+                spannable.removeSpan(span);
+            }else {
+                set = false;
+                break;
+            }
+        }
+        if (set) {
+            spannable.setSpan(new ImageSpan(EmotApplication.getAppContext(), emot), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        Log.i(TAG, "len2 = "+spannable.length());
+	}
+	
+	public void addEmot(Emot emot){
+		Spannable spannable = getText();
+		int start = spannable.length();
+		Log.i(TAG, "len1 = "+start);
+		String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
+		append(appendString);
+		//spannable.setSpan(new ImageSpan(EmotApplication.getAppContext(), emot), start+1, start+2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		replaceWithEmot(start, start+appendString.length(), emot.getEmotImg());
+	}
+
+	public void addSmiles(Context context, Spannable spannable) {
+		//spannable.setSpan(new ImageSpan(context, R.drawable.blank_user_image),0, 0,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+	    boolean hasChanges = false;
+	    Map<Pattern, Integer> emoticons = new HashMap<Pattern, Integer>();
+	    emoticons.put(Pattern.compile(Pattern.quote(":)")), R.drawable.blank_user_image);
+	    for (Entry<Pattern, Integer> entry : emoticons.entrySet()) {
+	        Matcher matcher = entry.getKey().matcher(spannable);
+	        while (matcher.find()) {
+	            boolean set = true;
+	            for (ImageSpan span : spannable.getSpans(matcher.start(),
+	                    matcher.end(), ImageSpan.class))
+	                if (spannable.getSpanStart(span) >= matcher.start()
+	                        && spannable.getSpanEnd(span) <= matcher.end())
+	                    spannable.removeSpan(span);
+	                else {
+	                    set = false;
+	                    break;
+	                }
+	            if (set) {
+	                hasChanges = true;
+	                spannable.setSpan(new ImageSpan(context, entry.getValue()),
+	                        matcher.start(), matcher.end(),
+	                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+	            }
+	            Log.i(TAG, "Matcher start = " + matcher.start() + " end = "+matcher.end());
+	        }
+	    }
+	}
+	
+	public void setEmotSuggestionLayout(LinearLayout view){
+		this.emotSuggestionLayout = view;
+	}
+	
+	@Override
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		if(emotSuggestionLayout==null){
+			super.onTextChanged(s, start, before, count);
+			return;
+		}
+		emotSuggestionLayout.removeAllViews();
+		//Log.i(TAG, "Text changed 111" + s.toString());
+		String txt = s.toString();
+		int lastSpace = txt.lastIndexOf(" ");
+		if(txt.length()==0)
+			return;
+		if(lastSpace==-1)
+			lastSpace = 0;
+		String lastWord = txt.substring(lastSpace);
+		
+		if(updateEmotTask==null){
+			updateEmotTask = new UpdateEmotSuggestions(lastWord);
+			updateEmotTask.execute();
+		}else{
+			updateEmotTask.cancel(true);
+			updateEmotTask = new UpdateEmotSuggestions(lastWord);
+			updateEmotTask.execute();
+		}
+		//Log.i(TAG, "Text changed 222" + s.toString());
+	}
+	
+	public class UpdateEmotSuggestions extends AsyncTask<Void, Emot, Void>{
+		private String text;
+
+		public UpdateEmotSuggestions(String s){
+			this.text = s;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			Cursor cr = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH} , DBContract.EmotsDBEntry.TAGS+" match '"+text+"';", null, null, null, null, null);
+			while (cr.moveToNext())
+			{
+				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
+				byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
+				Log.i(TAG, "Emot hash is "+hash);
+				Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
+				publishProgress(emot);
+			}
+			cr.close();
+			return null;
+		}
+		
+		@Override
+		protected void onProgressUpdate(Emot... values) {
+			final Emot emot = values[0];
+			ImageView view = new ImageView(EmotApplication.getAppContext());
+			view.setId(0);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			view.setLayoutParams(params);
+			view.setImageBitmap(emot.getEmotImg());
+			view.setDrawingCacheEnabled(true);
+			view.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					Log.i(TAG, "Image clicked !!!");
+					
+					EmotEditText.this.addEmot(emot);
+					//Log.i(TAG, "cache = "+v.getDrawingCache());
+				}
+			});
+			EmotEditText.this.emotSuggestionLayout.addView(view);
+		}
+
+	}
+
+}

@@ -18,6 +18,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Light.Panel">
         <activity
+            android:theme="@style/CustomActionBarTheme"
             android:name=".ChatScreen"
             android:label="@string/app_name" >
         </activity>
