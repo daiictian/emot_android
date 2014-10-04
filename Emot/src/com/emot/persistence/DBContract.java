@@ -28,6 +28,18 @@ public final class DBContract {
 		public static final String CURRENT_STATUS = "current_status";
 		public static final String SUBSCRIBED = "subscribed";
 	}
+	
+	public static abstract class GroupEmotHistoryEntry implements BaseColumns{
+		
+		public static final String TABLE_NAME = "group_emot_history";
+		public static final String GROUP_NAME = "group_name";
+        public static final String DATETIME = "date";
+        public static final String ENTRY_ID = "mobile";
+        public static final String EMOTS = "emots";
+        public static final String EMOT_LOCATION = "emotlocation";
+		
+		
+	}
 
 	public static abstract class EmotsDBEntry implements BaseColumns{
 

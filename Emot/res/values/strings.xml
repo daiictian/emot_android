@@ -9,4 +9,6 @@
 	<string name="enterVerificationCode">Please enter your verification code</string>
 	<string name="edit">edit</string>
 	<string name="save">SAVE</string>
+	<string name="registrationMessage">Hey There, Let us know your mobile number. We need it to create your account.</string>
+	<string name="country">Please select your country</string>
 </resources>

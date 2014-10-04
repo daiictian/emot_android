@@ -6,6 +6,7 @@ public class ChatMessage {
 	private boolean right;
 	private String mDate;
 	private String mTime;
+	private String mUser;
 	
 	public ChatMessage(final String pMessage, final String pTime, final boolean pRight){
 		this.mMessage = pMessage;
@@ -13,7 +14,20 @@ public class ChatMessage {
 		this.mTime = pTime;
 		
 	}
-
+	
+	public ChatMessage(final String pUser, final String pMessage, final String pTime, final boolean pRight){
+		this.mMessage = pMessage;
+		this.right = pRight;
+		this.mTime = pTime;
+		this.mUser = pUser;
+		
+	}
+	
+	
+	public String getUser(){
+		
+		return mUser;
+	}
 	public String getmMessage() {
 		return mMessage;
 	}

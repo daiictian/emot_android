@@ -8,6 +8,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -25,8 +30,13 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.emot.api.EmotHTTPClient;
@@ -35,6 +45,7 @@ import com.emot.constants.ApplicationConstants;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
+import com.emot.persistence.EmoticonDBHelper;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
@@ -45,6 +56,7 @@ public class Registration extends ActionBarActivity {
 
 	private static final String TAG = Registration.class.getSimpleName();
 	private EditText mEnterMobile;
+	private Spinner mCountryList;
 	private Button mSubmitNumber;
 	private EditText mEnterVerificationCode;
 	private Button mSendVerificationCode;
@@ -54,6 +66,22 @@ public class Registration extends ActionBarActivity {
 	private ProgressDialog pd;
 	private View viewMobileBlock;
 	private View viewVerificationBlock;
+	private AutoCompleteTextView mCountrySelector;
+	private static Map<String, String> mCountryCode = new HashMap<String, String>();
+	private static Map<String, Integer> mCountryCallingCodeMap = new HashMap<String, Integer>();
+	private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+	static{
+		String[] locales = Locale.getISOCountries();
+		for (String countryCode : locales) {
+
+			Locale obj = new Locale("", countryCode);
+			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
+			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
+			
+
+
+		}
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,15 +89,20 @@ public class Registration extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.layout_register_screen);
 		initializeUI();
+		
+		suggestCountryOnEntry();
 		setOnClickListeners();
 //		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 //		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
 //		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
+		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 	}
+
+
 
 	private boolean isNumberValid(final String pNumber){
 		boolean isValid = false;
-		PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+		//PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 		try {
 			PhoneNumber numberProto = phoneUtil.parse(pNumber, "IN");
 			isValid = phoneUtil.isValidNumber(numberProto); 
@@ -274,6 +307,27 @@ public class Registration extends ActionBarActivity {
 
 			}
 		});
+		
+		
+		
+		
+		
+	
+		
+		mCountrySelector.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				
+				Log.i(TAG,"ssssssssssssss" + mCountrySelector.getText().toString() );
+				Log.i(TAG,"ssssssssssssss" +mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())) );
+				Log.i(TAG, "ssss " +String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())) ));
+				mEnterMobile.setText("+"+String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString()))) +"-");
+				
+				
+			}
+		});
 	}
 
 	private String hText(final String input){
@@ -301,11 +355,42 @@ public class Registration extends ActionBarActivity {
 		return new BigInteger(130, mRandom).toString(32);
 	}
 
+//	private void addItemsOnCountrySpinner() {
+//
+//
+//		List<String> list = new ArrayList<String>();
+//		for(String key : mCountryCode.keySet()){
+//			list.add(key);
+//		}
+//		Collections.sort(list);
+//
+//		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+//				android.R.layout.simple_spinner_item, list);
+//		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//		mCountryList.setAdapter(dataAdapter);
+//	}
+	
+	private void suggestCountryOnEntry(){
+		
+		List<String> list = new ArrayList<String>();
+		for(String key : mCountryCode.keySet()){
+			list.add(key);
+		}
+		Collections.sort(list);
+		
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>  
+        (this,android.R.layout.select_dialog_item,list);
+		mCountrySelector.setThreshold(1);//will start working from first character  
+		mCountrySelector.setAdapter(adapter);//setting the adapter data into the AutoCompleteTextView  
+	}
+
 	private void initializeUI() {
 		mEnterMobile = (EditText)findViewById(R.id.enterNumber);
+		mCountrySelector = (AutoCompleteTextView)findViewById(R.id.countryselector);
 		mSubmitNumber = (Button)findViewById(R.id.submitNumber);
 		mEnterVerificationCode = (EditText)findViewById(R.id.verificationCode);
 		mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
+		
 		pd = new ProgressDialog(Registration.this);
 		pd.setMessage("loading");
 		viewMobileBlock = findViewById(R.id.viewRegisterMobileBlock);
