@@ -32,7 +32,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -46,6 +45,7 @@ import com.emot.constants.ApplicationConstants;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
+import com.emot.persistence.EmoticonDBHelper;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
@@ -95,7 +95,7 @@ public class Registration extends ActionBarActivity {
 //		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 //		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
 //		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
-		
+		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 	}
 
 

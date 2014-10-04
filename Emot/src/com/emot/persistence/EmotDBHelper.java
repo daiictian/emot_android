@@ -91,9 +91,8 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 	}
 	
 	public Cursor getGroupEmotHistory(final String pGroupName){
-		db = this.getReadableDatabase();
 		
-		Cursor cursor = db.rawQuery("SELECT " + DBContract.GroupEmotHistoryEntry.EMOTS + "," +
+		Cursor cursor = emotDBHelperInstance.getReadableDatabase().rawQuery("SELECT " + DBContract.GroupEmotHistoryEntry.EMOTS + "," +
 				DBContract.GroupEmotHistoryEntry.EMOT_LOCATION + "," +
 				DBContract.GroupEmotHistoryEntry.ENTRY_ID + "," +
 				DBContract.GroupEmotHistoryEntry.DATETIME + " from " +

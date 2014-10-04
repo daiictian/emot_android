@@ -33,7 +33,6 @@ import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.FormField;
-import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.packet.VCard;
@@ -473,7 +472,7 @@ public class ChatService extends Service{
 				SmackAndroid smack = SmackAndroid.init(getApplicationContext());
 				Log.i(TAG, "current_chat is "+current_chat);
 				//connection.getRoster().createGroup("myroom");
-				chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
+			//	chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
 			 muc = new MultiUserChat(connection, "myroom@conference.emot-net");
 				
 				Form form = null;

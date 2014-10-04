@@ -8,17 +8,6 @@ import java.util.List;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 
-
-import com.emot.adapters.GroupChatListArrayAdapter;
-import com.emot.constants.IntentStrings;
-import com.emot.emotobjects.ChatMessage;
-import com.emot.model.EmotApplication;
-import com.emot.persistence.DBContract;
-import com.emot.persistence.EmotDBHelper;
-
-
-import com.emot.services.ChatService;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -37,7 +26,14 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.emot.adapters.GroupChatListArrayAdapter;
+import com.emot.constants.IntentStrings;
+import com.emot.emotobjects.ChatMessage;
+import com.emot.model.EmotApplication;
+import com.emot.persistence.DBContract;
+import com.emot.persistence.EmotDBHelper;
+import com.emot.services.ChatService;
 
 public class GroupChatScreen extends Activity{
 	
