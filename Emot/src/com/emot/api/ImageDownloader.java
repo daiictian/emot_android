@@ -8,13 +8,13 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import com.emot.common.BitmapHandler;
-import com.emot.constants.WebServiceConstants;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.emot.common.BitmapHandler;
+import com.emot.constants.WebServiceConstants;
 
 public class ImageDownloader extends AsyncTask<Void, Void, Bitmap> {
 	

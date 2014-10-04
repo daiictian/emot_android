@@ -3,7 +3,7 @@ package com.emot.constants;
 public final class WebServiceConstants {
 
 	public static final String HTTP = "http";
-	public static final String SERVER_IP = "192.168.0.105";
+	public static final String SERVER_IP = "ec2-54-165-232-122.compute-1.amazonaws.com";
 	public static final String SERVER_PORT = "8000";
 	public static final String OP_GET = "GET";
 	public static final String OP_POST = "POST";

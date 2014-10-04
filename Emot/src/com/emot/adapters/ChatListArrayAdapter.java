@@ -1,7 +1,6 @@
 package com.emot.adapters;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
