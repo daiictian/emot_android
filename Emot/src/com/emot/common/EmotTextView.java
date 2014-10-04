@@ -13,10 +13,9 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.emot.constants.ApplicationConstants;
-import com.emot.model.Emot;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
-import com.emot.persistence.EmotDBHelper;
+import com.emot.persistence.EmoticonDBHelper;
 import com.emot.screens.R;
 
 public class EmotTextView extends TextView {
@@ -90,7 +89,7 @@ public class EmotTextView extends TextView {
 					//DB QUERY TO GET IMAGE
 					String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
 					//Log.i(TAG, "emot_hash = "+emot_hash);
-					Cursor cr = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG} , DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", null, null, null, null, null);
+					Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG} , DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", null, null, null, null, null);
 					Bitmap emot_img = null;
 					while (cr.moveToNext())
 					{
@@ -186,7 +185,7 @@ public class EmotTextView extends TextView {
 						//DB QUERY TO GET IMAGE
 						String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
 						//Log.i(TAG, "emot_hash = "+emot_hash);
-						Cursor cr = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG} , DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", null, null, null, null, null);
+						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG} , DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", null, null, null, null, null);
 						Bitmap emot_img = null;
 						while (cr.moveToNext())
 						{

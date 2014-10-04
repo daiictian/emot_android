@@ -16,6 +16,7 @@ import android.text.Spannable;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -26,7 +27,7 @@ import com.emot.constants.ApplicationConstants;
 import com.emot.model.Emot;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
-import com.emot.persistence.EmotDBHelper;
+import com.emot.persistence.EmoticonDBHelper;
 import com.emot.screens.R;
 
 public class EmotEditText extends EditText {
@@ -34,6 +35,7 @@ public class EmotEditText extends EditText {
 	private static final String TAG = EmotEditText.class.getSimpleName();
 	private UpdateEmotSuggestions updateEmotTask;
 	private LinearLayout emotSuggestionLayout; 
+	private HashMap<String, Boolean> suggestedEmots = new HashMap<String, Boolean>();
 
 	public EmotEditText(Context context) {
 		super(context);
@@ -77,11 +79,24 @@ public class EmotEditText extends EditText {
 	public void addEmot(Emot emot){
 		Spannable spannable = getText();
 		int start = spannable.length();
-		Log.i(TAG, "len1 = "+start);
+		Log.i(TAG, "len1 = "+start + " last char = "+getText().charAt(start-1));
 		String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
+		if(getText().charAt(start-1) != ' '){
+			while(start>0 && getText().charAt(start-1) != ' '){
+				start--;
+				dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+			}
+			//setText(getText().toString().substring(0, start));
+			//setSelection(getText().length());
+		}else{
+			
+		}
+		Log.i(TAG, "111 " + getText().toString());
 		append(appendString);
+		Log.i(TAG, "222 " + getText().toString());
 		//spannable.setSpan(new ImageSpan(EmotApplication.getAppContext(), emot), start+1, start+2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		replaceWithEmot(start, start+appendString.length(), emot.getEmotImg());
+		Log.i(TAG, "333 " + getText().toString());
 	}
 
 	public void addSmiles(Context context, Spannable spannable) {
@@ -117,13 +132,18 @@ public class EmotEditText extends EditText {
 		this.emotSuggestionLayout = view;
 	}
 	
+	public void clearSuggestion(){
+		emotSuggestionLayout.removeAllViews();
+		suggestedEmots.clear();
+	}
+	
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 		if(emotSuggestionLayout==null){
 			super.onTextChanged(s, start, before, count);
 			return;
 		}
-		emotSuggestionLayout.removeAllViews();
+		//
 		//Log.i(TAG, "Text changed 111" + s.toString());
 		String txt = s.toString();
 		int lastSpace = txt.lastIndexOf(" ");
@@ -153,7 +173,7 @@ public class EmotEditText extends EditText {
 
 		@Override
 		protected Void doInBackground(Void... params) {
-			Cursor cr = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH} , DBContract.EmotsDBEntry.TAGS+" match '"+text+"';", null, null, null, null, null);
+			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH} , DBContract.EmotsDBEntry.TAGS+" match '"+text+"';", null, null, null, null, null);
 			while (cr.moveToNext())
 			{
 				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
@@ -180,12 +200,14 @@ public class EmotEditText extends EditText {
 				@Override
 				public void onClick(View v) {
 					Log.i(TAG, "Image clicked !!!");
-					
 					EmotEditText.this.addEmot(emot);
 					//Log.i(TAG, "cache = "+v.getDrawingCache());
 				}
 			});
-			EmotEditText.this.emotSuggestionLayout.addView(view);
+			if(!suggestedEmots.containsKey(emot.getEmotHash())){
+				EmotEditText.this.emotSuggestionLayout.addView(view, 0);
+				suggestedEmots.put(emot.getEmotHash(), true);
+			}
 		}
 
 	}

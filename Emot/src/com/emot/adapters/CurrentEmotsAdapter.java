@@ -2,19 +2,17 @@ package com.emot.adapters;
 
 import java.util.List;
 
-import com.emot.emotobjects.CurrentEmot;
-import com.emot.screens.R;
-
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView.FindListener;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import com.emot.emotobjects.CurrentEmot;
+import com.emot.screens.R;
 
 public class CurrentEmotsAdapter extends BaseAdapter {
 	

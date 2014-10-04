@@ -3,9 +3,6 @@ package com.emot.screens;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.emot.adapters.CurrentEmotsAdapter;
-import com.emot.persistence.EmotHistoryHelper;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -17,7 +14,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.emot.adapters.CurrentEmotsAdapter;
 import com.emot.emotobjects.CurrentEmot;
+import com.emot.persistence.EmotHistoryHelper;
 
 
 public class Emots extends Activity {

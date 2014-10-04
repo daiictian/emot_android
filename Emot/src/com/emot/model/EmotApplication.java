@@ -90,7 +90,7 @@ public class EmotApplication extends Application {
 
 	public static String getAppID(){
 		//Replace this with shared pref value
-		return "edd7d5d6e48a699a240b57f4e1c2478e";
+		return "d3a6c0a69d1feeff863df0a4d05cb91e";
 	}
 
 	public static String getDateTime() {

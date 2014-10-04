@@ -5,12 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.graphics.BitmapFactory;
 import android.util.Log;
-
-import com.emot.common.ImageHelper;
-import com.emot.model.EmotApplication;
-import com.emot.screens.R;
 
 public class EmotDBHelper extends SQLiteOpenHelper{
 
@@ -37,13 +32,6 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 			DBContract.ContactsDBEntry.SUBSCRIBED + " BOOLEAN DEFAULT 0 NOT NULL," +
 			DBContract.ContactsDBEntry.PROFILE_IMG + " VARCHAR(100) NULL" + " )";
 	
-	private static final String SQL_CREATE_TABLE_EMOT = "CREATE VIRTUAL TABLE" +
-			" " + DBContract.EmotsDBEntry.TABLE_NAME +
-			" USING fts3 " +
-			" (" + DBContract.EmotsDBEntry._ID + " INTEGER PRIMARY KEY autoincrement," +
-			DBContract.EmotsDBEntry.EMOT_HASH + " VARCHAR(20)," +
-			DBContract.EmotsDBEntry.EMOT_IMG + " BLOB," +
-			DBContract.EmotsDBEntry.TAGS + " TEXT" + ")";
 	
 	private static EmotDBHelper emotDBHelperInstance;
 	
@@ -62,12 +50,12 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		
 	
 	}
-	SQLiteDatabase db;
+	//SQLiteDatabase db;
 	
 	public Cursor getEmotHistory(final String entryID){
-		 db = this.getReadableDatabase();
+		 //db = this.getReadableDatabase();
 		
-		Cursor cursor = db.rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + "," +
+		Cursor cursor = emotDBHelperInstance.getReadableDatabase().rawQuery("SELECT " + DBContract.EmotHistoryEntry.EMOTS + "," +
 				DBContract.EmotHistoryEntry.EMOT_LOCATION + "," +
 				DBContract.EmotHistoryEntry.DATETIME + " from " +
 				DBContract.EmotHistoryEntry.TABLE_NAME + " where " + 
@@ -88,7 +76,7 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		//cursor.close();
 		Log.d(TAG, "endtime ... " + i);
 		Log.d(TAG, "Ran queries ...");
-		
+		//cursor.close();
 		return cursor;
 		
 	}
@@ -129,14 +117,12 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(SQL_CREATE_TABLE_EMOTHISTORY);
 		db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
-		db.execSQL(SQL_CREATE_TABLE_EMOT);
 		Log.d(TAG, "Tables created !!!");
-		
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		onCreate(db);
 	}
-
+	
 }

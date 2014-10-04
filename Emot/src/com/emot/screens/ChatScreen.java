@@ -98,10 +98,8 @@ public class ChatScreen extends ActionBarActivity{
 					publishProgress(newChat);
 				}
 
-				result.close();
-			}else{
-				//chatList.add("DB unfriendly");
 			}
+			result.close();
 			return null;
 		}
 
@@ -293,6 +291,7 @@ public class ChatScreen extends ActionBarActivity{
 					chatList.add(new ChatMessage(chat, dateTime[1],true));
 					chatlistAdapter.notifyDataSetChanged();
 					chatEntry.setText("");
+					chatEntry.clearSuggestion();
 
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -324,6 +323,28 @@ public class ChatScreen extends ActionBarActivity{
 				emotSuggestion.setVisibility(View.VISIBLE);
 			}
 		});
+		
+//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
+		
+//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
+//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("INSERT INTO emots select * from emoticons");
+		
+		
+//		ContentValues cvs = new ContentValues();
+//		String imgHash = EmotApplication.randomId();
+//		Log.i(TAG, "Image hash  = "+ imgHash);
+//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+//		cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
+//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.mad)));
+//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+//		
+//		cvs = new ContentValues();
+//		imgHash = EmotApplication.randomId();
+//		Log.i(TAG, "Image hash  = "+ imgHash);
+//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+//		cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
+//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.sad)));
+//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 
 	}
 

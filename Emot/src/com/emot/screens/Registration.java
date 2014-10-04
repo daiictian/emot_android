@@ -62,6 +62,9 @@ public class Registration extends ActionBarActivity {
 		setContentView(R.layout.layout_register_screen);
 		initializeUI();
 		setOnClickListeners();
+//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
+//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
+//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
 	}
 
 	private boolean isNumberValid(final String pNumber){
