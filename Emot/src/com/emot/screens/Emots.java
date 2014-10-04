@@ -66,7 +66,7 @@ public class Emots extends Activity {
 				TextView user = (TextView)view.findViewById(R.id.username);
 				String userName = user.getText().toString();
 				Intent intent = new Intent(Emots.this, ChatScreen.class);
-				intent.putExtra("USERNAME", userName);
+				intent.putExtra("chat_friend", userName);
 				startActivity(intent);
 				
 				

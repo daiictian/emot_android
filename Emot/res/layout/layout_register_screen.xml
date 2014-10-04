@@ -8,8 +8,30 @@
     <LinearLayout
         android:id="@+id/viewRegisterMobileBlock"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="5dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
         android:orientation="vertical" >
+        
+        <TextView 
+            
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/registrationMessage"  />  
+            
+        <TextView 
+            android:paddingTop="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/country"  />
+
+     
+        <AutoCompleteTextView 
+            android:id="@+id/countryselector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/enterNumber"
@@ -28,8 +50,9 @@
     <LinearLayout
         android:id="@+id/viewRegisterVerificationBlock"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        
         android:orientation="vertical" >
 
         <EditText

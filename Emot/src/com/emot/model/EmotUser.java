@@ -56,7 +56,7 @@ public class EmotUser {
 			byte[] bytes = stream.toByteArray();
             String encodedImage = StringUtils.encodeBase64(bytes);
             vCard.setAvatar(bytes, encodedImage);
-            vCard.setEncodedImage(encodedImage);
+           // vCard.setEncodedImage(encodedImage); 
             vCard.setField("PHOTO", 
             		"<TYPE>image/jpg</TYPE><BINVAL>"
                     + encodedImage + 

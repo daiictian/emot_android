@@ -3,13 +3,17 @@ package com.emot.services;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.MessageListener;
@@ -18,6 +22,7 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
@@ -26,9 +31,16 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.Form;
+import org.jivesoftware.smackx.FormField;
+import org.jivesoftware.smackx.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.muc.InvitationListener;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.packet.VCard;
 import org.jivesoftware.smackx.provider.VCardProvider;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -49,6 +61,7 @@ import com.emot.emotobjects.ConnectionQueue;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
+import com.emot.screens.R;
 
 public class ChatService extends Service{
 	
@@ -74,7 +87,7 @@ public class ChatService extends Service{
 			Bundle data = pMessage.getData();
 			mChatFriend = data.getString("chat_friend");
 			String msg = (String)data.getString("chat");
-			
+			boolean joinRoom = (Boolean)data.getBoolean("join_room");
 			Log.i(TAG, "message receieved in service " +msg);
 			Log.i(TAG, "chatFriend in service " +mChatFriend);
 			try {
@@ -83,6 +96,22 @@ public class ChatService extends Service{
 					chat.sendMessage(msg);
 				break;
 				}
+				Log.i(TAG, "muc is " +muc);
+				while(muc != null ){
+					if(joinRoom){
+						muc.join("test5@emot-net");
+						muc.addMessageListener(mmGrouplistener);
+						//muc.join("test6@emot-net");
+						//joinRoom = false;
+					}
+					if(msg != null)
+					muc.sendMessage(msg);
+				break;
+				}
+				
+				
+				
+				
 			} catch (XMPPException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -138,12 +167,14 @@ public class ChatService extends Service{
 		Date now = new Date();
 		String strDate = sdfDate.format(now);
 		final String dateTime[] = strDate.split(" ");
+		String user = "";
 		@Override
 		public void processMessage(Chat chat, final Message message) {
+			if(message.getBody() != null){
 			Log.d("Incoming message", message.getBody());
-
+			user = message.getFrom();
 			Bundle data = new Bundle();
-			
+			data.putString("user", user);
 			data.putCharSequence("chat", message.getBody());
 			data.putCharSequence("time", dateTime[1]);
 			android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
@@ -165,6 +196,93 @@ public class ChatService extends Service{
 			}).start(); 
 
 
+		}}
+	};
+	
+	private MessageListener mmGlistener = new MessageListener() {
+		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date now = new Date();
+		String strDate = sdfDate.format(now);
+		final String dateTime[] = strDate.split(" ");
+		String user = "";
+		@Override
+		public void processMessage(Chat chat, final Message message) {
+			Log.d("Incoming message", message.getBody());
+			user = message.getFrom();
+			Bundle data = new Bundle();
+			data.putString("user", user);
+			data.putCharSequence("chat", message.getBody());
+			data.putCharSequence("time", dateTime[1]);
+			android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
+			Log.i("XMPPClient", "sendign message to activity " +message.getBody() );
+			msg.setData(data);
+			try {
+				mChatPacketSender.send(msg);
+			} catch (RemoteException e) {
+				Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
+				e.printStackTrace();
+			}
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					emotHistoryDB.insertChat(mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
+
+				}
+			}).start(); 
+
+
+		}
+	};
+
+	
+	private PacketListener mmGrouplistener = new PacketListener() {
+		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date now = new Date();
+		String strDate = sdfDate.format(now);
+		final String dateTime[] = strDate.split(" ");
+		String user = "";
+		@Override
+		public void processPacket(Packet packet) {
+			Log.i(TAG, "In process packet");
+			if (packet instanceof Message){
+				final Message message = (Message)packet;
+				Log.d("Incoming message", message.getBody());
+				user = message.getFrom();
+				Bundle data = new Bundle();
+				if(user != null && !user.equals("myroom@conference.emot-net/myroom")){
+				data.putString("user", user);
+				data.putCharSequence("chat", message.getBody());
+				data.putCharSequence("time", dateTime[1]);
+				android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
+				Log.i("XMPPClient", "sendign message to activity " +msg);
+				msg.setData(data);
+				try {
+					notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+					mBackgroundMessage = new Notification.Builder(ChatService.this).
+							setContentTitle("TESTUSER").
+							setContentText(message.getBody()).
+							setSmallIcon(R.drawable.ic_launcher).build();
+					notificationManager.notify(0, mBackgroundMessage);
+					if(mChatPacketSender != null){
+					mChatPacketSender.send(msg);
+					 
+					}
+				} catch (RemoteException e) {
+					Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
+					e.printStackTrace();
+				}
+				new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						emotHistoryDB.insertGroupChat(user,mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
+
+					}
+				}).start(); 
+			}
+			}
+			
 		}
 	};
 	
@@ -192,10 +310,15 @@ public class ChatService extends Service{
 	//private BlockingQueue<XMPPConnection> mConnectionQueue;
 	private BlockingQueue<Chat> chatQueue = new ArrayBlockingQueue<Chat>(1);
 	private Chat chat;
-
+	private Chat grpChat;
+	private MultiUserChat muc;
+	private Notification mBackgroundMessage;
+	private NotificationManager notificationManager;
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		  
+		
 		Log.i(TAG, "___________ON CREATE____________" + connection);
 		if(connection!=null && connection.isAuthenticated()){
 			return;
@@ -339,7 +462,7 @@ public class ChatService extends Service{
 				
 				//connection.addPacketListener(chatPacketListener, null);
 				try {
-					connection.login("test1","1234");
+					connection.login("test5","1234");
 					Log.i(TAG, "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
 				} catch (XMPPException e) {
 					// TODO Auto-generated catch block
@@ -347,9 +470,85 @@ public class ChatService extends Service{
 				}
 				
 				ChatManager current_chat  = connection.getChatManager();
+				SmackAndroid smack = SmackAndroid.init(getApplicationContext());
 				Log.i(TAG, "current_chat is "+current_chat);
+				//connection.getRoster().createGroup("myroom");
 				chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
-			
+			 muc = new MultiUserChat(connection, "myroom@conference.emot-net");
+				
+				Form form = null;
+					Log.i(TAG, "creating multi user chat " +muc);
+					try {
+						if(muc.getRoom() == null){
+						muc.create("myroom");
+						Log.i(TAG, "creating multi user chat2 " +muc);
+						Log.i(TAG, "creating multi user chat @" +muc);
+						form = muc.getConfigurationForm();
+						Form submitForm = form.createAnswerForm(); 
+						Iterator<FormField> fields = form.getFields();
+						while(fields.hasNext()){
+							FormField field = (FormField) fields.next();
+							if(!FormField.TYPE_HIDDEN.equals(field.getType()) && field.getVariable() != null){
+								submitForm.setDefaultAnswer(field.getVariable()); 
+							}
+						}
+						List<String> owners = new ArrayList<String>(); 
+						Log.i(TAG, "creating multi user chat 3" +muc);
+						owners.add("test5@emot-net");
+						//owners.add("test6@emot-net");
+			//			submitForm.setAnswer("muc#roomconfig_roomowners", owners);
+						Log.i(TAG, "creating multi user chat 4" +muc);
+						try {
+							muc.sendConfigurationForm(submitForm);
+							
+							
+						} catch (XMPPException e) {
+							Log.i(TAG, "Exception " +e.getMessage());
+							e.printStackTrace();
+						}
+						}
+						
+						muc.invite("test6@emot-net", "hey");
+						muc.join("test5@emot-net", "hey");	
+						muc.addMessageListener(mmGrouplistener);
+						//boolean supports = MultiUserChat.isServiceEnabled(connection, "test6@emot-net");
+						//		Log.i(TAG, "test6 supports MUC? " +supports);
+								//muc.join("test6@emot-net");
+								
+								MultiUserChat.addInvitationListener(connection, new InvitationListener() {
+									
+
+									@Override
+									public void invitationReceived(
+											Connection arg0, String arg1,
+											String arg2, String arg3,
+											String arg4, Message arg5) {
+										Log.i(TAG, "Invitation received");
+										try {
+												muc.join("test5@emot-net");
+											} catch (XMPPException e) {
+												// TODO Auto-generated catch block
+												e.printStackTrace();
+											}// TODO Auto-generated method stub
+										
+									}
+								});
+								
+						//muc.join("test6@conference.emot-net");
+						
+						
+						 
+					} catch (XMPPException e) {
+						Log.i(TAG, "exception " + e.getMessage());
+						e.printStackTrace();
+					}
+					
+					
+					
+					Log.i(TAG, "Group Chat is " +muc.getRoom());
+					
+					
+				//chat = muc.createPrivateChat("myroom@conference.emot-net",mmGlistener);
 				
 				//Roster Listener
 				roster = connection.getRoster();
@@ -426,7 +625,7 @@ public class ChatService extends Service{
 			byte[] bytes = stream.toByteArray();
             String encodedImage = StringUtils.encodeBase64(bytes);
             vCard.setAvatar(bytes, encodedImage);
-            vCard.setEncodedImage(encodedImage);
+          //  vCard.setEncodedImage(encodedImage);
             vCard.setField("PHOTO", 
             		"<TYPE>image/jpg</TYPE><BINVAL>"
                     + encodedImage + 

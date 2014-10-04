@@ -20,6 +20,15 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 			DBContract.EmotHistoryEntry.DATETIME + " TEXT," +
 			DBContract.EmotHistoryEntry.EMOT_LOCATION + " TEXT " +" )";
 	
+	private static final  String SQL_CREATE_TABLE_GROUPEMOTHISTORY = "CREATE TABLE IF NOT EXISTS " +
+			DBContract.GroupEmotHistoryEntry.TABLE_NAME +
+			" (" + DBContract.GroupEmotHistoryEntry._ID + " INTEGER PRIMARY KEY," +
+			DBContract.GroupEmotHistoryEntry.ENTRY_ID + " VARCHAR(20)," +
+			DBContract.GroupEmotHistoryEntry.GROUP_NAME + " TEXT," +
+			DBContract.GroupEmotHistoryEntry.EMOTS + " TEXT," +
+			DBContract.GroupEmotHistoryEntry.DATETIME + " TEXT," +
+			DBContract.GroupEmotHistoryEntry.EMOT_LOCATION + " TEXT " +" )";
+	
 	private static final String SQL_CREATE_TABLE_CONTACTDETAILS = "CREATE TABLE IF NOT EXISTS " +
 			DBContract.ContactsDBEntry.TABLE_NAME +
 			" (" + DBContract.ContactsDBEntry._ID + " INTEGER PRIMARY KEY autoincrement," +
@@ -81,6 +90,32 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		
 	}
 	
+	public Cursor getGroupEmotHistory(final String pGroupName){
+		db = this.getReadableDatabase();
+		
+		Cursor cursor = db.rawQuery("SELECT " + DBContract.GroupEmotHistoryEntry.EMOTS + "," +
+				DBContract.GroupEmotHistoryEntry.EMOT_LOCATION + "," +
+				DBContract.GroupEmotHistoryEntry.ENTRY_ID + "," +
+				DBContract.GroupEmotHistoryEntry.DATETIME + " from " +
+				DBContract.GroupEmotHistoryEntry.TABLE_NAME + " where " + 
+				DBContract.GroupEmotHistoryEntry.GROUP_NAME + " = '" + pGroupName  + "'", null);
+		
+		//db.execSQL(CREATE_EMOT_TABLE);
+		
+		Log.d(TAG, "starttime ... ");
+		//Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
+		Log.d(TAG, "querytime ... "+cursor.getCount());
+		
+		
+		//cursor.close();
+		
+		Log.d(TAG, "Ran queries ...");
+		
+		return cursor;
+		
+		
+	}
+	
 	public void insertChat(final String entryID, final String chat, final String date, final String time, final String location){
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues contentValues = new ContentValues();
@@ -89,6 +124,23 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		contentValues.put(DBContract.EmotHistoryEntry.DATETIME, time);	
 		contentValues.put(DBContract.EmotHistoryEntry.EMOT_LOCATION, location);
 		long i = db.insert(DBContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
+		if(i < 0){
+			Log.i(TAG,"Could not insert chat");
+		}else{
+			Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
+		}
+
+	}
+	
+	public void insertGroupChat(final String entryID, final String groupName, final String chat, final String date, final String time, final String location){
+		SQLiteDatabase db = this.getWritableDatabase();
+		ContentValues contentValues = new ContentValues();
+		contentValues.put(DBContract.GroupEmotHistoryEntry.ENTRY_ID, entryID);
+		contentValues.put(DBContract.GroupEmotHistoryEntry.GROUP_NAME, entryID);
+		contentValues.put(DBContract.GroupEmotHistoryEntry.EMOTS, chat);
+		contentValues.put(DBContract.GroupEmotHistoryEntry.DATETIME, time);	
+		contentValues.put(DBContract.GroupEmotHistoryEntry.EMOT_LOCATION, location);
+		long i = db.insert(DBContract.GroupEmotHistoryEntry.TABLE_NAME, null, contentValues);
 		if(i < 0){
 			Log.i(TAG,"Could not insert chat");
 		}else{
@@ -118,6 +170,8 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		db.execSQL(SQL_CREATE_TABLE_EMOTHISTORY);
 		db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
 		Log.d(TAG, "Tables created !!!");
+		db.execSQL(SQL_CREATE_TABLE_GROUPEMOTHISTORY);
+		
 	}
 
 	@Override
