@@ -25,6 +25,7 @@ import android.util.Log;
 
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
+import com.emot.constants.PreferenceKeys;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
 
@@ -46,7 +47,7 @@ public class ContactUpdater {
 		contacts = getContacts(EmotApplication.getAppContext().getContentResolver());
 		
 		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-		params.add(new BasicNameValuePair("appid", EmotApplication.getAppID()));
+		params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceKeys.USER_APPID, "")));
 		JSONArray numbers = new JSONArray();
 		Set<String> numberSet = contacts.keySet();
 		for(String number: numberSet){

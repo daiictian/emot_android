@@ -44,6 +44,7 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.emot.constants.PreferenceKeys;
 import com.emot.emotobjects.ConnectionQueue;
 
 public class EmotApplication extends Application {
@@ -86,11 +87,6 @@ public class EmotApplication extends Application {
 
 	public static String getValue(String k, String d) {
 		return prefs.getString(k, d);
-	}
-
-	public static String getAppID(){
-		//Replace this with shared pref value
-		return "d3a6c0a69d1feeff863df0a4d05cb91e";
 	}
 
 	public static String getDateTime() {
@@ -336,5 +332,6 @@ public class EmotApplication extends Application {
 	public static String randomId() {
 		return new BigInteger(130, new SecureRandom()).toString(32);
 	}
+
 	
 }

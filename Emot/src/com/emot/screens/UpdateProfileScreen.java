@@ -3,6 +3,7 @@ package com.emot.screens;
 import java.io.ByteArrayOutputStream;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,10 +20,15 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.emot.common.TaskCompletedRunnable;
+import com.emot.constants.PreferenceKeys;
+import com.emot.model.EmotApplication;
 import com.emot.model.EmotUser;
 import com.emot.services.ChatService;
 import com.emot.services.ChatService.ProfileBinder;
+import com.emot.services.ChatService.UpdateStatusTask;
 
 public class UpdateProfileScreen extends ActionBarActivity {
 	private EditText editStatus;
@@ -30,8 +36,10 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	private ImageView imageAvatar;
 	private static final int CAMERA_REQUEST = 1;
 	private static final int PICK_FROM_GALLERY = 2;
+	protected static final String TAG = UpdateProfileScreen.class.getSimpleName();
 	private ChatService chatService;
 	boolean mBound = false;
+	private ProgressDialog pd;
 
 
 	@Override
@@ -43,13 +51,28 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		saveButton = (Button)findViewById(R.id.buttonProfileSave);
 		imageAvatar = (ImageView)findViewById(R.id.imageAvatar);
 		imageAvatar.setImageBitmap(EmotUser.getAvatar());
-
+		pd = new ProgressDialog(UpdateProfileScreen.this);
+		pd.setMessage("Updating ...");
 		saveButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
+				pd.show();
 				if (mBound) {
-					chatService.updateStatus(editStatus.getText().toString());
+					Log.i(TAG, "Status setting");
+					chatService.updateStatus(editStatus.getText().toString(), new TaskCompletedRunnable() {
+						
+						@Override
+						public void onTaskComplete(String result) {
+							pd.cancel();
+							if(result.equals("success")){
+								Log.i(TAG, "Status being set is ");
+							}else{
+								Toast.makeText(EmotApplication.getAppContext(), "Error updating your status.", Toast.LENGTH_LONG);
+							}
+							editStatus.setText(EmotApplication.getValue(PreferenceKeys.USER_STATUS, ""));
+						}
+					});
 				}
 			}
 		});
@@ -81,13 +104,14 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				dialog.show();
 			}
 		});
-
+		Log.i(TAG, "on create of update profile screen");
 	}
 	
 	@Override
     protected void onStart() {
         super.onStart();
         // Bind to LocalService
+        Log.i(TAG, "On start of update profile");
         Intent intent = new Intent(this, ChatService.class);
         intent.putExtra("request_code", ChatService.REQUEST_PROFILE_UPDATE);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
@@ -170,6 +194,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			// We've bound to LocalService, cast the IBinder and get LocalService instance
+			Log.i(TAG, "service connected ... ");
 			ProfileBinder binder = (ProfileBinder) service;
 			chatService = binder.getService();
 			mBound = true;
@@ -178,6 +203,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		@Override
 		public void onServiceDisconnected(ComponentName arg0) {
 			mBound = false;
+			Log.i(TAG, "service disconnected ... ");
 		}
 	};
 }

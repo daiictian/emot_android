@@ -45,22 +45,24 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.PreferenceKeys;
 import com.emot.constants.WebServiceConstants;
 import com.emot.emotobjects.ConnectionQueue;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
-import com.emot.screens.R;
 
 public class ChatService extends Service{
 	
@@ -256,6 +258,8 @@ public class ChatService extends Service{
 				android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
 				Log.i("XMPPClient", "sendign message to activity " +msg);
 				msg.setData(data);
+				
+				/*
 				try {
 					notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 					mBackgroundMessage = new Notification.Builder(ChatService.this).
@@ -271,6 +275,7 @@ public class ChatService extends Service{
 					Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
 					e.printStackTrace();
 				}
+				*/
 				new Thread(new Runnable() {
 
 					@Override
@@ -289,11 +294,11 @@ public class ChatService extends Service{
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		Log.d(TAG, "Binding the messenger...");
 		int requestCode = intent.getIntExtra("request_code", REQUEST_CHAT_MESSAGE);
 		if(requestCode == REQUEST_CHAT_MESSAGE){
 			return mMessenger.getBinder();
 		}else if(requestCode == REQUEST_PROFILE_UPDATE){
+			Log.i(TAG, "Binding the messenger...");
 			return profileBinder;
 		}else{
 			return null;
@@ -419,13 +424,12 @@ public class ChatService extends Service{
 		//connectionThread.start();
 		
 		
-		final int portInt = 5222;
 		Thread connThread = new Thread(new Runnable() {
 			
 			
 			@Override
 			public void run() {
-				ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
+				ConnectionConfiguration connConfig = new ConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
 				connConfig.setSASLAuthenticationEnabled(true);
 				connConfig.setSecurityMode(SecurityMode.enabled);
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -461,7 +465,7 @@ public class ChatService extends Service{
 				
 				//connection.addPacketListener(chatPacketListener, null);
 				try {
-					connection.login("test5","1234");
+					connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""));
 					Log.i(TAG, "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
 				} catch (XMPPException e) {
 					// TODO Auto-generated catch block
@@ -607,10 +611,8 @@ public class ChatService extends Service{
 		connThread.start();
 			}
 	
-	public void updateStatus(String status){
-		Presence presence = new Presence(Presence.Type.available, status, 1, Mode.available);
-		connection.sendPacket(presence);
-		EmotApplication.setValue(PreferenceKeys.USER_STATUS, status);
+	public void updateStatus(final String status, final TaskCompletedRunnable handler){
+		new UpdateStatusTask(status, handler).execute();
 	}
 	
 	public void updateAvatar(Bitmap bmp){
@@ -640,6 +642,37 @@ public class ChatService extends Service{
 			Log.i(TAG, " EXCEPTION  ------ ");
 			e.printStackTrace();
 		}
+	}
+	
+	public class UpdateStatusTask extends AsyncTask<Void, Void, Boolean>{
+		private String status;
+		private TaskCompletedRunnable handler;
+		public UpdateStatusTask(String status, TaskCompletedRunnable handler){
+			this.status = status;
+			this.handler = handler;
+		}
+		
+		@Override
+		protected Boolean doInBackground(Void... params) {
+			try{
+				Presence presence = new Presence(Presence.Type.available, status, 1, Mode.available);
+				connection.sendPacket(presence);
+				EmotApplication.setValue(PreferenceKeys.USER_STATUS, status);
+				return true;
+			}catch(Exception e){
+				return false;
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+			if(result){
+				handler.onTaskComplete("success");
+			}else{
+				handler.onTaskComplete("failed");
+			}
+		}
+		
 	}
 	
 }
