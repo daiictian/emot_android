@@ -42,6 +42,7 @@ import android.widget.Toast;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.ApplicationConstants;
+import com.emot.constants.PreferenceKeys;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
@@ -87,15 +88,18 @@ public class Registration extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
+		if(EmotApplication.getValue(PreferenceKeys.USER_APPID, null)!=null){
+			startActivity(new Intent(this, ContactScreen.class));
+			finish();
+		}
 		setContentView(R.layout.layout_register_screen);
 		initializeUI();
-		
+		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 		suggestCountryOnEntry();
 		setOnClickListeners();
 //		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 //		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
 //		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
-		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 	}
 
 
@@ -215,16 +219,17 @@ public class Registration extends ActionBarActivity {
 							JSONObject resultJson = new JSONObject(result);
 							String status = resultJson.getString("status");
 							if(status.equals("success")){
+								EmotApplication.setValue(PreferenceKeys.USER_APPID, resultJson.getString("appid"));
+								EmotApplication.setValue(PreferenceKeys.USER_MOBILE, mMobileNumber);
+								EmotApplication.setValue(PreferenceKeys.USER_PWD, mRN);
 								Thread login = new Thread(new Runnable() {
 
 									@Override
 									public void run() {
 										XMPPConnection connection;
 
-										int portInt = 5222;
-
 										// Create a connection
-										ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
+										ConnectionConfiguration connConfig = new ConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
 										connConfig.setSASLAuthenticationEnabled(true);
 										//connConfig.setCompressionEnabled(true);
 										connConfig.setSecurityMode(SecurityMode.enabled);
@@ -264,12 +269,12 @@ public class Registration extends ActionBarActivity {
 
 
 										try {
-											connection.login(mMobileNumber,mRN);
+											connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""));
 											if(connection.isAuthenticated()){
 												Log.i(TAG, "Authenticated : "+connection.isAuthenticated());
 												///In a UI thread launch contacts Activity
 											}else{
-
+												
 											}
 
 
@@ -290,6 +295,7 @@ public class Registration extends ActionBarActivity {
 										//Contacts updated in SQLite. You might want to update UI
 										pd.cancel();
 										startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+										finish();
 									}
 								});
 							}
@@ -392,7 +398,7 @@ public class Registration extends ActionBarActivity {
 		mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
 		
 		pd = new ProgressDialog(Registration.this);
-		pd.setMessage("loading");
+		pd.setMessage("Loading");
 		viewMobileBlock = findViewById(R.id.viewRegisterMobileBlock);
 		viewVerificationBlock = findViewById(R.id.viewRegisterVerificationBlock);
 	}
