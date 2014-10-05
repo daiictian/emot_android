@@ -20,6 +20,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
@@ -39,6 +40,7 @@ public class ContactScreen extends ActionBarActivity{
 	private ContactArrayAdapter contactsAdapter;
 	private ArrayList<Contact> contacts;
 	private XMPPConnection connection;
+	private ShowContacts showContactsThread;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,9 @@ public class ContactScreen extends ActionBarActivity{
 //		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.asin)));
 //		EmotDBHelper.getInstance(ContactScreen.this).getWritableDatabase().insertWithOnConflict(DBContract.EmotsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 
+		showContactsThread = new ShowContacts();
+		showContactsThread.execute();
+		
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 			@Override
@@ -70,35 +75,30 @@ public class ContactScreen extends ActionBarActivity{
 		contactsAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		listviewContact.setAdapter(contactsAdapter);
 		
-		Thread connectionThread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(10000);
-					//mConnectionQueue = EmotApplication.mConnectionQueue;
-					Log.i(TAG, "b4 connection retreived " +connection + " ");
-					while(true){
-						connection = ConnectionQueue.get();
-						Log.i(TAG, "after connection retreived " +connection);
-					}
-					
-					
-					//mCurrentChat = connection.getChatManager();
-					//mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					Log.i(TAG, "Queue exception ...");
-					e.printStackTrace();
-				}
-				
-			}
-		});
-		connectionThread.setName("Connection Thread");
-		connectionThread.start();
+//		Thread connectionThread = new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				try {
+//					Thread.sleep(10000);
+//					//mConnectionQueue = EmotApplication.mConnectionQueue;
+//					Log.i(TAG, "b4 connection retreived " +connection + " ");
+//					while(true){
+//						connection = ConnectionQueue.get();
+//						Log.i(TAG, "after connection retreived " +connection);
+//					}
+//
+//				} catch (InterruptedException e) {
+//					Log.i(TAG, "Queue exception ...");
+//					e.printStackTrace();
+//				}
+//				
+//			}
+//		});
+//		connectionThread.setName("Connection Thread");
+//		connectionThread.start();
 		
 		//new UpdateRosters().execute();
-		new ShowContacts().execute();
 		//new UpdateRosters().execute();
 		
 		//From DB
@@ -128,6 +128,12 @@ public class ContactScreen extends ActionBarActivity{
 			}
 		});
 
+	}
+	
+	@Override
+	protected void onStop() {
+		showContactsThread.cancel(true);
+		super.onStop();
 	}
 
 	public class UpdateRosters extends AsyncTask<Void, Contact, Void>{
@@ -186,33 +192,38 @@ public class ContactScreen extends ActionBarActivity{
 	}
 	
 	
-	public class ShowContacts extends AsyncTask<Void, Contact, Void>{
+	public class ShowContacts extends AsyncTask<Void, Contact, Boolean>{
 
 		@Override
-		protected Void doInBackground(Void... params) {
-			Log.i(TAG, "time 1");
-			SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
-			Cursor cursor = db.rawQuery("select * from "+DBContract.ContactsDBEntry.TABLE_NAME, null);
-			Log.i(TAG, "Cursor length "+cursor.getCount());
-			if (cursor.moveToFirst()){
-				   do{
-				      String name = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.CONTACT_NAME));
-				      String mobile = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.MOBILE_NUMBER));
-				      String status = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.CURRENT_STATUS));
-				      byte[] avatar = cursor.getBlob(cursor.getColumnIndex(DBContract.ContactsDBEntry.PROFILE_THUMB));
-				      Contact contact = new Contact(name, mobile);
-				      contact.setStatus(status);
-				      contact.setAvatar(avatar);
-				      Log.i(TAG, "Name = "+name + " Mobile = "+mobile+ " Avatar = "+avatar);
-				      publishProgress(contact);
-				      
-				   }while(cursor.moveToNext());
-				}
-				cursor.close();
+		protected Boolean doInBackground(Void... params) {
+			try{
+				Log.i(TAG, "time 1");
+				SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
+				Cursor cursor = db.rawQuery("select * from "+DBContract.ContactsDBEntry.TABLE_NAME, null);
+				Log.i(TAG, "Cursor length "+cursor.getCount());
+				if (cursor.moveToFirst()){
+					   do{
+					      String name = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.CONTACT_NAME));
+					      String mobile = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.MOBILE_NUMBER));
+					      String status = cursor.getString(cursor.getColumnIndex(DBContract.ContactsDBEntry.CURRENT_STATUS));
+					      byte[] avatar = cursor.getBlob(cursor.getColumnIndex(DBContract.ContactsDBEntry.PROFILE_THUMB));
+					      Contact contact = new Contact(name, mobile);
+					      contact.setStatus(status);
+					      contact.setAvatar(avatar);
+					      Log.i(TAG, "Name = "+name + " Mobile = "+mobile+ " Avatar = "+avatar);
+					      publishProgress(contact);
+					      
+					   }while(cursor.moveToNext());
+					}
+					cursor.close();
+				
+				
+				Log.i(TAG, "time 2");
+				return true;
+			}catch(Exception e){
+				return false;
+			}
 			
-			
-			Log.i(TAG, "time 2");
-			return null;
 		}
 		
 		protected void onProgressUpdate(Contact... contact){
@@ -222,8 +233,10 @@ public class ContactScreen extends ActionBarActivity{
 			return;
 		}
 		
-		protected void onPostExecute(Void resp) {
-			
+		protected void onPostExecute(Boolean resp) {
+			if(!resp){
+				Toast.makeText(EmotApplication.getAppContext(), "Sorry encountered some error while fetching contacts. Please try again later.", Toast.LENGTH_LONG);
+			}
 		}
 	}
 

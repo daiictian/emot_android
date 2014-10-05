@@ -465,7 +465,7 @@ public class ChatService extends Service{
 				
 				//connection.addPacketListener(chatPacketListener, null);
 				try {
-					connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""));
+					connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
 					Log.i(TAG, "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
 				} catch (XMPPException e) {
 					// TODO Auto-generated catch block
@@ -476,7 +476,7 @@ public class ChatService extends Service{
 				SmackAndroid smack = SmackAndroid.init(getApplicationContext());
 				Log.i(TAG, "current_chat is "+current_chat);
 				//connection.getRoster().createGroup("myroom");
-			//	chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
+				chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
 			 muc = new MultiUserChat(connection, "myroom@conference.emot-net");
 				
 				Form form = null;
