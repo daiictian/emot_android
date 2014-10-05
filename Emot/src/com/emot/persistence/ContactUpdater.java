@@ -33,6 +33,8 @@ public class ContactUpdater {
 
 	private static String TAG = ContactUpdater.class.getSimpleName();
 	private static HashMap<String, String> contacts;
+	private static TaskCompletedRunnable taskCompleteHandler;
+	
 	@SuppressLint("InlinedApi")
 	private final static String[] FROM_COLUMN = {
 		Build.VERSION.SDK_INT
@@ -43,100 +45,83 @@ public class ContactUpdater {
 
 
 	public static void updateContacts(final TaskCompletedRunnable taskCompleteHandler){
-		Log.i(TAG, "Context "+EmotApplication.getAppContext());
-		contacts = getContacts(EmotApplication.getAppContext().getContentResolver());
-		
-		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-		params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceKeys.USER_APPID, "")));
-		JSONArray numbers = new JSONArray();
-		Set<String> numberSet = contacts.keySet();
-		for(String number: numberSet){
-			numbers.put(number);
-		}
-		params.add(new BasicNameValuePair("number_list", numbers.toString()));
-		URL cUrl;
-		try{
-
-			cUrl = new URL(WebServiceConstants.HTTP + "://"+ 
-					WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
-					+WebServiceConstants.PATH_API+WebServiceConstants.OP_GETCONTACT);
-			Log.i(TAG, "URL "+cUrl);
-		}catch(MalformedURLException e){
-			e.printStackTrace();
-			return;
-		}
-		Log.i(TAG, "Calling API ...");
-		EmotHTTPClient contactCall = new EmotHTTPClient(cUrl, params , new TaskCompletedRunnable() {
-
-			@Override
-			public void onTaskComplete(String result) {
-				//Put this in database
-				//result = "[{\"hbjh\"}]";
-				//Log.i(TAG, "Result "+result.toString());
-
-				SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
-				try {
-					AddRoster addRoster = new AddRoster(new JSONArray(result));
-					addRoster.execute();
-					
-					/*
-					JSONArray emotters = new JSONArray(result);
-					int len = emotters.length();
-					
-					for(int i=0; i<len; i++){
-						try {
-							
-							JSONObject emotter = emotters.getJSONObject(i);
-							
-							//Database entry
-							ContentValues cvs = new ContentValues();
-							cvs.put(DBContract.ContactsDBEntry.MOBILE_NUMBER, emotter.getString("mobile"));
-							cvs.put(DBContract.ContactsDBEntry.EMOT_NAME, emotter.getString("name"));
-							cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
-							cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
-							cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
-							db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
-							updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
-							
-							//roster.createEntry(emotter.getString("mobile"), "emot-net", null);
-							
-							
-						} catch (JSONException e) {
-							e.printStackTrace();
-						} 
-					}
-					*/
-				}catch (JSONException e1) {
-					e1.printStackTrace();
-				}finally{
-					db.close();
-				}
-				
-				
-				taskCompleteHandler.onTaskComplete(result);
-				Log.i(TAG, "Db ran ... ");
-			}
-		});
-		contactCall.execute();
+		ContactUpdater.taskCompleteHandler = taskCompleteHandler;
+		new GetContacts().execute();
 	}
 
-	public static HashMap<String, String> getContacts(ContentResolver cr)
-	{
-		HashMap<String, String> cntcts = new HashMap<String, String>();
-		Cursor phones = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null,null, null);
-		while (phones.moveToNext())
-		{
-			String name=phones.getString(phones.getColumnIndex(FROM_COLUMN[0]));
-			String mobile = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).replace("-", "");
-			//Log.i(TAG, "name = " + name + ". Phone = " + mobile); 
-			cntcts.put(mobile,  name);
-		}
-		return cntcts;
-	}
 	
-	public static void updateProfileBitmap(String url, String mobile){
-		if(url!=null && url != ""){
+	public static class GetContacts extends AsyncTask<Void, Void, JSONArray>{
+		
+		@Override
+		protected JSONArray doInBackground(Void... vals) {
+			try{
+				contacts = getContacts(EmotApplication.getAppContext().getContentResolver());
+				JSONArray numbers = new JSONArray();
+				Set<String> numberSet = contacts.keySet();
+				for(String number: numberSet){
+					numbers.put(number);
+				}
+				return numbers;
+			}catch(Exception e){
+				e.printStackTrace();
+				return null;
+			}
 			
+		}
+		
+		@Override
+		protected void onPostExecute(JSONArray numbers) {
+			if(numbers!=null && numbers.length()>0){
+				Log.i(TAG, "Calling API ...");
+				URL cUrl;
+				try{
+					cUrl = new URL(WebServiceConstants.HTTP + "://"+ 
+							WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
+							+WebServiceConstants.PATH_API+WebServiceConstants.OP_GETCONTACT);
+					Log.i(TAG, "URL "+cUrl);
+				}catch(MalformedURLException e){
+					e.printStackTrace();
+					return;
+				}
+				ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+				params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceKeys.USER_APPID, "")));
+				params.add(new BasicNameValuePair("number_list", numbers.toString()));
+				EmotHTTPClient contactCall = new EmotHTTPClient(cUrl, params , new TaskCompletedRunnable() {
+
+					@Override
+					public void onTaskComplete(String result) {
+						//Put this in database
+						//result = "[{\"hbjh\"}]";
+						//Log.i(TAG, "Result "+result.toString());
+
+						SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
+						try {
+							AddRoster addRoster = new AddRoster(new JSONArray(result));
+							addRoster.execute();
+						}catch (JSONException e1) {
+							e1.printStackTrace();
+						}finally{
+							db.close();
+						}
+						Log.i(TAG, "Db ran ... ");
+					}
+				});
+				contactCall.execute();
+			}
+		}
+		
+		public HashMap<String, String> getContacts(ContentResolver cr)
+		{
+			HashMap<String, String> cntcts = new HashMap<String, String>();
+			Cursor phones = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null,null, null);
+			while (phones.moveToNext())
+			{
+				String name=phones.getString(phones.getColumnIndex(FROM_COLUMN[0]));
+				String mobile = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).replace("-", "");
+				//Log.i(TAG, "name = " + name + ". Phone = " + mobile); 
+				cntcts.put(mobile,  name);
+			}
+			return cntcts;
 		}
 	}
 	
@@ -185,12 +170,19 @@ public class ContactUpdater {
 					db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 					//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
 					Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
-					
 				} catch (JSONException e) {
 					e.printStackTrace();
-				} 
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+			ContactUpdater.taskCompleteHandler.onTaskComplete(null);
 		}
 		
 	}
