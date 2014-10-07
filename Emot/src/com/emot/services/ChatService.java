@@ -2,6 +2,7 @@ package com.emot.services;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +37,6 @@ import org.jivesoftware.smackx.FormField;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.packet.VCard;
-import org.jivesoftware.smackx.provider.VCardProvider;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -51,7 +51,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
@@ -105,9 +104,9 @@ public class ChatService extends Service{
 						//muc.join("test6@emot-net");
 						//joinRoom = false;
 					}
-					if(msg != null)
-					muc.sendMessage(msg);
-				break;
+					if(msg != null){}
+					//muc.sendMessage(msg);
+					break;
 				}
 				
 				
@@ -322,7 +321,7 @@ public class ChatService extends Service{
 	public void onCreate() {
 		super.onCreate();
 		  
-		
+		SmackAndroid.init(EmotApplication.getAppContext());
 		Log.i(TAG, "___________ON CREATE____________" + connection);
 		if(connection!=null && connection.isAuthenticated()){
 			return;
@@ -375,7 +374,9 @@ public class ChatService extends Service{
 				
 					vCard.load(connection, mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
 					byte[] avatar = vCard.getAvatar();
-					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
+					if(avatar!=null){
+						cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
+					}
 					cvs.put(DBContract.ContactsDBEntry.LAST_SEEN, EmotApplication.getDateTime());
 					
 					Log.i(TAG, "Thumb avatar = "+avatar);
@@ -462,7 +463,6 @@ public class ChatService extends Service{
 					//publishProgress("Failed to connect to " + HOST);
 					//xmppClient.setConnection(null);
 				}
-				
 				//connection.addPacketListener(chatPacketListener, null);
 				try {
 					connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
@@ -477,7 +477,7 @@ public class ChatService extends Service{
 				Log.i(TAG, "current_chat is "+current_chat);
 				//connection.getRoster().createGroup("myroom");
 				chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
-			 muc = new MultiUserChat(connection, "myroom@conference.emot-net");
+				muc = new MultiUserChat(connection, "myroom@conference.emot-net");
 				
 				Form form = null;
 					Log.i(TAG, "creating multi user chat " +muc);
@@ -513,7 +513,7 @@ public class ChatService extends Service{
 						
 						muc.invite("test6@emot-net", "hey");
 						muc.join("test5@emot-net", "hey");	
-						muc.addMessageListener(mmGrouplistener);
+						//muc.addMessageListener(mmGrouplistener);
 						//boolean supports = MultiUserChat.isServiceEnabled(connection, "test6@emot-net");
 						//		Log.i(TAG, "test6 supports MUC? " +supports);
 								//muc.join("test6@emot-net");
@@ -555,93 +555,60 @@ public class ChatService extends Service{
 				
 				//Roster Listener
 				roster = connection.getRoster();
-//				try {
-//					roster.createEntry("9342464980@emot-net", "abhi", null);
-//				} catch (XMPPException e1) {
-//					Log.i(TAG, "Create entry error");
-//					e1.printStackTrace();
-//				}
+		
 				Collection<RosterEntry> rosters = roster.getEntries();
 				Log.i(TAG, "Roster Size = "+ rosters.size());
 				roster.setSubscriptionMode(SubscriptionMode.accept_all);
 				roster.addRosterListener(rosterListener);
-				
-//				  Presence presence = roster.getPresence(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-//                Log.i(TAG, "Presence name = " + presence.getType().name());
-//                Log.i(TAG, "Status = " + presence.getStatus());
-                
-//                Presence presence1 = new Presence(Presence.Type.subscribed);
-//                presence1.setTo(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-//                EmotApplication.getConnection().sendPacket(presence1);
-//                
-				
-				Cursor cr = emotHistoryDB.getReadableDatabase().query(DBContract.ContactsDBEntry.TABLE_NAME, new String[] {DBContract.ContactsDBEntry.MOBILE_NUMBER} , DBContract.ContactsDBEntry.SUBSCRIBED+" = 0;", null, null, null, null, null);
-				while (cr.moveToNext())
-				{
-					String mobile = cr.getString(cr.getColumnIndex(DBContract.ContactsDBEntry.MOBILE_NUMBER));
-					Presence presence2 = new Presence(Presence.Type.subscribe);
-	                presence2.setTo(mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
-	                connection.sendPacket(presence2);
-					ContentValues cvs = new ContentValues();
-					cvs.put(DBContract.ContactsDBEntry.SUBSCRIBED, true);
-					emotHistoryDB.getWritableDatabase().update(DBContract.ContactsDBEntry.TABLE_NAME, cvs, DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+mobile+"'", null);
-					Log.i(TAG, "Presence subscribe "+mobile);
-				}
-				cr.close();
-				
-                
-//                cvs.put(DBContract.ContactsDBEntry.CURRENT_STATUS, presence.getType().name());
-                
-                
-                
-//				EmotApplication.configure(ProviderManager.getInstance());
-//				VCard vCard = new VCard();
-//				try {
-//					vCard.load(EmotApplication.getConnection(), emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
-//					byte[] avatar = vCard.getAvatar();
-//					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
-//					Log.i(TAG, "Thumb avatar = "+avatar);
-//				} catch (XMPPException e) {
-//					Log.i(TAG, "Error getting profile pic ....");
-//					e.printStackTrace();
-//				}
-//				Log.i(TAG, "Nick name = " + vCard.getNickName() + " Name = " + emotter.getString("mobile"));
 			}
 		});
 		connThread.start();
-			}
+	}
 	
-	public void updateStatus(final String status, final TaskCompletedRunnable handler){
+	public void updatePresence(){
+		Thread presenceThread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				try{
+					Cursor cr = emotHistoryDB.getReadableDatabase().query(DBContract.ContactsDBEntry.TABLE_NAME, new String[] {DBContract.ContactsDBEntry.MOBILE_NUMBER} , DBContract.ContactsDBEntry.SUBSCRIBED+" = 0;", null, null, null, null, null);
+					Log.i(TAG, "Contacts to subscribe "+cr.getCount());
+					while (cr.moveToNext())
+					{
+						String mobile = cr.getString(cr.getColumnIndex(DBContract.ContactsDBEntry.MOBILE_NUMBER));
+						
+						//SHOWING MY PRESENCE
+						Presence presence2 = new Presence(Presence.Type.subscribe);
+			            presence2.setTo(mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
+			            connection.sendPacket(presence2);
+			            
+			            //ASKING FOR PRESENCE
+			            /*
+			            Presence presence3 = new Presence(Presence.Type.subscribed);
+			            presence3.setTo(mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
+			            connection.sendPacket(presence3);
+			            */
+			            
+						ContentValues cvs = new ContentValues();
+						cvs.put(DBContract.ContactsDBEntry.SUBSCRIBED, true);
+						emotHistoryDB.getWritableDatabase().update(DBContract.ContactsDBEntry.TABLE_NAME, cvs, DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+mobile+"'", null);
+						Log.i(TAG, "Presence subscribe "+mobile);
+					}
+					cr.close();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}});
+		presenceThread.start();
+	}
+	
+	public void updateStatus(String status, TaskCompletedRunnable handler){
 		new UpdateStatusTask(status, handler).execute();
 	}
 	
-	public void updateAvatar(Bitmap bmp){
+	public void updateAvatar(Bitmap bmp, TaskCompletedRunnable handler){
 		//EmotApplication.configure(ProviderManager.getInstance());
-		ProviderManager.getInstance().addIQProvider("vCard","vcard-temp", new VCardProvider());
-		VCard vCard = new VCard();
-		try {
-			//Bitmap bmp = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.asin);
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-			byte[] bytes = stream.toByteArray();
-            String encodedImage = StringUtils.encodeBase64(bytes);
-            vCard.setAvatar(bytes, encodedImage);
-          //  vCard.setEncodedImage(encodedImage);
-            vCard.setField("PHOTO", 
-            		"<TYPE>image/jpg</TYPE><BINVAL>"
-                    + encodedImage + 
-                    "</BINVAL>", 
-                    true);
-            vCard.save(connection);
-            EmotApplication.setValue(PreferenceKeys.USER_AVATAR, encodedImage);
-            Log.i(TAG, "Setting preference value ...");
-        }  catch (XMPPException e) {
-        	Log.i(TAG, "XMPP EXCEPTION  ----------- ");
-			e.printStackTrace();
-		}	catch(Exception e){
-			Log.i(TAG, " EXCEPTION  ------ ");
-			e.printStackTrace();
-		}
+		new UpdateAvatarTask(bmp, handler).execute();
 	}
 	
 	public class UpdateStatusTask extends AsyncTask<Void, Void, Boolean>{
@@ -662,6 +629,62 @@ public class ChatService extends Service{
 			}catch(Exception e){
 				return false;
 			}
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+			if(result){
+				handler.onTaskComplete("success");
+			}else{
+				handler.onTaskComplete("failed");
+			}
+		}
+		
+	}
+	
+	public class UpdateAvatarTask extends AsyncTask<Void, Void, Boolean>{
+
+		private Bitmap bmp;
+		private TaskCompletedRunnable handler;
+		
+		public UpdateAvatarTask(Bitmap bmp, TaskCompletedRunnable handler){
+			this.bmp = bmp;
+			this.handler = handler;
+		}
+		
+		@Override
+		protected Boolean doInBackground(Void... params) {
+			SmackAndroid.init(EmotApplication.getAppContext());
+			//ProviderManager.getInstance().addIQProvider("vCard","vcard-temp", new VCardProvider());
+			EmotApplication.configure(ProviderManager.getInstance());
+			VCard vCard = new VCard();
+			try {
+				//Bitmap bmp = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.asin);
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				bmp.compress(Bitmap.CompressFormat.PNG, 0, stream);
+				byte[] bytes = stream.toByteArray();
+	            String encodedImage = StringUtils.encodeBase64(bytes);
+	            URL img = new URL("http://www.ka-gold-jewelry.com/images/products-800/merkaba-prana-small/merkaba-prana-small1.jpg");
+	            vCard.setAvatar(bytes);
+	            //vCard.setEncodedImage(encodedImage);
+	            vCard.setField("PHOTO", 
+	            		"<TYPE>image/jpg</TYPE><BINVAL>"
+	                    + encodedImage + 
+	                    "</BINVAL>", 
+	                    true);
+	            vCard.save(connection);
+	            EmotApplication.setValue(PreferenceKeys.USER_AVATAR, encodedImage);
+	            Log.i(TAG, "Setting preference value ...");
+	        }  catch (XMPPException e) {
+	        	Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+				e.printStackTrace();
+				return false;
+			}	catch(Exception e){
+				Log.i(TAG, " EXCEPTION  ------ ");
+				e.printStackTrace();
+				return false;
+			}
+			return true;
 		}
 		
 		@Override

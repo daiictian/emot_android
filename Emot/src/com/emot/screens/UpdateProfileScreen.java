@@ -68,7 +68,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 							if(result.equals("success")){
 								Log.i(TAG, "Status being set is ");
 							}else{
-								Toast.makeText(EmotApplication.getAppContext(), "Error updating your status.", Toast.LENGTH_LONG);
+								Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your status. Please try again later.", Toast.LENGTH_LONG);
 							}
 							editStatus.setText(EmotApplication.getValue(PreferenceKeys.USER_STATUS, ""));
 						}
@@ -156,6 +156,20 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode != RESULT_OK)
 			return;
+		
+		TaskCompletedRunnable avatarHandler = new TaskCompletedRunnable() {
+			
+			@Override
+			public void onTaskComplete(String result) {
+				pd.cancel();
+				if(result.equals("success")){
+					Log.i(TAG, "Status being set is ");
+				}else{
+					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG);
+				}
+				imageAvatar.setImageBitmap(EmotUser.getAvatar());
+			}
+		};
 
 		switch (requestCode) {
 		case CAMERA_REQUEST:
@@ -169,7 +183,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
-				chatService.updateAvatar(yourImage);
+				chatService.updateAvatar(yourImage, avatarHandler);
 			}
 			break;
 		case PICK_FROM_GALLERY:
@@ -182,7 +196,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
-				chatService.updateAvatar(yourImage);
+				chatService.updateAvatar(yourImage, avatarHandler);
 			}
 
 			break;

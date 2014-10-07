@@ -48,16 +48,6 @@ public class EmotEditText extends EditText {
 	public EmotEditText(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
-
-//	@Override
-//	protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
-//		updateText();
-//	}
-
-	private void updateText() {
-		Log.i(TAG, getText().toString());
-		addSmiles(getContext(), getText());
-	}
 	
 	public void replaceWithEmot(int start, int end, Bitmap emot){
 		Spannable spannable = getText();
@@ -79,7 +69,7 @@ public class EmotEditText extends EditText {
 	public void addEmot(Emot emot){
 		Spannable spannable = getText();
 		int start = spannable.length();
-		Log.i(TAG, "len1 = "+start + " last char = "+getText().charAt(start-1));
+		Log.i(TAG, "len1 = "+start + " String = "+getText().toString());
 		String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
 		if(getText().charAt(start-1) != ' '){
 			while(start>0 && getText().charAt(start-1) != ' '){
@@ -88,9 +78,8 @@ public class EmotEditText extends EditText {
 			}
 			//setText(getText().toString().substring(0, start));
 			//setSelection(getText().length());
-		}else{
-			
 		}
+		
 		Log.i(TAG, "111 " + getText().toString());
 		append(appendString);
 		Log.i(TAG, "222 " + getText().toString());

@@ -167,9 +167,15 @@ public class ContactUpdater {
 					cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
 					//cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
 					//cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
-					db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
-					//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
-					Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
+					Cursor cr = db.query(DBContract.ContactsDBEntry.TABLE_NAME, new String[] {DBContract.ContactsDBEntry.MOBILE_NUMBER} , DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+emotter.getString("mobile")+"';", null, null, null, null, null);
+					if(cr.getCount()==0){
+						db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+						//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
+						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
+					}else{
+						Log.i(TAG, "Already in DB "+emotter.getString("mobile"));
+					}
+					cr.close();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				} catch (Exception e) {

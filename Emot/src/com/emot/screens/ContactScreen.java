@@ -5,42 +5,50 @@ import java.util.Collection;
 
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.packet.VCard;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.emot.adapters.ContactArrayAdapter;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.IntentStrings;
-import com.emot.emotobjects.ConnectionQueue;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
+import com.emot.services.ChatService;
+import com.emot.services.ChatService.ProfileBinder;
 
 public class ContactScreen extends ActionBarActivity{
 	private ListView listviewContact;
 	private static String TAG = ContactScreen.class.getName();
 	private ContactArrayAdapter contactsAdapter;
 	private ArrayList<Contact> contacts;
-	private XMPPConnection connection;
 	private ShowContacts showContactsThread;
+	private ChatService chatService;
+	boolean mBound = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,11 +67,12 @@ public class ContactScreen extends ActionBarActivity{
 		showContactsThread = new ShowContacts();
 		showContactsThread.execute();
 		
+		//Update Contacts
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 			@Override
 			public void onTaskComplete(String result) {
-				//Contacts updated in SQLite. You might want to update UI
+				
 			}
 		});
 		
@@ -131,8 +140,43 @@ public class ContactScreen extends ActionBarActivity{
 	}
 	
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    // Inflate the menu items for use in the action bar
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.menu_actions, menu);
+	    return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case R.id.action_profile:
+	            startActivity(new Intent(this, UpdateProfileScreen.class));
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+	
+	@Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Log.i(TAG, "On start of update profile");
+        Intent intent = new Intent(this, ChatService.class);
+        intent.putExtra("request_code", ChatService.REQUEST_PROFILE_UPDATE);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+	
+	@Override
 	protected void onStop() {
 		showContactsThread.cancel(true);
+		// Unbind from the service
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
 		super.onStop();
 	}
 
@@ -239,5 +283,25 @@ public class ContactScreen extends ActionBarActivity{
 			}
 		}
 	}
+	
+	private ServiceConnection mConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			// We've bound to LocalService, cast the IBinder and get LocalService instance
+			Log.i(TAG, "service connected ... ");
+			ProfileBinder binder = (ProfileBinder) service;
+			chatService = binder.getService();
+			mBound = true;
+			//Update presence of friends
+			chatService.updatePresence();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			mBound = false;
+			Log.i(TAG, "service disconnected ... ");
+		}
+	};
 
 }
