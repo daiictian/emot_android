@@ -771,13 +771,7 @@ public class ChatService extends Service implements MessageListener{
 								});
 								
 						//muc.join("test6@conference.emot-net");
-						
-						
-						 
-					} catch (XMPPException e) {
-						//Log.i(TAG, "exception " + e.getMessage());
-						//e.printStackTrace();
-					}
+
 
 					//muc.invite("test6@emot-net", "hey");
 					//muc.join("test5@emot-net", "hey");	
