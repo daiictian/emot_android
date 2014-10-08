@@ -32,13 +32,14 @@ public class EmotUser {
 	public static Bitmap getAvatar(){
 		String img = EmotApplication.getValue(PreferenceKeys.USER_AVATAR, null);
 		Bitmap bitmap;
+		Log.i(TAG, "img is "+img);
 		if(img==null){
 			bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
 		}else{
 			byte[] bArray =  Base64.decode(img, Base64.DEFAULT);
 			bitmap = BitmapFactory.decodeByteArray(bArray , 0, bArray.length);
 		}
-		 
+		
 		return bitmap;
 	}
 	

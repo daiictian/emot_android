@@ -9,9 +9,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -22,13 +26,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.emot.common.ImageHelper;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.PreferenceKeys;
 import com.emot.model.EmotApplication;
 import com.emot.model.EmotUser;
 import com.emot.services.ChatService;
 import com.emot.services.ChatService.ProfileBinder;
-import com.emot.services.ChatService.UpdateStatusTask;
 
 public class UpdateProfileScreen extends ActionBarActivity {
 	private EditText editStatus;
@@ -61,14 +65,14 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				if (mBound) {
 					Log.i(TAG, "Status setting");
 					chatService.updateStatus(editStatus.getText().toString(), new TaskCompletedRunnable() {
-						
+
 						@Override
 						public void onTaskComplete(String result) {
 							pd.cancel();
 							if(result.equals("success")){
 								Log.i(TAG, "Status being set is ");
 							}else{
-								Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your status. Please try again later.", Toast.LENGTH_LONG);
+								Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your status. Please try again later.", Toast.LENGTH_LONG).show();
 							}
 							editStatus.setText(EmotApplication.getValue(PreferenceKeys.USER_STATUS, ""));
 						}
@@ -106,26 +110,26 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		});
 		Log.i(TAG, "on create of update profile screen");
 	}
-	
-	@Override
-    protected void onStart() {
-        super.onStart();
-        // Bind to LocalService
-        Log.i(TAG, "On start of update profile");
-        Intent intent = new Intent(this, ChatService.class);
-        intent.putExtra("request_code", ChatService.REQUEST_PROFILE_UPDATE);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Unbind from the service
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
-    }
+	@Override
+	protected void onStart() {
+		super.onStart();
+		// Bind to LocalService
+		Log.i(TAG, "On start of update profile");
+		Intent intent = new Intent(this, ChatService.class);
+		intent.putExtra("request_code", ChatService.REQUEST_PROFILE_UPDATE);
+		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		// Unbind from the service
+		if (mBound) {
+			unbindService(mConnection);
+			mBound = false;
+		}
+	}
 
 	public void callCamera() {
 		Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
@@ -139,6 +143,22 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	}
 
 	public void callGallery() {
+//		TaskCompletedRunnable avatarHandler = new TaskCompletedRunnable() {
+//
+//			@Override
+//			public void onTaskComplete(String result) {
+//				pd.cancel();
+//				if(result.equals("success")){
+//					Log.i(TAG, "Status being set is ");
+//				}else{
+//					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG).show();
+//				}
+//				imageAvatar.setImageBitmap(EmotUser.getAvatar());
+//			}
+//		};
+//		Bitmap yourImage = BitmapFactory.decodeResource(getResources(), R.drawable.friends);
+//		chatService.updateAvatar(yourImage, avatarHandler);
+
 		Intent intent = new Intent();
 		intent.setType("image/*");
 		intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -156,18 +176,19 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode != RESULT_OK)
 			return;
-		
+
 		TaskCompletedRunnable avatarHandler = new TaskCompletedRunnable() {
-			
+
 			@Override
 			public void onTaskComplete(String result) {
 				pd.cancel();
 				if(result.equals("success")){
 					Log.i(TAG, "Status being set is ");
 				}else{
-					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG);
+					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG).show();
 				}
 				imageAvatar.setImageBitmap(EmotUser.getAvatar());
+				pd.cancel();
 			}
 		};
 
@@ -178,30 +199,58 @@ public class UpdateProfileScreen extends ActionBarActivity {
 
 			if (extras != null) {
 				Bitmap yourImage = extras.getParcelable("data");
+				Uri selectedImageUri = data.getData();
+                String selectedImagePath = getPath(selectedImageUri);
 				// convert bitmap to byte
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
 				chatService.updateAvatar(yourImage, avatarHandler);
+				pd.show();
 			}
 			break;
 		case PICK_FROM_GALLERY:
 			Bundle extras2 = data.getExtras();
 
 			if (extras2 != null) {
+//				Uri selectedImageUri = data.getData();
+//              String selectedImagePath = getPath(selectedImageUri);
+//              chatService.updateAvatar(selectedImagePath, avatarHandler);
+				
 				Bitmap yourImage = extras2.getParcelable("data");
-				// convert bitmap to byte
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
 				chatService.updateAvatar(yourImage, avatarHandler);
+				pd.show();
 			}
 
 			break;
 		}
 	}
+	
+	public String getPath(Uri uri) {
+		// just some safety built in 
+		if( uri == null ) {
+			// TODO perform some logging or show user feedback
+			return null;
+		}
+		// try to retrieve the image from the media store first
+		// this will only work for images selected from gallery
+		String[] projection = { MediaStore.Images.Media.DATA };
+		Cursor cursor = managedQuery(uri, projection, null, null, null);
+		if( cursor != null ){
+			int column_index = cursor
+					.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+			cursor.moveToFirst();
+			return cursor.getString(column_index);
+		}
+		// this is our fallback here
+		return uri.getPath();
+	}
+	
 
 	private ServiceConnection mConnection = new ServiceConnection() {
 

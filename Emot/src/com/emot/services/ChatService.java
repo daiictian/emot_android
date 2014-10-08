@@ -2,7 +2,8 @@ package com.emot.services;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.net.URL;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,6 +64,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
@@ -73,6 +75,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.emot.common.ImageHelper;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.PreferenceKeys;
 import com.emot.constants.WebServiceConstants;
@@ -91,6 +94,7 @@ public class ChatService extends Service implements MessageListener{
 	    }
 	}
 	
+
 	private static XMPPConnection connection;
 	private static final String TAG = "ChatService";
 	public static final int MESSAGE_TYPE_TEXT = 2;
@@ -170,10 +174,10 @@ public class ChatService extends Service implements MessageListener{
 
 					break;
 				}
-				
-				
-				
-				
+
+
+
+
 			} catch (XMPPException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -182,14 +186,14 @@ public class ChatService extends Service implements MessageListener{
 			Log.i(TAG, "mChatPacketSender is " + mChatPacketSender);
 		}
 	}
-	
+
 	public class ProfileBinder extends Binder{
 		public ChatService getService() {
-            return ChatService.this;
-        }
+			return ChatService.this;
+		}
 	}
-	
-	
+
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODO Auto-generated method stub
@@ -211,11 +215,11 @@ public class ChatService extends Service implements MessageListener{
 
 	//Fetch the packet and deliver to needy.
 	private PacketListener chatPacketListener = new PacketListener() {
-		
+
 		@Override
 		public void processPacket(Packet packet) {
 			Log.i("XMPPClient", "process packet ...in Service");
-			
+
 			String s = packet.getFrom();
 			Log.i("XMPPClient", " packet ...in Service is from " +s);
 			Log.i(TAG, "packet is " +packet.toXML());
@@ -238,6 +242,7 @@ public class ChatService extends Service implements MessageListener{
 	String strDate = sdfDate.format(now);
 	final String dateTime[] = strDate.split(" ");
 	String user = "";
+
 	EmotDBHelper emotHistoryDB = EmotDBHelper.getInstance(ChatService.this);
 	private MessageListener mmlistener = new MessageListener() {
 		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -248,34 +253,34 @@ public class ChatService extends Service implements MessageListener{
 		@Override
 		public void processMessage(Chat chat, final Message message) {
 			if(message.getBody() != null){
-			Log.d("Incoming message", message.getBody());
-			user = message.getFrom();
-			Bundle data = new Bundle();
-			data.putString("user", user);
-			data.putCharSequence("chat", message.getBody());
-			data.putCharSequence("time", dateTime[1]);
-			android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
-			Log.i("XMPPClient", "sendign message to activity ");
-			msg.setData(data);
-			try {
-				mChatPacketSender.send(msg);
-			} catch (RemoteException e) {
-				Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
-				e.printStackTrace();
-			}
-			new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					emotHistoryDB.insertChat(mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
-
+				Log.d("Incoming message", message.getBody());
+				user = message.getFrom();
+				Bundle data = new Bundle();
+				data.putString("user", user);
+				data.putCharSequence("chat", message.getBody());
+				data.putCharSequence("time", dateTime[1]);
+				android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
+				Log.i("XMPPClient", "sendign message to activity ");
+				msg.setData(data);
+				try {
+					mChatPacketSender.send(msg);
+				} catch (RemoteException e) {
+					Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
+					e.printStackTrace();
 				}
-			}).start(); 
+				new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						emotHistoryDB.insertChat(mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
+
+					}
+				}).start(); 
 
 
-		}}
+			}}
 	};
-	
+
 	private MessageListener mmGlistener = new MessageListener() {
 		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date now = new Date();
@@ -312,7 +317,7 @@ public class ChatService extends Service implements MessageListener{
 		}
 	};
 
-	
+
 	private PacketListener mmGrouplistener = new PacketListener() {
 		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date now = new Date();
@@ -336,6 +341,7 @@ public class ChatService extends Service implements MessageListener{
 				msg.setData(data);
 				
 				/*
+
 				try {
 					notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 					mBackgroundMessage = new Notification.Builder(ChatService.this).
@@ -345,24 +351,24 @@ public class ChatService extends Service implements MessageListener{
 					notificationManager.notify(0, mBackgroundMessage);
 					if(mChatPacketSender != null){
 					mChatPacketSender.send(msg);
-					 
+
 					}
 				} catch (RemoteException e) {
 					Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
 					e.printStackTrace();
 				}
-				*/
-				new Thread(new Runnable() {
+					 */
+					new Thread(new Runnable() {
 
-					@Override
-					public void run() {
-						emotHistoryDB.insertGroupChat(user,mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
+						@Override
+						public void run() {
+							emotHistoryDB.insertGroupChat(user,mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
 
-					}
-				}).start(); 
+						}
+					}).start(); 
+				}
 			}
-			}
-			
+
 		}
 	};
 	
@@ -409,6 +415,8 @@ public class ChatService extends Service implements MessageListener{
 		}
 	};
 
+
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		int requestCode = intent.getIntExtra("request_code", REQUEST_CHAT_MESSAGE);
@@ -421,10 +429,10 @@ public class ChatService extends Service implements MessageListener{
 			return null;
 		}
 	}
-	
-	
 
-	
+
+
+
 	private boolean stop;
 	private ChatManager mCurrentChat;
 	private Chat mChat;
@@ -445,6 +453,8 @@ public class ChatService extends Service implements MessageListener{
 
 		SmackAndroid.init(ChatService.this);
 
+
+		SmackConfiguration.setPacketReplyTimeout(60000);
 		Log.i(TAG, "___________ON CREATE____________" + connection);
 		if(connection!=null && connection.isAuthenticated()){
 			return;
@@ -469,33 +479,33 @@ public class ChatService extends Service implements MessageListener{
 		}).start();
 		
 		Log.i(TAG, "___________INITIALIZING____________");
-		
-//		while(mServerConnection == null){
-//		mServerConnection = EmotApplication.getConnection();
-//		Log.i(TAG, "mServerConnection is "+mServerConnection);
-//	if(mServerConnection != null){
-	//		mCurrentChat = mServerConnection.getChatManager();
-	//	Log.i(TAG, "current_chat is "+mCurrentChat);
-	//	mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
+
+		//		while(mServerConnection == null){
+		//		mServerConnection = EmotApplication.getConnection();
+		//		Log.i(TAG, "mServerConnection is "+mServerConnection);
+		//	if(mServerConnection != null){
+		//		mCurrentChat = mServerConnection.getChatManager();
+		//	Log.i(TAG, "current_chat is "+mCurrentChat);
+		//	mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
 		//	}
 		//}
 		//mConnectionQueue = EmotApplication.mConnectionQueue;
-		
+
 		/*
 		Log.i(TAG, "before connection retreived " +connection);
 		try {
 			Log.i(TAG, "connection queue size " +EmotApplication.mConnectionQueue.size());
-			
+
 			connection = EmotApplication.mConnectionQueue.take();
-			
+
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			Log.i(TAG, "Error in qeue take ...");
 			e1.printStackTrace();
 		}
 		Log.i(TAG, "after connection retreived " +connection);
-		*/
-		
+		 */
+
 		//mCurrentChat = connection.getChatManager();
 		//mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
 		Log.i(TAG, "On create of chat service !!!!!!!!!!!!!!!!!!!");
@@ -516,14 +526,14 @@ public class ChatService extends Service implements MessageListener{
 					EmotApplication.configure(ProviderManager.getInstance());
 					VCard vCard = new VCard();
 					Log.i(TAG, "B4 try catch");
-				
+
 					vCard.load(connection, mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
 					byte[] avatar = vCard.getAvatar();
 					if(avatar!=null){
 						cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, avatar);
 					}
 					cvs.put(DBContract.ContactsDBEntry.LAST_SEEN, EmotApplication.getDateTime());
-					
+
 					Log.i(TAG, "Thumb avatar = "+avatar);
 					Log.i(TAG, "Nick name = " + vCard.getNickName() + " Name = " + mobile);
 					emotHistoryDB.getWritableDatabase().update(DBContract.ContactsDBEntry.TABLE_NAME, cvs, DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+mobile+"'", null);
@@ -534,16 +544,16 @@ public class ChatService extends Service implements MessageListener{
 					Log.i(TAG, "Error exception ....");
 					e.printStackTrace();
 				}
-				
+
 			}
 			@Override
 			public void entriesAdded(Collection<String> arg0) {
-				
+
 			}
 		};
-		
+
 		Thread connectionThread = new Thread(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				try {
@@ -554,8 +564,8 @@ public class ChatService extends Service implements MessageListener{
 						connection = ConnectionQueue.get();
 						Log.i(TAG, "after connection retreived " +connection);
 					}
-					
-					
+
+
 					//mCurrentChat = connection.getChatManager();
 					//mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
 				} catch (InterruptedException e) {
@@ -563,22 +573,24 @@ public class ChatService extends Service implements MessageListener{
 					Log.i(TAG, "Queue exception ...");
 					e.printStackTrace();
 				}
-				
+
 			}
 		});
 		connectionThread.setName("Connection Thread");
 		//connectionThread.start();
-		
-		
+
+
 		Thread connThread = new Thread(new Runnable() {
-			
-			
+
+
 			@Override
 			public void run() {
 				
 				AndroidConnectionConfiguration connConfig = new AndroidConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
 				connConfig.setSASLAuthenticationEnabled(true);
 				connConfig.setReconnectionAllowed(true);
+
+
 				connConfig.setSecurityMode(SecurityMode.enabled);
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 					connConfig.setTruststoreType("AndroidCAStore");
@@ -695,10 +707,11 @@ public class ChatService extends Service implements MessageListener{
 			 Log.i(TAG, "chat object is after multiuser chat " +chat);
 
 				
+
 				Form form = null;
-					Log.i(TAG, "creating multi user chat " +muc);
-					try {
-						if(muc.getRoom() == null){
+				Log.i(TAG, "creating multi user chat " +muc);
+				try {
+					if(muc.getRoom() == null){
 						muc.create("myroom");
 						Log.i(TAG, "creating multi user chat2 " +muc);
 						Log.i(TAG, "creating multi user chat @" +muc);
@@ -716,12 +729,12 @@ public class ChatService extends Service implements MessageListener{
 						Log.i(TAG, "creating multi user chat 3" +muc);
 						owners.add("test5@emot-net");
 						//owners.add("test6@emot-net");
-			//			submitForm.setAnswer("muc#roomconfig_roomowners", owners);
+						//			submitForm.setAnswer("muc#roomconfig_roomowners", owners);
 						Log.i(TAG, "creating multi user chat 4" +muc);
 						try {
 							muc.sendConfigurationForm(submitForm);
-							
-							
+
+
 						} catch (XMPPException e) {
 							Log.i(TAG, "Exception " +e.getMessage());
 							e.printStackTrace();
@@ -758,24 +771,53 @@ public class ChatService extends Service implements MessageListener{
 								});
 								
 						//muc.join("test6@conference.emot-net");
-						
-						
-						 
-					} catch (XMPPException e) {
-						//Log.i(TAG, "exception " + e.getMessage());
-						//e.printStackTrace();
-					}
-					
-					
-					
-					Log.i(TAG, "Group Chat is " +muc.getRoom());
-					
-					
+
+
+					//muc.invite("test6@emot-net", "hey");
+					//muc.join("test5@emot-net", "hey");	
+					//muc.addMessageListener(mmGrouplistener);
+					//boolean supports = MultiUserChat.isServiceEnabled(connection, "test6@emot-net");
+					//		Log.i(TAG, "test6 supports MUC? " +supports);
+					//muc.join("test6@emot-net");
+
+					MultiUserChat.addInvitationListener(connection, new InvitationListener() {
+
+
+						@Override
+						public void invitationReceived(
+								Connection arg0, String arg1,
+								String arg2, String arg3,
+								String arg4, Message arg5) {
+							Log.i(TAG, "Invitation received");
+							try {
+								muc.join("test5@emot-net");
+							} catch (XMPPException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}// TODO Auto-generated method stub
+
+						}
+					});
+
+					//muc.join("test6@conference.emot-net");
+
+
+
+				} catch (XMPPException e) {
+					Log.i(TAG, "exception " + e.getMessage());
+					e.printStackTrace();
+				}
+
+
+
+				Log.i(TAG, "Group Chat is " +muc.getRoom());
+
+
 				//chat = muc.createPrivateChat("myroom@conference.emot-net",mmGlistener);
-				
+
 				//Roster Listener
 				roster = connection.getRoster();
-		
+
 				Collection<RosterEntry> rosters = roster.getEntries();
 				Log.i(TAG, "Roster Size = "+ rosters.size());
 				roster.setSubscriptionMode(SubscriptionMode.accept_all);
@@ -784,7 +826,7 @@ public class ChatService extends Service implements MessageListener{
 		});
 		connThread.start();
 	}
-	
+
 	public void updatePresence(){
 		Thread presenceThread = new Thread(new Runnable() {
 
@@ -796,19 +838,19 @@ public class ChatService extends Service implements MessageListener{
 					while (cr.moveToNext())
 					{
 						String mobile = cr.getString(cr.getColumnIndex(DBContract.ContactsDBEntry.MOBILE_NUMBER));
-						
+
 						//SHOWING MY PRESENCE
 						Presence presence2 = new Presence(Presence.Type.subscribe);
-			            presence2.setTo(mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
-			            connection.sendPacket(presence2);
-			            
-			            //ASKING FOR PRESENCE
-			            /*
+						presence2.setTo(mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
+						connection.sendPacket(presence2);
+
+						//ASKING FOR PRESENCE
+						/*
 			            Presence presence3 = new Presence(Presence.Type.subscribed);
 			            presence3.setTo(mobile+"@"+WebServiceConstants.CHAT_DOMAIN);
 			            connection.sendPacket(presence3);
-			            */
-			            
+						 */
+
 						ContentValues cvs = new ContentValues();
 						cvs.put(DBContract.ContactsDBEntry.SUBSCRIBED, true);
 						emotHistoryDB.getWritableDatabase().update(DBContract.ContactsDBEntry.TABLE_NAME, cvs, DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+mobile+"'", null);
@@ -821,16 +863,21 @@ public class ChatService extends Service implements MessageListener{
 			}});
 		presenceThread.start();
 	}
-	
+
 	public void updateStatus(String status, TaskCompletedRunnable handler){
 		new UpdateStatusTask(status, handler).execute();
 	}
-	
+
 	public void updateAvatar(Bitmap bmp, TaskCompletedRunnable handler){
 		//EmotApplication.configure(ProviderManager.getInstance());
 		new UpdateAvatarTask(bmp, handler).execute();
 	}
 	
+	public void updateAvatar(String file, TaskCompletedRunnable handler){
+		//EmotApplication.configure(ProviderManager.getInstance());
+		new UpdateAvatarTask(file, handler).execute();
+	}
+
 	public class UpdateStatusTask extends AsyncTask<Void, Void, Boolean>{
 		private String status;
 		private TaskCompletedRunnable handler;
@@ -838,7 +885,7 @@ public class ChatService extends Service implements MessageListener{
 			this.status = status;
 			this.handler = handler;
 		}
-		
+
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			try{
@@ -850,7 +897,7 @@ public class ChatService extends Service implements MessageListener{
 				return false;
 			}
 		}
-		
+
 		@Override
 		protected void onPostExecute(Boolean result) {
 			if(result){
@@ -859,7 +906,7 @@ public class ChatService extends Service implements MessageListener{
 				handler.onTaskComplete("failed");
 			}
 		}
-		
+
 	}
 
 
@@ -1007,38 +1054,56 @@ public class ChatService extends Service implements MessageListener{
 	public class UpdateAvatarTask extends AsyncTask<Void, Void, Boolean>{
 
 		private Bitmap bmp;
+		private String file;
 		private TaskCompletedRunnable handler;
-		
+
 		public UpdateAvatarTask(Bitmap bmp, TaskCompletedRunnable handler){
 			this.bmp = bmp;
 			this.handler = handler;
 		}
 		
+		public UpdateAvatarTask(String file, TaskCompletedRunnable handler){
+			this.file = file;
+			this.handler = handler;
+		}
+
+		
+
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			SmackAndroid.init(EmotApplication.getAppContext());
 			//ProviderManager.getInstance().addIQProvider("vCard","vcard-temp", new VCardProvider());
 			EmotApplication.configure(ProviderManager.getInstance());
 			VCard vCard = new VCard();
+			Log.i(TAG, "file = "+file);
+			if(file!=null){
+				Log.i(TAG, "avatar file found");
+				try{
+					bmp = ImageHelper.shrinkBitmap(file, 50, 50);
+				}catch(Exception e){
+					e.printStackTrace();
+					return false;
+				}
+			}
+			bmp = Bitmap.createScaledBitmap(bmp, 120, 120, false);
 			try {
-				//Bitmap bmp = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.asin);
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				bmp.compress(Bitmap.CompressFormat.PNG, 0, stream);
+				bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+				Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
 				byte[] bytes = stream.toByteArray();
-	            String encodedImage = StringUtils.encodeBase64(bytes);
-	            URL img = new URL("http://www.ka-gold-jewelry.com/images/products-800/merkaba-prana-small/merkaba-prana-small1.jpg");
-	            vCard.setAvatar(bytes);
-	            //vCard.setEncodedImage(encodedImage);
-	            vCard.setField("PHOTO", 
-	            		"<TYPE>image/jpg</TYPE><BINVAL>"
-	                    + encodedImage + 
-	                    "</BINVAL>", 
-	                    true);
-	            vCard.save(connection);
-	            EmotApplication.setValue(PreferenceKeys.USER_AVATAR, encodedImage);
-	            Log.i(TAG, "Setting preference value ...");
-	        }  catch (XMPPException e) {
-	        	Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+				String encodedImage = StringUtils.encodeBase64(bytes);
+				vCard.setAvatar(bytes);
+				//vCard.setEncodedImage(encodedImage);
+//				vCard.setField("PHOTO", 
+//						"<TYPE>image/jpeg</TYPE><BINVAL>"
+//								+ encodedImage + 
+//								"</BINVAL>", 
+//								true);
+				vCard.save(connection);
+				EmotApplication.setValue(PreferenceKeys.USER_AVATAR, encodedImage);
+				Log.i(TAG, "Setting preference value ...");
+			}  catch (XMPPException e) {
+				Log.i(TAG, "XMPP EXCEPTION  ----------- ");
 				e.printStackTrace();
 				return false;
 			}	catch(Exception e){
@@ -1046,9 +1111,11 @@ public class ChatService extends Service implements MessageListener{
 				e.printStackTrace();
 				return false;
 			}
+			
+			
 			return true;
 		}
-		
+
 		@Override
 		protected void onPostExecute(Boolean result) {
 			if(result){
@@ -1057,7 +1124,7 @@ public class ChatService extends Service implements MessageListener{
 				handler.onTaskComplete("failed");
 			}
 		}
-		
+
 	}
-	
+
 }
