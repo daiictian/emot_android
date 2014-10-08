@@ -67,6 +67,7 @@ public class ContactScreen extends ActionBarActivity{
 		showContactsThread = new ShowContacts();
 		showContactsThread.execute();
 		
+
 		//Update Contacts
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
@@ -75,6 +76,19 @@ public class ContactScreen extends ActionBarActivity{
 				
 			}
 		});
+
+		 Intent i = new Intent();
+         i.setAction("com.emot.services.ChatService");
+        // i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+         this.startService(i);
+//		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
+//
+//			@Override
+//			public void onTaskComplete(String result) {
+//				//Contacts updated in SQLite. You might want to update UI
+//			}
+//		});
+
 		
 //		Intent chatIntent = new Intent(ContactScreen.this, ChatScreen.class);
 //		chatIntent.putExtra(IntentStrings.CHAT_FRIEND, "1234567890");
@@ -179,6 +193,8 @@ public class ContactScreen extends ActionBarActivity{
         }
 		super.onStop();
 	}
+	
+	
 
 	public class UpdateRosters extends AsyncTask<Void, Contact, Void>{
 

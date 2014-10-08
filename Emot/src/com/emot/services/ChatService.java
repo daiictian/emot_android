@@ -12,24 +12,36 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.jivesoftware.smack.AndroidConnectionConfiguration;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
+import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.PacketCollector;
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.Roster.SubscriptionMode;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackAndroid;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.AndFilter;
+import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.filter.PacketTypeFilter;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.packet.Presence.Mode;
+import org.jivesoftware.smack.provider.IQProvider;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.Form;
@@ -37,6 +49,12 @@ import org.jivesoftware.smackx.FormField;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.packet.VCard;
+
+import org.jivesoftware.smackx.ping.packet.Ping;
+import org.jivesoftware.smackx.ping.packet.Pong;
+import org.jivesoftware.smackx.provider.VCardProvider;
+import org.xmlpull.v1.XmlPullParser;
+
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -63,7 +81,15 @@ import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 
-public class ChatService extends Service{
+public class ChatService extends Service implements MessageListener{
+	ReconnectionManager reconnectionManager;
+	static {
+	    try {
+	        Class.forName("org.jivesoftware.smack.ReconnectionManager");
+	    } catch (ClassNotFoundException ex) {
+	        // problem loading reconnection manager
+	    }
+	}
 	
 	private static XMPPConnection connection;
 	private static final String TAG = "ChatService";
@@ -77,6 +103,8 @@ public class ChatService extends Service{
 	public static int REQUEST_CHAT_MESSAGE = 1;
 	public static int REQUEST_PROFILE_UPDATE = 2;
 	private String mChatFriend;
+	private boolean mStopOtherChat;
+	ReconnectionManager reconnectionManager2;
 	class IncomingHandler extends Handler{
 
 		@Override
@@ -87,25 +115,59 @@ public class ChatService extends Service{
 			Bundle data = pMessage.getData();
 			mChatFriend = data.getString("chat_friend");
 			String msg = (String)data.getString("chat");
+			boolean createChat = (Boolean)data.getBoolean("create_chat");
+			
+			if(createChat){
+				Log.i(TAG, "createChat is " +createChat);
+				if(chat!=null){
+					Log.i(TAG, " participant is  = "+chat.getParticipant());
+				}
+				current_chat  = connection.getChatManager();
+				
+				if(chat == null || !chat.getParticipant().equals(mChatFriend)){
+					chat = current_chat.createChat(mChatFriend+"@emot-net", ChatService.this);
+					current_chat.addChatListener(mChatManagerListener);
+				}else{
+				//	current_chat.addChatListener(mChatManagerListener);
+					//chat.addMessageListener(mmlistener);
+				}
+			}
 			boolean joinRoom = (Boolean)data.getBoolean("join_room");
 			Log.i(TAG, "message receieved in service " +msg);
 			Log.i(TAG, "chatFriend in service " +mChatFriend);
 			try {
 				Log.i(TAG, "chat is " +mChat);
+				
+				
+				
+				
 				while(chat != null){
+					Log.i(TAG, "while loop 22222222222222");
+					//chat.addMessageListener(mmlistener);
+					Log.i(TAG, "chat being sent is " +chat);
+					Log.i(TAG, "chat participant ID " +chat.getParticipant());
+					if(connection != null){
+						Log.i(TAG, "connection authentication status " +connection.isAuthenticated());
+					}
 					chat.sendMessage(msg);
-				break;
+					break;
 				}
 				Log.i(TAG, "muc is " +muc);
 				while(muc != null ){
+					Log.i(TAG, "while loop 3333333333333333");
 					if(joinRoom){
-						muc.join("test5@emot-net");
-						muc.addMessageListener(mmGrouplistener);
+					//	muc.join("test5@emot-net");
+					//	muc.addMessageListener(mmGrouplistener);
 						//muc.join("test6@emot-net");
 						//joinRoom = false;
 					}
+
 					if(msg != null){}
 					//muc.sendMessage(msg);
+
+					//if(msg != null)
+					//	muc.sendMessage(msg);
+
 					break;
 				}
 				
@@ -134,7 +196,17 @@ public class ChatService extends Service{
 		return super.onStartCommand(intent, flags, startId);
 	}
 
-
+	private ChatManagerListener mChatManagerListener = new ChatManagerListener() {
+		
+		@Override
+		public void chatCreated(Chat arg0, boolean createdLocally) {
+			if (!createdLocally){
+				Log.i(TAG, "chat created !!!");
+				//chat.addMessageListener(mmlistener);
+			}
+			
+		}
+	};
 
 
 	//Fetch the packet and deliver to needy.
@@ -146,21 +218,26 @@ public class ChatService extends Service{
 			
 			String s = packet.getFrom();
 			Log.i("XMPPClient", " packet ...in Service is from " +s);
+			Log.i(TAG, "packet is " +packet.toXML());
 			//Presence p = (Presence)packet;
 			//Log.i("XMPPClient", " presence ...in Service is " +p);
-			Message m = (Message)packet;
-			Log.i("XMPPClient", " packet ...in Service is " +m.getBody());
-			if(m != null){
+			//Message m = (Message)packet;
+			//Log.i("XMPPClient", " packet ...in Service is " +m.getBody());
+			//if(m != null){
 				
 			
 				
-			}
+		//	}
 			
 			
 			
 		}
 	};
-	
+	SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	Date now = new Date();
+	String strDate = sdfDate.format(now);
+	final String dateTime[] = strDate.split(" ");
+	String user = "";
 	EmotDBHelper emotHistoryDB = EmotDBHelper.getInstance(ChatService.this);
 	private MessageListener mmlistener = new MessageListener() {
 		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -255,7 +332,7 @@ public class ChatService extends Service{
 				data.putCharSequence("chat", message.getBody());
 				data.putCharSequence("time", dateTime[1]);
 				android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
-				Log.i("XMPPClient", "sendign message to activity " +msg);
+				Log.i(TAG, "sendign message to activity " +msg);
 				msg.setData(data);
 				
 				/*
@@ -289,7 +366,48 @@ public class ChatService extends Service{
 		}
 	};
 	
-	
+	private ConnectionListener mConnectionListener = new ConnectionListener() {
+		
+		@Override
+		public void reconnectionSuccessful() {
+			try {
+				Log.i(TAG, "reconnection successful");
+				muc.join("test5@emot-net");
+			} catch (XMPPException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		@Override
+		public void reconnectionFailed(Exception arg0) {
+			Log.i(TAG, "reconnection failed");
+			
+		}
+		
+		@Override
+		public void reconnectingIn(int arg0) {
+			Log.i(TAG, "reconnecting in " +arg0);
+			
+		}
+		
+		@Override
+		public void connectionClosedOnError(Exception arg0) {
+			Log.i(TAG, "connection closed on error");
+			
+			
+		}
+		
+		@Override
+		public void connectionClosed() {
+			Log.i(TAG, "connection closed");
+			
+			
+			
+			
+		}
+	};
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -313,20 +431,45 @@ public class ChatService extends Service{
 	//private BlockingQueue<XMPPConnection> mConnectionQueue;
 	private BlockingQueue<Chat> chatQueue = new ArrayBlockingQueue<Chat>(1);
 	private Chat chat;
+	private ChatManager current_chat;
 	private Chat grpChat;
 	private MultiUserChat muc;
 	private Notification mBackgroundMessage;
 	private NotificationManager notificationManager;
+	PacketCollector collector;
 	@Override
 	public void onCreate() {
 		super.onCreate();
 		  
-		SmackAndroid.init(EmotApplication.getAppContext());
+	
+
+		SmackAndroid.init(ChatService.this);
+
 		Log.i(TAG, "___________ON CREATE____________" + connection);
 		if(connection!=null && connection.isAuthenticated()){
 			return;
 		}
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				while(true){
+					try {
+						Thread.sleep(10000);
+						
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					Log.i(TAG, "Connection state = "+connection.isAuthenticated() + " socket closed? = "+connection.isSocketClosed());
+				}
+				
+			}
+		}).start();
+		
 		Log.i(TAG, "___________INITIALIZING____________");
+		
 //		while(mServerConnection == null){
 //		mServerConnection = EmotApplication.getConnection();
 //		Log.i(TAG, "mServerConnection is "+mServerConnection);
@@ -356,6 +499,8 @@ public class ChatService extends Service{
 		//mCurrentChat = connection.getChatManager();
 		//mChat = mCurrentChat.createChat("test6@emot-net", "test6@emot-net",mmlistener);
 		Log.i(TAG, "On create of chat service !!!!!!!!!!!!!!!!!!!");
+		chat = null;
+		current_chat = null;
 		rosterListener = new RosterListener() {
 			// Ignored events public void entriesAdded(Collection<String> addresses) {}
 			public void entriesDeleted(Collection<String> addresses) {}
@@ -430,8 +575,10 @@ public class ChatService extends Service{
 			
 			@Override
 			public void run() {
-				ConnectionConfiguration connConfig = new ConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
+				
+				AndroidConnectionConfiguration connConfig = new AndroidConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
 				connConfig.setSASLAuthenticationEnabled(true);
+				connConfig.setReconnectionAllowed(true);
 				connConfig.setSecurityMode(SecurityMode.enabled);
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 					connConfig.setTruststoreType("AndroidCAStore");
@@ -452,9 +599,14 @@ public class ChatService extends Service{
 				}
 				connConfig.setDebuggerEnabled(true);
 				XMPPConnection.DEBUG_ENABLED = true;
+				SmackConfiguration.setPacketReplyTimeout(5000);
 				connection = new XMPPConnection(connConfig);
 				try {
 					connection.connect();
+					
+					connection.addPacketListener(new PingPacketListener(connection), new PingPacketFilter());
+					ProviderManager.getInstance().addIQProvider("ping", "urn:xmpp:ping", new PingProvider());
+					connection.addConnectionListener(mConnectionListener);
 					Log.i(TAG, "[SettingsDialog] Connected to " + connection.getHost());
 					// publishProgress("Connected to host " + HOST);
 				} catch (XMPPException ex) {
@@ -463,7 +615,43 @@ public class ChatService extends Service{
 					//publishProgress("Failed to connect to " + HOST);
 					//xmppClient.setConnection(null);
 				}
-				//connection.addPacketListener(chatPacketListener, null);
+
+				
+				connection.addPacketListener(chatPacketListener, null); 
+				PacketFilter filter  = new AndFilter(new PacketTypeFilter(Ping.class));//= new AndFilter(new PacketTypeFilter(Message.class));
+		        collector = connection.createPacketCollector(filter);
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						while(true){
+							Packet p = collector.nextResult(120*1000);
+							
+							if(p== null){
+								Log.i(TAG, "Connection dead, restart the conn");
+								connection.disconnect();
+								try {
+									connection.connect();
+									connection.addPacketListener(new PingPacketListener(connection), new PingPacketFilter());
+									ProviderManager.getInstance().addIQProvider("ping", "urn:xmpp:ping", new PingProvider());
+									connection.addConnectionListener(mConnectionListener);
+									connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
+									
+								} catch (XMPPException e) {
+									Log.i(TAG, "Exception while connecting again");
+									e.printStackTrace();
+								}
+							}else{
+								Log.i(TAG, "Connection active");
+							}
+						
+						
+					}
+					}
+				}).start();
+				
+				
+
 				try {
 					connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
 					Log.i(TAG, "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
@@ -472,12 +660,40 @@ public class ChatService extends Service{
 					e.printStackTrace();
 				}
 				
-				ChatManager current_chat  = connection.getChatManager();
-				SmackAndroid smack = SmackAndroid.init(getApplicationContext());
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						while(true){
+						Ping ping = new Ping();
+						
+						ping.setTo(mChatFriend+"@emot-net");
+						ping.setFrom(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, "") +"@emot-net");
+						if(connection.isAuthenticated()){
+							Log.i(TAG,"Sending pingssss");
+						connection.sendPacket((ping));
+						try {
+							Thread.sleep(60*1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						}
+						
+					}
+					}
+				}).start();
+				
+				
 				Log.i(TAG, "current_chat is "+current_chat);
 				//connection.getRoster().createGroup("myroom");
-				chat = current_chat.createChat(mChatFriend+"@emot-net", mChatFriend+"@emot-net", mmlistener);
-				muc = new MultiUserChat(connection, "myroom@conference.emot-net");
+
+
+				
+				Log.i(TAG, "chat object is " +chat);
+			 muc = new MultiUserChat(connection, "myroom@conference.emot-net");
+			 Log.i(TAG, "chat object is after multiuser chat " +chat);
+
 				
 				Form form = null;
 					Log.i(TAG, "creating multi user chat " +muc);
@@ -490,6 +706,7 @@ public class ChatService extends Service{
 						Form submitForm = form.createAnswerForm(); 
 						Iterator<FormField> fields = form.getFields();
 						while(fields.hasNext()){
+							Log.i(TAG, "while loop 1111111111111111");
 							FormField field = (FormField) fields.next();
 							if(!FormField.TYPE_HIDDEN.equals(field.getType()) && field.getVariable() != null){
 								submitForm.setDefaultAnswer(field.getVariable()); 
@@ -511,8 +728,11 @@ public class ChatService extends Service{
 						}
 						}
 						
-						muc.invite("test6@emot-net", "hey");
-						muc.join("test5@emot-net", "hey");	
+
+
+					//	muc.invite("test6@emot-net", "hey");
+					//	muc.join("test5@emot-net", "hey");	
+
 						//muc.addMessageListener(mmGrouplistener);
 						//boolean supports = MultiUserChat.isServiceEnabled(connection, "test6@emot-net");
 						//		Log.i(TAG, "test6 supports MUC? " +supports);
@@ -527,12 +747,12 @@ public class ChatService extends Service{
 											String arg2, String arg3,
 											String arg4, Message arg5) {
 										Log.i(TAG, "Invitation received");
-										try {
-												muc.join("test5@emot-net");
-											} catch (XMPPException e) {
-												// TODO Auto-generated catch block
-												e.printStackTrace();
-											}// TODO Auto-generated method stub
+//										try {
+//												//muc.join("test5@emot-net");
+//											} catch (XMPPException e) {
+//												// TODO Auto-generated catch block
+//												e.printStackTrace();
+//											}// TODO Auto-generated method stub
 										
 									}
 								});
@@ -542,8 +762,8 @@ public class ChatService extends Service{
 						
 						 
 					} catch (XMPPException e) {
-						Log.i(TAG, "exception " + e.getMessage());
-						e.printStackTrace();
+						//Log.i(TAG, "exception " + e.getMessage());
+						//e.printStackTrace();
 					}
 					
 					
@@ -639,6 +859,148 @@ public class ChatService extends Service{
 				handler.onTaskComplete("failed");
 			}
 		}
+		
+	}
+
+
+	@Override
+	public void processMessage(Chat arg0, final Message message) {
+		if(message.getBody() != null){
+			Log.d("Incoming message", message.getBody());
+			user = message.getFrom();
+			Bundle data = new Bundle();
+			data.putString("user", user);
+			data.putCharSequence("chat", message.getBody());
+			data.putCharSequence("time", dateTime[1]);
+			android.os.Message msg = android.os.Message.obtain(null, MESSAGE_TYPE_TEXT);
+			Log.i("XMPPClient", "sendign message to activity ");
+			msg.setData(data);
+			try {
+				mChatPacketSender.send(msg);
+			} catch (RemoteException e) {
+				Log.i("XMPPClient", "RemoteException occured " +e.getMessage());
+				e.printStackTrace();
+			}
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					emotHistoryDB.insertChat(mChatFriend, message.getBody(), dateTime[0], dateTime[1], "left");
+
+				}
+			}).start(); 
+
+
+		}
+		
+		
+		
+	}
+	
+	class Ping extends IQ implements IQProvider{
+
+		@Override
+		public IQ parseIQ(XmlPullParser arg0) throws Exception {
+			
+			return null;
+		}
+
+		@Override
+		public String getChildElementXML() {
+			StringBuffer sb = new StringBuffer();
+			sb.append("<ping xmlns='urn:xmpp:ping'/>");
+			return sb.toString();
+		}
+		
+		
+	}
+	
+	class PingProvider implements IQProvider{
+
+		@Override
+		public IQ parseIQ(XmlPullParser parser) throws Exception {
+			
+			return new Ping();
+		}
+		
+	}
+	
+	class PingPacketFilter implements PacketFilter{
+
+		@Override
+		public boolean accept(Packet packet) {
+			if(packet instanceof Ping){
+				Log.i(TAG, "Ping request received ");
+				return true;
+			}else{
+				return false;
+			}
+			
+			
+		}
+		}
+	
+	class Pong extends IQ{
+		
+		public Pong(){
+			
+			this.setType(Type.ERROR);
+		}
+
+		@Override
+		public String getChildElementXML() {
+			StringBuffer sb = new StringBuffer();
+			sb.append("<ping xmlns= 'urn:xmpp:ping'/>");
+			sb.append("<error type = 'cancel'>");
+			sb.append("<service-unavailable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>");
+			sb.append("</error>");
+			return sb.toString();
+		}
+		
+	}
+	class PingPacketListener implements PacketListener{
+		private XMPPConnection conn;
+		public PingPacketListener(final XMPPConnection pConnection){
+			conn = pConnection;
+		}
+		@Override
+		public void processPacket(Packet packet) {
+			if(packet == null){
+				Log.i(TAG, "Ping packet is null");
+				return;
+			}
+		
+			Pong pong = new Pong();
+			String from = packet.getFrom();
+			String to = packet.getTo();
+			Log.i(TAG, "From " + from + "To " + to);
+			pong.setFrom(to);
+			pong.setTo(from);
+			Log.i(TAG, "Sendign Pong packet");
+//			new Thread(new Runnable() {
+//				
+//				@Override
+//				public void run() {
+//					try {
+//						connection.disconnect();
+//						connection.connect();
+//						connection.addPacketListener(new PingPacketListener(connection), new PingPacketFilter());
+//						ProviderManager.getInstance().addIQProvider("ping", "urn:xmpp:ping", new PingProvider());
+//						connection.addConnectionListener(mConnectionListener);
+//						connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
+//						
+//					} catch (XMPPException e) {
+//						Log.i(TAG,"Exception while connecting again ");
+//						e.printStackTrace();
+//					}
+//					
+//				}
+//			}).start();
+			
+			conn.sendPacket(pong);
+			
+		}
+		
 		
 	}
 	

@@ -1,7 +1,10 @@
 package com.emot.persistence;
 
+import com.emot.model.EmotApplication;
+
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -170,6 +173,8 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
 		Log.d(TAG, "Tables created !!!");
 		db.execSQL(SQL_CREATE_TABLE_GROUPEMOTHISTORY);
+		
+        
 		
 	}
 

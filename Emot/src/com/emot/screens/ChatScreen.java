@@ -61,7 +61,7 @@ public class ChatScreen extends ActionBarActivity{
 		protected void onPostExecute(Void result) {
 			
 			Log.i(TAG, "chats = "+chatList.size());
-			chatView.setSelection(chatList.size()-1);
+			//chatView.setSelection(chatList.size()-1);
 		}
 		
 		@Override
@@ -150,10 +150,10 @@ public class ChatScreen extends ActionBarActivity{
 	
 	@Override
 	protected void onStart() {
-		Intent serviceIntent = new Intent();
-		serviceIntent.setAction("com.emot.services.ChatService");
-		startService(serviceIntent);
 		super.onStart();
+//		Intent serviceIntent = new Intent();
+//		serviceIntent.setAction("com.emot.services.ChatService");
+//		startService(serviceIntent);
 		 Intent chatservice = new Intent("com.emot.services.ChatService");
 		 bindService(chatservice, mChatServiceConnection, Context.BIND_AUTO_CREATE);
 	}
@@ -184,6 +184,7 @@ public class ChatScreen extends ActionBarActivity{
 			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
 			Bundle data = new Bundle();
 			data.putString("chat_friend", chatFriend);
+			data.putBoolean("create_chat", true);
 			Log.i("XMPPClient", "meg reply to is " +msg.replyTo + " friend = "+chatFriend);
 			msg.replyTo = mMessenger;
 			msg.setData(data);

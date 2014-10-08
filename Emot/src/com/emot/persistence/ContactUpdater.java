@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -45,9 +46,11 @@ public class ContactUpdater {
 
 
 	public static void updateContacts(final TaskCompletedRunnable taskCompleteHandler){
+
 		ContactUpdater.taskCompleteHandler = taskCompleteHandler;
 		new GetContacts().execute();
 	}
+
 
 	
 	public static class GetContacts extends AsyncTask<Void, Void, JSONArray>{
