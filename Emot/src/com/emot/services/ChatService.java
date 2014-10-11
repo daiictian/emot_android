@@ -2,14 +2,14 @@ package com.emot.services;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -18,7 +18,6 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
@@ -40,22 +39,19 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.provider.IQProvider;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.FormField;
+import org.jivesoftware.smackx.OfflineMessageManager;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.packet.VCard;
-
-import org.jivesoftware.smackx.ping.packet.Ping;
-import org.jivesoftware.smackx.ping.packet.Pong;
-import org.jivesoftware.smackx.provider.VCardProvider;
+import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
+import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
 import org.xmlpull.v1.XmlPullParser;
-
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -64,7 +60,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
@@ -154,6 +149,13 @@ public class ChatService extends Service implements MessageListener{
 						Log.i(TAG, "connection authentication status " +connection.isAuthenticated());
 					}
 					chat.sendMessage(msg);
+					
+					Message msgObj = new Message();
+					msgObj.setTo(chat.getParticipant());
+					msgObj.setBody(msg);
+					DeliveryReceiptManager.addDeliveryReceiptRequest(msgObj);
+					connection.sendPacket(msgObj);
+					
 					break;
 				}
 				Log.i(TAG, "muc is " +muc);
@@ -178,7 +180,7 @@ public class ChatService extends Service implements MessageListener{
 
 
 
-			} catch (XMPPException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -453,8 +455,11 @@ public class ChatService extends Service implements MessageListener{
 
 		SmackAndroid.init(ChatService.this);
 
-
 		SmackConfiguration.setPacketReplyTimeout(60000);
+		
+		EmotApplication.configure(ProviderManager.getInstance());
+		
+		
 		Log.i(TAG, "___________ON CREATE____________" + connection);
 		if(connection!=null && connection.isAuthenticated()){
 			return;
@@ -630,6 +635,36 @@ public class ChatService extends Service implements MessageListener{
 
 				
 				connection.addPacketListener(chatPacketListener, null); 
+				
+				try { 
+                    OfflineMessageManager offlineManager = new OfflineMessageManager(connection);
+		              Iterator<org.jivesoftware.smack.packet.Message> it = offlineManager.getMessages(); 
+		              Log.i(TAG, "Retrival = "+offlineManager.supportsFlexibleRetrieval()); 
+		              Log.i(TAG, "Number of offline messages:: " + offlineManager.getMessageCount()); 
+		              Map<String,ArrayList<Message>> offlineMsgs = new HashMap<String,ArrayList<Message>>();   
+		              while (it.hasNext()) { 
+		                  org.jivesoftware.smack.packet.Message message = it.next(); 
+		                  Log.i(TAG, "receive offline messages, the Received from [" + message.getFrom() 
+		                                  + "] the message:" + message.getBody()); 
+		                  String fromUser = message.getFrom().split("/")[0]; 
+		
+		                  if(offlineMsgs.containsKey(fromUser)) 
+		                  { 
+		                      offlineMsgs.get(fromUser).add(message); 
+		                  }else{ 
+		                      ArrayList<Message> temp = new ArrayList<Message>(); 
+		                      temp.add(message); 
+		                      offlineMsgs.put(fromUser, temp); 
+		                  } 
+		              } 
+		              // Deal with a collection of offline messages ... 
+		             
+		              offlineManager.deleteMessages(); 
+		          } catch (Exception e) { 
+		                    Log.e(TAG,"!!!!!!!!!!!!OFFLINE FAILEDDDDD!!!!!!!!!!!!!!");
+		              e.printStackTrace(); 
+		          }
+				
 				PacketFilter filter  = new AndFilter(new PacketTypeFilter(Ping.class));//= new AndFilter(new PacketTypeFilter(Message.class));
 		        collector = connection.createPacketCollector(filter);
 				new Thread(new Runnable() {
@@ -671,6 +706,17 @@ public class ChatService extends Service implements MessageListener{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				DeliveryReceiptManager.getInstanceFor(connection).enableAutoReceipts();
+				DeliveryReceiptManager.getInstanceFor(connection).addReceiptReceivedListener(new ReceiptReceivedListener()
+				{
+				        @Override
+				        public void onReceiptReceived(String arg0, String arg1, String arg2)
+				        {
+				            Log.i(TAG, arg0 + ", " + arg1 + ", " + arg2);
+				        }
+				});
+				
+				
 				
 				new Thread(new Runnable() {
 					
@@ -822,7 +868,19 @@ public class ChatService extends Service implements MessageListener{
 				Log.i(TAG, "Roster Size = "+ rosters.size());
 				roster.setSubscriptionMode(SubscriptionMode.accept_all);
 				roster.addRosterListener(rosterListener);
+				for(RosterEntry rstr: rosters){
+					Presence p = roster.getPresence(rstr.getUser());
+					Log.i(TAG, "Roster status " + rstr.getStatus() + " Presence ="+p.getStatus());
+				}
+				Presence p = roster.getPresence("0987654321@emot-net");
+				Log.i(TAG, "Roster status Presence 1 = "+p.getStatus());
+				p = roster.getPresence("fakeid@emot-net");
+				Log.i(TAG, "Roster status Presence 2 ="+p.getStatus());
+				p = roster.getPresence("0987654321");
+				Log.i(TAG, "Roster status Presence 3 ="+p.getStatus());
 			}
+			
+			
 		});
 		connThread.start();
 	}

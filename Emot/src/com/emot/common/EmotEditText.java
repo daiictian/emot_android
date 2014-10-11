@@ -3,6 +3,7 @@ package com.emot.common;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +37,7 @@ public class EmotEditText extends EditText {
 	private UpdateEmotSuggestions updateEmotTask;
 	private LinearLayout emotSuggestionLayout; 
 	private HashMap<String, Boolean> suggestedEmots = new HashMap<String, Boolean>();
+	Stack<Integer> lastEmotIndex = new Stack<Integer>();
 
 	public EmotEditText(Context context) {
 		super(context);
@@ -66,13 +68,21 @@ public class EmotEditText extends EditText {
         Log.i(TAG, "len2 = "+spannable.length());
 	}
 	
+	public boolean isLastEmotLocation(int loc){
+		if(lastEmotIndex.isEmpty()){
+			return false;
+		}
+		return loc==lastEmotIndex.peek();
+	}
+	
 	public void addEmot(Emot emot){
 		Spannable spannable = getText();
 		int start = spannable.length();
 		Log.i(TAG, "len1 = "+start + " String = "+getText().toString());
 		String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
-		if(getText().charAt(start-1) != ' '){
-			while(start>0 && getText().charAt(start-1) != ' '){
+		if(start>0 && getText().charAt(start-1) != ' '){
+			while(start>0 && getText().charAt(start-1) != ' ' && !isLastEmotLocation(start-1)){
+				Log.i(TAG, "@@@@@@@@@ len1 = "+start + " String = "+getText().toString());
 				start--;
 				dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
 			}
@@ -85,6 +95,7 @@ public class EmotEditText extends EditText {
 		Log.i(TAG, "222 " + getText().toString());
 		//spannable.setSpan(new ImageSpan(EmotApplication.getAppContext(), emot), start+1, start+2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		replaceWithEmot(start, start+appendString.length(), emot.getEmotImg());
+		lastEmotIndex.push(getText().length()-1);
 		Log.i(TAG, "333 " + getText().toString());
 	}
 
@@ -132,15 +143,23 @@ public class EmotEditText extends EditText {
 			super.onTextChanged(s, start, before, count);
 			return;
 		}
-		//
-		//Log.i(TAG, "Text changed 111" + s.toString());
+		
 		String txt = s.toString();
 		int lastSpace = txt.lastIndexOf(" ");
 		if(txt.length()==0)
 			return;
 		if(lastSpace==-1)
 			lastSpace = 0;
-		String lastWord = txt.substring(lastSpace);
+		String lastWord;
+		if(!lastEmotIndex.isEmpty() && lastEmotIndex.peek()>txt.length()){
+			lastEmotIndex.pop();
+		}
+		if(!lastEmotIndex.isEmpty() && lastSpace<lastEmotIndex.peek()){
+			lastWord = txt.substring(lastEmotIndex.peek());
+		}else{
+			lastWord = txt.substring(lastSpace);
+		}
+		 
 		
 		if(updateEmotTask==null){
 			updateEmotTask = new UpdateEmotSuggestions(lastWord);
@@ -167,7 +186,7 @@ public class EmotEditText extends EditText {
 			{
 				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
 				byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-				Log.i(TAG, "Emot hash is "+hash);
+				//Log.i(TAG, "Emot hash is "+hash);
 				Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
 				publishProgress(emot);
 			}

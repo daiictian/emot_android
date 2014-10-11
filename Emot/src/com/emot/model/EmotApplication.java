@@ -35,6 +35,8 @@ import org.jivesoftware.smackx.provider.RosterExchangeProvider;
 import org.jivesoftware.smackx.provider.StreamInitiationProvider;
 import org.jivesoftware.smackx.provider.VCardProvider;
 import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
+import org.jivesoftware.smackx.receipts.DeliveryReceipt;
+import org.jivesoftware.smackx.receipts.DeliveryReceiptRequest;
 import org.jivesoftware.smackx.search.UserSearch;
 
 import android.app.Application;
@@ -327,6 +329,12 @@ public class EmotApplication extends Application {
 		pm.addExtensionProvider("bad-payload", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.BadPayloadError());
 		pm.addExtensionProvider("bad-sessionid", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.BadSessionIDError());
 		pm.addExtensionProvider("session-expired", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.SessionExpiredError());
+		
+		pm.addExtensionProvider(DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE, new DeliveryReceipt.Provider());
+		pm.addExtensionProvider(DeliveryReceiptRequest.ELEMENT, new DeliveryReceiptRequest().getNamespace(), new DeliveryReceiptRequest.Provider());
+		
+		//pm.addExtensionProvider("offline", "http://jabber.org/protocol/offline", new org.jivesoftware.smackx.packet.OfflineMessageInfo.Provider());
+		//pm.addIQProvider("offline", "http://jabber.org/protocol/offline", new org.jivesoftware.smackx.packet.OfflineMessageRequest.Provider());
 	}
 
 	public static String randomId() {
