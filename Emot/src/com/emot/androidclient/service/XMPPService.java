@@ -19,11 +19,11 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.emot.androidclient.IXMPPRosterCallback;
-import com.emot.androidclient.MainWindow;
 import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.exceptions.YaximXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
+import com.emot.screens.ContactScreen;
 import com.emot.screens.R;
 
 public class XMPPService extends GenericService {
@@ -331,7 +331,7 @@ public class XMPPService extends GenericService {
 				System.currentTimeMillis());
 		n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR | Notification.FLAG_ONLY_ALERT_ONCE;
 
-		Intent notificationIntent = new Intent(this, MainWindow.class);
+		Intent notificationIntent = new Intent(this, ContactScreen.class);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		n.contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
 				PendingIntent.FLAG_UPDATE_CURRENT);

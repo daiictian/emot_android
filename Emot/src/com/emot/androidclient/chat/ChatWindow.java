@@ -16,6 +16,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.text.ClipboardManager;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,6 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -37,10 +40,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockListActivity;
-import com.actionbarsherlock.view.Window;
-import com.emot.androidclient.MainWindow;
 import com.emot.androidclient.data.ChatProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.RosterProvider;
@@ -52,7 +51,7 @@ import com.emot.model.EmotApplication;
 import com.emot.screens.R;
 
 @SuppressWarnings("deprecation") /* recent ClipboardManager only available since API 11 */
-public class ChatWindow extends SherlockListActivity implements OnKeyListener,
+public class ChatWindow extends ActionBarActivity implements OnKeyListener,
 		TextWatcher {
 
 	public static final String INTENT_EXTRA_USERNAME = ChatWindow.class.getName() + ".username";
@@ -99,7 +98,7 @@ public class ChatWindow extends SherlockListActivity implements OnKeyListener,
 		actionBar.setHomeButtonEnabled(true);
 		actionBar.setDisplayHomeAsUpEnabled(true);
 
-		registerForContextMenu(getListView());
+		//registerForContextMenu(getListView());
 		setContactFromUri();
 		registerXMPPService();
 		setSendButton();
@@ -136,8 +135,8 @@ public class ChatWindow extends SherlockListActivity implements OnKeyListener,
 				selection, null, null);
 		ListAdapter adapter = new ChatWindowAdapter(cursor, PROJECTION_FROM,
 				PROJECTION_TO, mWithJabberID, mUserScreenName);
-
-		setListAdapter(adapter);
+		
+		//setListAdapter(adapter);
 	}
 
 	protected boolean needs_to_bind_unbind = false;

@@ -3,19 +3,18 @@
 
     <!-- for emulator include bg -->
     <!-- <color name="holo_light_bg_color">#fff3f3f3</color> -->
-    
-<!--     the unprefixed ones (without android:) are for the Sherlock implementation -->
 
+
+    <!-- the unprefixed ones (without android:) are for the Sherlock implementation -->
+    <!--
     <style name="YaximLightTheme" parent="Theme.Sherlock.Light">
         <item name="android:actionBarStyle">@style/MyActionBarLight</item>
         <item name="actionBarStyle">@style/MyActionBarLight</item>
         
-        <!-- <item name="android:windowBackground">@color/holo_light_bg_color</item> -->
         <item name="MainGroup">@style/RosterGroupName.Light</item>
         <item name="MainChild">@style/RosterGroupItem.Light</item>
         <item name="OnlineFriends">@drawable/ic_action_online_friends_light</item>
         <item name="AllFriends">@drawable/ic_action_all_friends_light</item>
-        <!-- <item name="android:listSeparatorTextViewStyle">@style/PreferenceListHeader</item> -->
         <item name="ChatMsgHeaderMeColor">#ff6d6dcc</item>
         <item name="ChatMsgHeaderYouColor">#ffcc5050</item>
 		<item name="ErrorView">@style/StyleErrorView.Light</item>
@@ -58,6 +57,23 @@
 		<item name="ErrorView">@style/StyleErrorView</item>
         <item name="ChatText">@style/ChatText</item>
         <item name="dialogTextColor">@style/dialogBackground</item>
+    </style>
+    -->
+    <style name="CustomActionBarTheme" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+
+        <!-- <item name="android:actionBarStyle">@style/MyActionBar</item> -->
+
+
+        <!-- Support library compatibility -->
+        <item name="actionBarStyle">@style/MyActionBar</item>
+    </style>
+
+    <!-- ActionBar styles -->
+    <style name="MyActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@color/blue</item>
+
+        <!-- Support library compatibility -->
+        <item name="background">@color/blue</item>
     </style>
 
 </resources>

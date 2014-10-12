@@ -18,6 +18,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -27,8 +29,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockActivity;
 import com.emot.adapters.ChatListArrayAdapter;
 import com.emot.common.EmotEditText;
 import com.emot.constants.IntentStrings;
@@ -38,7 +38,7 @@ import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 import com.emot.services.ChatService;
 
-public class ChatScreen extends SherlockActivity{
+public class ChatScreen extends ActionBarActivity{
 
 	private Chat chat;
 	private ImageView sendButton;

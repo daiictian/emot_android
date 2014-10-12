@@ -24,6 +24,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -32,11 +34,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockActivity;
 import com.emot.adapters.ContactArrayAdapter;
 import com.emot.androidclient.IXMPPRosterCallback.Stub;
-import com.emot.androidclient.MainWindow.RosterExpListAdapter;
 import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.data.YaximConfiguration;
 import com.emot.androidclient.service.IXMPPRosterService;
@@ -53,7 +52,7 @@ import com.emot.persistence.EmotDBHelper;
 import com.emot.services.ChatService;
 import com.emot.services.ChatService.ProfileBinder;
 
-public class ContactScreen extends SherlockActivity{
+public class ContactScreen extends ActionBarActivity{
 	private ListView listviewContact;
 	private static String TAG = ContactScreen.class.getName();
 	private ContactArrayAdapter contactsAdapter;
@@ -67,7 +66,7 @@ public class ContactScreen extends SherlockActivity{
 	private ServiceConnection xmppServiceConnection;
 	private XMPPRosterServiceAdapter serviceAdapter;
 	private Stub rosterCallback;
-	private RosterExpListAdapter rosterListAdapter;
+	//private RosterExpListAdapter rosterListAdapter;
 	private TextView mConnectingText;
 	private YaximConfiguration mConfig;
 
@@ -181,7 +180,7 @@ public class ContactScreen extends SherlockActivity{
 				
 			}
 		});
-		registerXMPPService();
+		//registerXMPPService();
 	}
 	
 	@Override
@@ -199,24 +198,8 @@ public class ContactScreen extends SherlockActivity{
 	}
 	
 	@Override
-    protected void onStart() {
-        super.onStart();
-        // Bind to LocalService
-        Log.i(TAG, "On start of update profile");
-        Intent intent = new Intent(this, ChatService.class);
-        intent.putExtra("request_code", ChatService.REQUEST_PROFILE_UPDATE);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-	
-	@Override
 	protected void onStop() {
 		showContactsThread.cancel(true);
-		// Unbind from the service
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
-		super.onStop();
 	}
 	
 	
@@ -360,7 +343,7 @@ public class ContactScreen extends SherlockActivity{
 				serviceAdapter.registerUICallback(rosterCallback);
 				Log.i(TAG, "getConnectionState(): "
 						+ serviceAdapter.getConnectionState());
-				invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
+				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
 				ConnectionState cs = serviceAdapter.getConnectionState();
 //				updateConnectionState(cs);
 //				updateRoster();

@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -24,7 +25,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockActivity;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.PreferenceKeys;
 import com.emot.model.EmotApplication;
@@ -32,7 +32,7 @@ import com.emot.model.EmotUser;
 import com.emot.services.ChatService;
 import com.emot.services.ChatService.ProfileBinder;
 
-public class UpdateProfileScreen extends SherlockActivity {
+public class UpdateProfileScreen extends ActionBarActivity {
 	private EditText editStatus;
 	private Button saveButton;
 	private ImageView imageAvatar;

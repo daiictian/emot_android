@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -39,7 +40,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockActivity;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
@@ -55,7 +55,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 
 
-public class Registration extends SherlockActivity {
+public class Registration extends ActionBarActivity {
 
 	private static final String TAG = Registration.class.getSimpleName();
 	private EditText mEnterMobile;
