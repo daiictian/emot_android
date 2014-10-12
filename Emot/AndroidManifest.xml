@@ -10,19 +10,22 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/> 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:screenOrientation="portrait"
         android:name="com.emot.model.EmotApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.Light.Panel">
+        android:screenOrientation="portrait"
+        android:theme="@android:style/Theme.Light.Panel" >
         <activity
-            android:theme="@style/CustomActionBarTheme"
             android:name=".ChatScreen"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:theme="@style/MyActionBarLight" >
         </activity>
         <activity
             android:name=".Emots"
@@ -30,49 +33,63 @@
         </activity>
         <activity
             android:name=".UpdateProfileScreen"
-            android:label="@string/app_name" 
-            android:theme="@style/CustomActionBarTheme">
+            android:label="@string/app_name"
+            android:theme="@style/MyActionBarLight" >
         </activity>
         <activity
-            android:theme="@style/CustomActionBarTheme"
             android:name=".ContactScreen"
-            android:label="@string/app_name" >
-             <intent-filter>
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Sherlock.Light" >
+            <intent-filter>
                 <action android:name="com.emot.services.ChatService" />
             </intent-filter>
         </activity>
-        
         <activity
-            android:theme="@style/CustomActionBarTheme"
             android:name=".GroupChatScreen"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:theme="@style/MyActionBarLight" >
         </activity>
         <activity
             android:name=".Registration"
             android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
-             <intent-filter>
+            android:theme="@style/Theme.Sherlock.Light" >
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.emot.androidclient.chat.ChatWindow"
+            android:alwaysRetainTaskState="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Sherlock.Light"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
 
         <service
-            android:name="com.emot.services.ChatService"
+            android:name="com.emot.androidclient.service.XMPPService"
             android:exported="true"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="com.emot.services.ChatService" />
             </intent-filter>
         </service>
+
+        <receiver android:name="com.emot.services.BootReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+
+                <category android:name="android.intent.category.HOME" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="com.emot.androidclient.data.ChatProvider"
+            android:authorities="com.emot.androidclient.provider.Chats"
+            android:exported="false" />
         
-        <receiver android:name="com.emot.services.BootReceiver">
-                        <intent-filter>
-                                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                                <category android:name="android.intent.category.HOME" />
-                        </intent-filter>
-   </receiver>
+        <activity android:name="de.duenndns.ssl.MemorizingActivity" />
     </application>
 
 </manifest>

@@ -2,6 +2,7 @@ package com.emot.screens;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
@@ -10,29 +11,40 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.packet.VCard;
 
+import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockActivity;
 import com.emot.adapters.ContactArrayAdapter;
+import com.emot.androidclient.IXMPPRosterCallback.Stub;
+import com.emot.androidclient.MainWindow.RosterExpListAdapter;
+import com.emot.androidclient.XMPPRosterServiceAdapter;
+import com.emot.androidclient.data.YaximConfiguration;
+import com.emot.androidclient.service.IXMPPRosterService;
+import com.emot.androidclient.service.XMPPService;
+import com.emot.androidclient.util.ConnectionState;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.IntentStrings;
+import com.emot.constants.WebServiceConstants;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
@@ -41,7 +53,7 @@ import com.emot.persistence.EmotDBHelper;
 import com.emot.services.ChatService;
 import com.emot.services.ChatService.ProfileBinder;
 
-public class ContactScreen extends ActionBarActivity{
+public class ContactScreen extends SherlockActivity{
 	private ListView listviewContact;
 	private static String TAG = ContactScreen.class.getName();
 	private ContactArrayAdapter contactsAdapter;
@@ -49,10 +61,27 @@ public class ContactScreen extends ActionBarActivity{
 	private ShowContacts showContactsThread;
 	private ChatService chatService;
 	boolean mBound = false;
+	private Handler mainHandler = new Handler();
+
+	private Intent xmppServiceIntent;
+	private ServiceConnection xmppServiceConnection;
+	private XMPPRosterServiceAdapter serviceAdapter;
+	private Stub rosterCallback;
+	private RosterExpListAdapter rosterListAdapter;
+	private TextView mConnectingText;
+	private YaximConfiguration mConfig;
+
+//	private ContentObserver mRosterObserver = new RosterObserver();
+//	private ContentObserver mChatObserver = new ChatObserver();
+	
+	private HashMap<String, Boolean> mGroupsExpanded = new HashMap<String, Boolean>();
+
+	private ActionBar actionBar;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mConfig = EmotApplication.getConfig(this);
 		setContentView(R.layout.contacts);
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
 
@@ -148,29 +177,25 @@ public class ContactScreen extends ActionBarActivity{
 				chatIntent.putExtra(IntentStrings.CHAT_FRIEND, mobile);
 				startActivity(chatIntent);
 				
+				startChatActivity(mobile+"@"+WebServiceConstants.CHAT_DOMAIN, "alias", null);
+				
 			}
 		});
+		registerXMPPService();
+	}
+	
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		unbindXMPPService();
+	}
 
-	}
-	
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    // Inflate the menu items for use in the action bar
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.menu_actions, menu);
-	    return super.onCreateOptionsMenu(menu);
-	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle presses on the action bar items
-	    switch (item.getItemId()) {
-	        case R.id.action_profile:
-	            startActivity(new Intent(this, UpdateProfileScreen.class));
-	            return true;
-	        default:
-	            return super.onOptionsItemSelected(item);
-	    }
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		bindXMPPService();
 	}
 	
 	@Override
@@ -319,5 +344,74 @@ public class ContactScreen extends ActionBarActivity{
 			Log.i(TAG, "service disconnected ... ");
 		}
 	};
+	
+	private void registerXMPPService() {
+		Log.i(TAG, "called startXMPPService()");
+		xmppServiceIntent = new Intent(this, XMPPService.class);
+		xmppServiceIntent.setAction("org.yaxim.androidclient.XMPPSERVICE");
+
+		xmppServiceConnection = new ServiceConnection() {
+
+			@TargetApi(Build.VERSION_CODES.HONEYCOMB) // required for Sherlock's invalidateOptionsMenu */
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				Log.i(TAG, "called onServiceConnected()");
+				serviceAdapter = new XMPPRosterServiceAdapter(
+						IXMPPRosterService.Stub.asInterface(service));
+				serviceAdapter.registerUICallback(rosterCallback);
+				Log.i(TAG, "getConnectionState(): "
+						+ serviceAdapter.getConnectionState());
+				invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
+				ConnectionState cs = serviceAdapter.getConnectionState();
+//				updateConnectionState(cs);
+//				updateRoster();
+
+				// when returning from prefs to main activity, apply new config
+				if (mConfig.reconnect_required && cs == ConnectionState.ONLINE) {
+					// login config changed, force reconnection
+					serviceAdapter.disconnect();
+					serviceAdapter.connect();
+				} else if (mConfig.presence_required && isConnected())
+					serviceAdapter.setStatusFromConfig();
+
+				// handle server-related intents after connecting to the backend
+				//handleJabberIntent();
+			}
+
+			public void onServiceDisconnected(ComponentName name) {
+				Log.i(TAG, "called onServiceDisconnected()");
+			}
+		};
+	}
+	
+	private void unbindXMPPService() {
+		try {
+			unbindService(xmppServiceConnection);
+		} catch (IllegalArgumentException e) {
+			Log.e(TAG, "Service wasn't bound!");
+		}
+	}
+
+	private void bindXMPPService() {
+		bindService(xmppServiceIntent, xmppServiceConnection, BIND_AUTO_CREATE);
+	}
+	
+	private boolean isConnected() {
+		return serviceAdapter != null && serviceAdapter.isAuthenticated();
+	}
+	private boolean isConnecting() {
+		return serviceAdapter != null && serviceAdapter.getConnectionState() == ConnectionState.CONNECTING;
+	}
+	
+	private void startChatActivity(String user, String userName, String message) {
+		Intent chatIntent = new Intent(this,
+				com.emot.androidclient.chat.ChatWindow.class);
+		Uri userNameUri = Uri.parse(user);
+		chatIntent.setData(userNameUri);
+		chatIntent.putExtra(com.emot.androidclient.chat.ChatWindow.INTENT_EXTRA_USERNAME, userName);
+		if (message != null) {
+			chatIntent.putExtra(com.emot.androidclient.chat.ChatWindow.INTENT_EXTRA_MESSAGE, message);
+		}
+		startActivity(chatIntent);
+	}
 
 }

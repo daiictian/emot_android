@@ -46,8 +46,10 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.emot.constants.PreferenceKeys;
+import com.emot.androidclient.data.YaximConfiguration;
 import com.emot.emotobjects.ConnectionQueue;
+
+import de.duenndns.ssl.MemorizingTrustManager;
 
 public class EmotApplication extends Application {
 
@@ -56,6 +58,11 @@ public class EmotApplication extends Application {
 	private static SharedPreferences prefs;
 	private static XMPPConnection connection;
 	private static boolean connecting = false;
+	public MemorizingTrustManager mMTM;
+	private YaximConfiguration mConfig;
+	
+	public static final String XMPP_IDENTITY_NAME = "emot";
+	public static final String XMPP_IDENTITY_TYPE = "phone";
 
 	public void onCreate() {
 		super.onCreate();
@@ -63,7 +70,18 @@ public class EmotApplication extends Application {
 		EmotApplication.context = getApplicationContext();
 		prefs = PreferenceManager.getDefaultSharedPreferences(context
 				.getApplicationContext());
+		mMTM = new MemorizingTrustManager(this);
+		mConfig = new YaximConfiguration(PreferenceManager
+				.getDefaultSharedPreferences(this));
 
+	}
+	
+	public static YaximConfiguration getConfig(Context ctx) {
+		return ((EmotApplication)getAppContext()).mConfig;
+	}
+	
+	public static EmotApplication getApp(Context ctx) {
+		return (EmotApplication)ctx.getApplicationContext();
 	}
 
 	public static XMPPConnection getConnection(){
@@ -78,6 +96,10 @@ public class EmotApplication extends Application {
 
 	public static Context getAppContext() {
 		return EmotApplication.context;
+	}
+	
+	public static SharedPreferences getPrefs(){
+		return prefs;
 	}
 
 	public static boolean setValue(String k, String v) {
@@ -111,7 +133,7 @@ public class EmotApplication extends Application {
 
 					// Create a connection
 					ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
-					connConfig.setSASLAuthenticationEnabled(true);
+					//connConfig.setSASLAuthenticationEnabled(true);
 					//connConfig.setCompressionEnabled(true);
 					connConfig.setSecurityMode(SecurityMode.enabled);
 

@@ -592,7 +592,7 @@ public class ChatService extends Service implements MessageListener{
 			public void run() {
 				
 				AndroidConnectionConfiguration connConfig = new AndroidConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
-				connConfig.setSASLAuthenticationEnabled(true);
+				//connConfig.setSASLAuthenticationEnabled(true);
 				connConfig.setReconnectionAllowed(true);
 
 
