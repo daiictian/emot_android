@@ -180,7 +180,7 @@ public class ContactScreen extends ActionBarActivity{
 				
 			}
 		});
-		//registerXMPPService();
+		registerXMPPService();
 	}
 	
 	@Override
@@ -200,6 +200,7 @@ public class ContactScreen extends ActionBarActivity{
 	@Override
 	protected void onStop() {
 		showContactsThread.cancel(true);
+		super.onStop();
 	}
 	
 	
