@@ -137,7 +137,7 @@ public class YaximConfiguration implements OnSharedPreferenceChangeListener {
 		this.priority = validatePriority(XMPPHelper.tryToParseInt(prefs
 				.getString(PreferenceConstants.PRIORITY, "0"), 0));
 
-		this.foregroundService = prefs.getBoolean(PreferenceConstants.FOREGROUND, true);
+		this.foregroundService = prefs.getBoolean(PreferenceConstants.FOREGROUND, false);
 
 		this.autoConnect = prefs.getBoolean(PreferenceConstants.CONN_STARTUP,
 				false);
