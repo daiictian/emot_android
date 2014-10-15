@@ -1,4 +1,4 @@
-package com.emot.screens;
+package com.emot.androidclient.chat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,13 +28,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.emot.adapters.GroupChatListArrayAdapter;
+import com.emot.androidclient.chat.XMPPChatServiceAdapter;
+import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 import com.emot.services.ChatService;
-
+import com.emot.screens.R;
 public class GroupChatScreen extends Activity{
 	
 
@@ -161,6 +163,7 @@ public class GroupChatScreen extends Activity{
 	private Messenger mMessengerService = null;
 	private boolean mMessengerServiceConnected = false;
 	private GroupChatListArrayAdapter grpchatlistAdapter;
+	private XMPPGroupChatServiceAdapter mServiceAdapter;
 	ArrayList<ChatMessage> chatList;
 	
 	
@@ -176,7 +179,15 @@ public class GroupChatScreen extends Activity{
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			
+
+			Log.i(TAG, "called onServiceConnected()");
+			mServiceAdapter = new XMPPGroupChatServiceAdapter(
+					IXMPPChatService.Stub.asInterface(service),
+					mGroupName);
 			
+			mServiceAdapter.clearNotifications(mGroupName);
+			//updateContactStatus();
+		
 			
 		}
 	};
