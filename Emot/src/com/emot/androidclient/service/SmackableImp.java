@@ -77,12 +77,10 @@ import com.emot.androidclient.data.RosterProvider.RosterConstants;
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.LogConstants;
+import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.ImageHelper;
-import com.emot.constants.PreferenceKeys;
-import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
-import com.emot.persistence.DBContract;
 
 import de.duenndns.ssl.MemorizingTrustManager;
 
@@ -1295,7 +1293,7 @@ public class SmackableImp implements Smackable {
 //								"</BINVAL>", 
 //								true);
 				vCard.save(mXMPPConnection);
-				EmotApplication.setValue(PreferenceKeys.USER_AVATAR, encodedImage);
+				EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
 				Log.i(TAG, "Setting preference value ...");
 			}  catch (XMPPException e) {
 				Log.i(TAG, "XMPP EXCEPTION  ----------- ");

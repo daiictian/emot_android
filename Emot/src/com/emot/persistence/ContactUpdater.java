@@ -14,7 +14,6 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -24,9 +23,9 @@ import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 
 import com.emot.androidclient.XMPPRosterServiceAdapter;
+import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
-import com.emot.constants.PreferenceKeys;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
 
@@ -89,7 +88,7 @@ public class ContactUpdater {
 					return;
 				}
 				ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-				params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceKeys.USER_APPID, "")));
+				params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceConstants.USER_APPID, "")));
 				params.add(new BasicNameValuePair("number_list", numbers.toString()));
 				EmotHTTPClient contactCall = new EmotHTTPClient(cUrl, params , new TaskCompletedRunnable() {
 
@@ -140,26 +139,18 @@ public class ContactUpdater {
 		
 		@Override
 		protected Void doInBackground(Void... params) {
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+
+			//Wait till connected
+			while (ContactUpdater.serviceAdapter==null || !ContactUpdater.serviceAdapter.isAuthenticated()){
+				Log.i(TAG, "Wait for connection to establish");
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 			
 			int len = emotters.length();
-//			while (EmotApplication.getConnection()==null || !EmotApplication.getConnection().isAuthenticated()){
-//				//Wait till connected
-//				Log.i(TAG, "Wait for connection to establish");
-//				try {
-//					Thread.sleep(5000);
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-			
-			SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 			for(int i=0; i<len; i++){
 				try {
 					
@@ -182,7 +173,7 @@ public class ContactUpdater {
 //					}
 					
 					
-					//Log.i(TAG, "Service adapter value = "+ContactUpdater.serviceAdapter + ContactUpdater.serviceAdapter.isAuthenticated());
+					Log.i(TAG, "Service adapter value = "+ContactUpdater.serviceAdapter);
 					if(ContactUpdater.serviceAdapter!=null && ContactUpdater.serviceAdapter.isAuthenticated()){
 						Log.i(TAG, "Adding roster "+emotter.getString("mobile"));
 						ContactUpdater.serviceAdapter.addRosterItem(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN, contacts.get(emotter.getString("mobile")), null);

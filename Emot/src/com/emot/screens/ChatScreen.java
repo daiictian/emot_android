@@ -219,21 +219,6 @@ public class ChatScreen extends ActionBarActivity{
 		//chatView.setAdapter(chatlistAdapter);
 		setChatWindowAdapter();
 		
-
-		if(EmotApplication.getConnection() != null){
-			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
-
-			runOnUiThread(new Thread(new Runnable() {
-				@Override
-				public void run() {
-					if(chat != null){
-						sendButton.setEnabled(true);
-					}
-
-				}
-			}));
-		}
-
 		chatEntry.setOnClickListener(new OnClickListener() {
 
 			@Override

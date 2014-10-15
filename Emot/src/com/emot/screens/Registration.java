@@ -1,6 +1,5 @@
 package com.emot.screens;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,18 +15,16 @@ import java.util.Map;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences.Editor;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -40,11 +37,17 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.emot.adapters.ContactArrayAdapter;
+import com.emot.androidclient.XMPPRosterServiceAdapter;
+import com.emot.androidclient.IXMPPRosterCallback.Stub;
+import com.emot.androidclient.data.EmotConfiguration;
+import com.emot.androidclient.service.IXMPPRosterService;
+import com.emot.androidclient.service.XMPPService;
+import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.ApplicationConstants;
-import com.emot.constants.PreferenceKeys;
 import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
@@ -73,24 +76,33 @@ public class Registration extends ActionBarActivity {
 	private static Map<String, String> mCountryCode = new HashMap<String, String>();
 	private static Map<String, Integer> mCountryCallingCodeMap = new HashMap<String, Integer>();
 	private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+	private Intent xmppServiceIntent;
+	private ServiceConnection xmppServiceConnection;
+	private XMPPRosterServiceAdapter serviceAdapter;
+	private Stub rosterCallback;
+	private EmotConfiguration mConfig;
+	
 	static{
 		String[] locales = Locale.getISOCountries();
 		for (String countryCode : locales) {
-
 			Locale obj = new Locale("", countryCode);
 			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
 			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
-			
-
-
 		}
+	}
+	
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		unbindXMPPService();
 	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
-		if(EmotApplication.getValue(PreferenceKeys.USER_APPID, null)!=null){
+		if(EmotApplication.getValue(PreferenceConstants.USER_APPID, null)!=null){
 			startActivity(new Intent(this, ContactScreen.class));
 			finish();
 		}
@@ -223,9 +235,7 @@ public class Registration extends ActionBarActivity {
 							JSONObject resultJson = new JSONObject(result);
 							String status = resultJson.getString("status");
 							if(status.equals("success")){
-								EmotApplication.setValue(PreferenceKeys.USER_APPID, resultJson.getString("appid"));
-								EmotApplication.setValue(PreferenceKeys.USER_MOBILE, mMobileNumber);
-								EmotApplication.setValue(PreferenceKeys.USER_PWD, mRN);
+								EmotApplication.setValue(PreferenceConstants.USER_APPID, resultJson.getString("appid"));
 								EmotApplication.setValue(PreferenceConstants.JID, mMobileNumber+"@"+WebServiceConstants.CHAT_DOMAIN);
 								EmotApplication.setValue(PreferenceConstants.PASSWORD, mRN);
 								EmotApplication.setValue(PreferenceConstants.CUSTOM_SERVER, WebServiceConstants.CHAT_SERVER);
@@ -233,83 +243,11 @@ public class Registration extends ActionBarActivity {
 								Editor e = EmotApplication.getPrefs().edit();
 								e.putBoolean(PreferenceConstants.REQUIRE_SSL, false);
 								e.commit();
-								//EmotApplication.setValue(PreferenceConstants.RESSOURCE, WebServiceConstants.CHAT_DOMAIN);
-								Thread login = new Thread(new Runnable() {
-
-									@Override
-									public void run() {
-										XMPPConnection connection;
-
-										// Create a connection
-										ConnectionConfiguration connConfig = new ConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
-										//connConfig.setSASLAuthenticationEnabled(true);
-										//connConfig.setCompressionEnabled(true);
-										connConfig.setSecurityMode(SecurityMode.enabled);
-
-										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-											connConfig.setTruststoreType("AndroidCAStore");
-											connConfig.setTruststorePassword(null);
-											connConfig.setTruststorePath(null);
-											Log.i(TAG, "[XmppConnectionTask] Build Icecream");
-
-										} else {
-											connConfig.setTruststoreType("BKS");
-											String path = System.getProperty("javax.net.ssl.trustStore");
-											if (path == null)
-												path = System.getProperty("java.home") + File.separator + "etc"
-														+ File.separator + "security" + File.separator
-														+ "cacerts.bks";
-											connConfig.setTruststorePath(path);
-											Log.i(TAG, "[XmppConnectionTask] Build less than Icecream ");
-
-										}
-										connConfig.setDebuggerEnabled(true);
-										XMPPConnection.DEBUG_ENABLED = true;
-										connection = new XMPPConnection(connConfig);
-
-										try {
-											connection.connect();
-											Log.i(TAG, "[SettingsDialog] Connected to " + connection.getHost());
-											// publishProgress("Connected to host " + HOST);
-										} catch (XMPPException ex) {
-											Log.e(TAG, "[SettingsDialog] Failed to connect to " + connection.getHost());
-											Log.e(TAG, ex.toString());
-											//publishProgress("Failed to connect to " + HOST);
-											//xmppClient.setConnection(null);
-										}
-
-
-
-										try {
-											connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
-											if(connection.isAuthenticated()){
-												Log.i(TAG, "Authenticated : "+connection.isAuthenticated());
-												///In a UI thread launch contacts Activity
-											}else{
-												
-											}
-
-
-										} catch(Exception ex){
-
-											Log.i(TAG, "loginfails ");
-											ex.printStackTrace();
-										}
-
-
-									}
-								});
-								//login.start();
-								ContactUpdater.updateContacts(new TaskCompletedRunnable() {
-
-									@Override
-									public void onTaskComplete(String result) {
-										//Contacts updated in SQLite. You might want to update UI
-										pd.cancel();
-										startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
-										finish();
-									}
-								}, null);
+								
+								//Register and bind
+								registerXMPPService();
+								bindXMPPService();
+								
 							}
 						} catch (JSONException e) {
 
@@ -321,16 +259,8 @@ public class Registration extends ActionBarActivity {
 				EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, reqContent, taskCompletedRunnable);
 				registrationHTTPClient.execute(new Void[]{});
 
-
-
 			}
 		});
-		
-		
-		
-		
-		
-	
 		
 		mCountrySelector.setOnItemClickListener(new OnItemClickListener() {
 
@@ -347,6 +277,8 @@ public class Registration extends ActionBarActivity {
 			}
 		});
 	}
+	
+	
 
 	private String hText(final String input){
 
@@ -415,10 +347,76 @@ public class Registration extends ActionBarActivity {
 		viewVerificationBlock = findViewById(R.id.viewRegisterVerificationBlock);
 	}
 
-	@Override
-	protected void onResume() {
+	private void registerXMPPService() {
+		Log.i(TAG, "called startXMPPService()");
+		mConfig = EmotApplication.getConfig(this);
+		Log.i(TAG, "USERNAME = "+mConfig.jabberID + " password = "+mConfig.password);
+		xmppServiceIntent = new Intent(this, XMPPService.class);
+		xmppServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
 
-		super.onResume();
+		xmppServiceConnection = new ServiceConnection() {
+
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				Log.i(TAG, "called onServiceConnected()");
+				serviceAdapter = new XMPPRosterServiceAdapter(
+						IXMPPRosterService.Stub.asInterface(service));
+				serviceAdapter.registerUICallback(rosterCallback);
+				Log.i(TAG, "getConnectionState(): "
+						+ serviceAdapter.getConnectionState());
+				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
+				ConnectionState cs = serviceAdapter.getConnectionState();
+
+				serviceAdapter.connect();
+				openContactScreen();
+			}
+
+			public void onServiceDisconnected(ComponentName name) {
+				Log.i(TAG, "called onServiceDisconnected()");
+				pd.cancel();
+				Toast.makeText(Registration.this, "Sorry we encountered error while registering. Please try again later", Toast.LENGTH_LONG).show();
+			}
+		};
+	}
+	
+	private void openContactScreen(){
+		Thread waitForConnection = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				while(serviceAdapter==null || !serviceAdapter.isAuthenticated()){
+					Log.i(TAG, "Waiting for connection to authenticate ...");
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						break;
+					}
+				}
+				
+				ContactUpdater.updateContacts(new TaskCompletedRunnable() {
+					@Override
+					public void onTaskComplete(String result) {
+						//Contacts updated in SQLite. You might want to update UI
+						pd.cancel();
+						startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+						finish();
+					}
+				}, serviceAdapter);
+			}
+		});
+		waitForConnection.start();
+	}
+
+	private void unbindXMPPService() {
+		try {
+			unbindService(xmppServiceConnection);
+		} catch (IllegalArgumentException e) {
+			Log.e(TAG, "Service wasn't bound!");
+		}
+	}
+
+	private void bindXMPPService() {
+		bindService(xmppServiceIntent, xmppServiceConnection, BIND_AUTO_CREATE);
 	}
 
 
