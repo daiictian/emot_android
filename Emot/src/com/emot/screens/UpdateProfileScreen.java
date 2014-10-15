@@ -12,7 +12,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.Preference;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -28,9 +27,7 @@ import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.service.XMPPService;
 import com.emot.androidclient.util.PreferenceConstants;
-import com.emot.common.EmotEditText;
 import com.emot.common.TaskCompletedRunnable;
-import com.emot.constants.PreferenceKeys;
 import com.emot.model.EmotApplication;
 import com.emot.model.EmotUser;
 

@@ -25,4 +25,6 @@ public class PreferenceConstants {
 	public final static String STATUS_MESSAGE = "status_message";
 	public static final String STATUS_MESSAGE_HISTORY = "status_message_history";
 	public final static String THEME = "theme";
+	public final static String USER_AVATAR = "account_avatar";
+	public final static String USER_APPID = "account_appid";
 }

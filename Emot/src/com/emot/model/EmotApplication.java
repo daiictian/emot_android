@@ -56,8 +56,6 @@ public class EmotApplication extends Application {
 	private static final String TAG = EmotApplication.class.getSimpleName();
 	private static Context context;
 	private static SharedPreferences prefs;
-	private static XMPPConnection connection;
-	private static boolean connecting = false;
 	public MemorizingTrustManager mMTM;
 	private EmotConfiguration mConfig;
 	
@@ -84,16 +82,6 @@ public class EmotApplication extends Application {
 		return (EmotApplication)ctx.getApplicationContext();
 	}
 
-	public static XMPPConnection getConnection(){
-		if (connection==null || !connection.isAuthenticated()){
-			if(!connecting){
-				startConnection();
-			}
-		}
-
-		return connection;
-	}
-
 	public static Context getAppContext() {
 		return EmotApplication.context;
 	}
@@ -118,144 +106,6 @@ public class EmotApplication extends Application {
 				"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 		Date date = new Date();
 		return dateFormat.format(date);
-	}
-
-	public static void startConnection(){
-		connecting = true;
-		Thread connThread = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				while(connection == null || connection.getHost() == null){
-					Log.i(TAG, "----------STARTING LOGIN---------");
-
-					int portInt = 5222;
-
-					// Create a connection
-					ConnectionConfiguration connConfig = new ConnectionConfiguration("ec2-54-85-148-36.compute-1.amazonaws.com", portInt,"emot-net");
-					//connConfig.setSASLAuthenticationEnabled(true);
-					//connConfig.setCompressionEnabled(true);
-					connConfig.setSecurityMode(SecurityMode.enabled);
-
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-						connConfig.setTruststoreType("AndroidCAStore");
-						connConfig.setTruststorePassword(null);
-						connConfig.setTruststorePath(null);
-						Log.i("XMPPClient", "[XmppConnectionTask] Build Icecream");
-
-					} else {
-						connConfig.setTruststoreType("BKS");
-						String path = System.getProperty("javax.net.ssl.trustStore");
-						if (path == null)
-							path = System.getProperty("java.home") + File.separator + "etc"
-									+ File.separator + "security" + File.separator
-									+ "cacerts.bks";
-						connConfig.setTruststorePath(path);
-						Log.i("XMPPClient", "[XmppConnectionTask] Build less than Icecream ");
-
-					}
-					connConfig.setDebuggerEnabled(true);
-					XMPPConnection.DEBUG_ENABLED = true;
-					connection = new XMPPConnection(connConfig);
-
-
-					try {
-						connection.connect();
-						Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
-						// publishProgress("Connected to host " + HOST);
-					} catch (XMPPException ex) {
-						Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
-						Log.e("XMPPClient", ex.toString());
-						//publishProgress("Failed to connect to " + HOST);
-						//xmppClient.setConnection(null);
-					}
-					Log.i("XMPPClient", "connection authenticated " +connection.isAuthenticated());
-
-				}
-
-
-				try {
-					connection.login("test5","1234");
-					Log.i("XMPPClient", "Logged in as " + connection.getUser() + ". Authenticated : "+connection.isAuthenticated());
-
-					//					UserSearchManager search = new UserSearchManager(connection);
-					//					Form searchForm = search.getSearchForm("emot-net");
-					//					Form answerForm = searchForm.createAnswerForm();
-					//					answerForm.setAnswer("test2", "DeMoro");
-					//					ReportedData data = search.getSearchResults(answerForm, "emot-net");
-					//					Log.i(TAG, "hmm : "+data);
-
-					/*
-					VCard vCard = new VCard();
-
-					vCard.setFirstName("abhinav2");
-					vCard.setLastName("singh2");
-					vCard.setEmailHome("abhi@gmail.com");
-					vCard.setJabberId("test2@emot-net");
-					vCard.setOrganization("Some organization");
-					vCard.setNickName("abhi");
-					try {
-						Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.asin);
-						ByteArrayOutputStream stream = new ByteArrayOutputStream();
-						bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-						byte[] bytes = stream.toByteArray();
-			            String encodedImage = StringUtils.encodeBase64(bytes);
-			            vCard.setAvatar(bytes, encodedImage);
-			            vCard.setEncodedImage(encodedImage);
-			            vCard.setField("PHOTO", 
-			            		"<TYPE>image/jpg</TYPE><BINVAL>"
-			                    + encodedImage + 
-			                    "</BINVAL>", 
-			                    true);
-			        } catch (NullPointerException e) {
-			            e.printStackTrace();
-			        }
-					vCard.save(connection);
-					Log.i(TAG, vCard.toString());
-
-
-
-					// To load VCard:
-
-					configure(ProviderManager.getInstance());
-					Log.i(TAG, "-------------------");
-					VCard vCard1 = new VCard();
-					vCard1.load(connection, "test1@emot-net"); // load own VCard
-					Log.i(TAG, "Nick name = " + vCard1.getNickName());
-					Log.i(TAG, "avatar = " + vCard1.getAvatar());
-					vCard1.load(connection, "test2@emot-net"); // load someone's VCard
-					Log.i(TAG, "Nick name 1 = " + vCard1.getNickName());
-					 */
-
-					Log.i("XMPPClient", "----------------- LOGIN SUCCESSFULL --------------- ");
-
-					try{
-						boolean b = false;
-						if(connection != null && connection.isConnected()){
-							ConnectionQueue.add(connection);
-							Log.i("XMPPClient", "putting into blocking queue successful? size=");
-
-						}
-					}catch(IllegalStateException e){
-						e.printStackTrace();
-					}
-
-
-
-
-
-				} catch(Exception ex){
-
-					Log.i("XMPPClient", "!!!!!!!!!!!  LOGINFAILS  !!!!!!!!!");
-					ex.printStackTrace();
-				}
-				connecting = false;
-
-
-			}
-
-		});
-		//connThread.start();
 	}
 
 	public static void configure(ProviderManager pm) {
