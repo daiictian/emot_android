@@ -50,6 +50,12 @@
             android:name=".GroupChatScreen"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
+            android:theme="@style/CustomActionBarTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".Registration"
@@ -66,13 +72,12 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
         </activity>
-        
         <service
             android:name="com.emot.androidclient.service.XMPPService"
             android:process=":my_process"
             android:label="@string/app_name" >
             <intent-filter>
-                <action android:name="com.emot.services.ChatService" />
+                <action android:name="com.emot.androidclient.service.XMPPService" />
             </intent-filter>
         </service>
 

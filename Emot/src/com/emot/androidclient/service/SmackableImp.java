@@ -302,6 +302,8 @@ public class SmackableImp implements Smackable {
 			mConnectingThread = null;
 		}
 	}
+	
+	
 
 	/** Non-blocking, synchronized function to connect/disconnect XMPP.
 	 * This code is called from outside and returns immediately. The actual work
@@ -589,6 +591,16 @@ public class SmackableImp implements Smackable {
 		
 	}
 	
+	private void joinUser(){
+		try {
+			mGroupChat.join("test6@emot-net");
+		} catch (XMPPException e) {
+			Log.i(TAG, "Error while joining group chat");
+			e.printStackTrace();
+		}
+		
+	}
+	
 	private Iterator discoverjoinedRooms(final String pUserName){
 		
 		Iterator<String> joinedRooms = MultiUserChat.getJoinedRooms(mXMPPConnection, pUserName+"/Smack");
@@ -609,6 +621,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void tryToConnect(boolean create_account) throws EmotXMPPException {
+	
 		try {
 			if (mXMPPConnection.isConnected()) {
 				try {
@@ -648,6 +661,8 @@ public class SmackableImp implements Smackable {
 				}
 				Log.i(TAG, "user = "+mConfig.userName + " password = "+mConfig.password + " resource = "+mConfig.ressource);
 				mXMPPConnection.login(mConfig.userName, mConfig.password, mConfig.ressource);
+				initMUC("myroom");
+				joinUser();
 			}
 			Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 			Log.d(TAG, "SM: can resume = " + mStreamHandler.isResumePossible() + " needbind=" + need_bind);
@@ -1541,6 +1556,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	@Override
+
 	public void sendChatState(String user, String state) {
 		Log.i(TAG, "Sending Chat state");
 		final Message newMessage = new Message(user, Message.Type.normal);
@@ -1548,5 +1564,16 @@ public class SmackableImp implements Smackable {
 		if (isAuthenticated()) {
 			mXMPPConnection.sendPacket(newMessage);
 		}
+	}
+
+	public void sendGroupMessage(String message) {
+		try {
+			Log.i(TAG, "Sending group message " +message);
+			mGroupChat.sendMessage(message);
+		} catch (XMPPException e) {
+			Log.i(TAG, "Error sending message on group chat");
+			e.printStackTrace();
+		}
+		
 	}
 }

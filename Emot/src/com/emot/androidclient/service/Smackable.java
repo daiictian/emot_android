@@ -25,6 +25,7 @@ public interface Smackable {
 	void setStatusFromConfig();
 	void sendMessage(String user, String message);
 	void sendChatState(String user, String state);
+	void sendGroupMessage(String message);
 	void sendServerPing();
 	void setUserWatching(boolean user_watching);
 	
