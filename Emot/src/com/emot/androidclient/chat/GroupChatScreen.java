@@ -1,4 +1,4 @@
-package com.emot.screens;
+package com.emot.androidclient.chat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -26,11 +28,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.emot.adapters.GroupChatListArrayAdapter;
-import com.emot.androidclient.data.ChatProvider.ChatConstants;
+import com.emot.androidclient.chat.XMPPChatServiceAdapter;
+import com.emot.androidclient.service.IXMPPChatService;
+import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
+import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
-
+import com.emot.services.ChatService;
+import com.emot.screens.R;
 public class GroupChatScreen extends Activity{
 	
 
@@ -69,10 +75,10 @@ public class GroupChatScreen extends Activity{
 				 result.moveToNext();
 				Log.i(TAG, "chat from DB is " +chat);
 				if(location.equals("left")){
-				chatList.add(new ChatMessage(user, chat,datetime, false, ChatConstants.DS_NEW));
+				chatList.add(new ChatMessage(user, chat,datetime, false));
 				grpchatlistAdapter.notifyDataSetChanged();
 				}else if(location.equals("right")){
-					chatList.add(new ChatMessage(user,chat,datetime, true, ChatConstants.DS_NEW));
+					chatList.add(new ChatMessage(user,chat,datetime, true));
 					grpchatlistAdapter.notifyDataSetChanged();
 				}
 				
@@ -157,6 +163,7 @@ public class GroupChatScreen extends Activity{
 	private Messenger mMessengerService = null;
 	private boolean mMessengerServiceConnected = false;
 	private GroupChatListArrayAdapter grpchatlistAdapter;
+	private XMPPGroupChatServiceAdapter mServiceAdapter;
 	ArrayList<ChatMessage> chatList;
 	
 	
@@ -171,7 +178,17 @@ public class GroupChatScreen extends Activity{
 		
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
+			
+
+			Log.i(TAG, "called onServiceConnected()");
+			mServiceAdapter = new XMPPGroupChatServiceAdapter(
+					IXMPPChatService.Stub.asInterface(service),
+					mGroupName);
+			
+			mServiceAdapter.clearNotifications(mGroupName);
+			//updateContactStatus();
 		
+			
 		}
 	};
 	
@@ -190,7 +207,7 @@ public class GroupChatScreen extends Activity{
 			String u = b.getString("user");
 			String time = b.getString("time");
 			
-			chatList.add(new ChatMessage(u,s,time, false, ChatConstants.DS_NEW));
+			chatList.add(new ChatMessage(u,s,time, false));
 			grpchatlistAdapter.notifyDataSetChanged();
 			
 		}
@@ -205,7 +222,7 @@ public class GroupChatScreen extends Activity{
 		super.onCreate(savedInstanceState);
 		Intent incomingIntent = getIntent();
 		String userName = "";
-		mGroupName = incomingIntent.getStringExtra(ChatScreen.INTENT_CHAT_FRIEND);
+		mGroupName = incomingIntent.getStringExtra(IntentStrings.CHAT_FRIEND);
 		Log.i(TAG, "chatFriend is " +mGroupName);
 //		if (mGroupName==null){
 //			Toast.makeText(EmotApplication.getAppContext(), "Incorrect username", Toast.LENGTH_LONG).show();
@@ -262,7 +279,7 @@ public class GroupChatScreen extends Activity{
 
 						}
 					}).start(); 
-					chatList.add(new ChatMessage("me",chat, dateTime[1],true, ChatConstants.DS_NEW));
+					chatList.add(new ChatMessage("me",chat, dateTime[1],true));
 					grpchatlistAdapter.notifyDataSetChanged();
 					chatEntry.setText("");
 					
@@ -273,21 +290,21 @@ public class GroupChatScreen extends Activity{
 		});
 		chatView.setAdapter(grpchatlistAdapter);
 
-//
-//		if(EmotApplication.getConnection() != null){
-//			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
-//			
-//			runOnUiThread(new Thread(new Runnable() {
-//				@Override
-//				public void run() {
-//					if(chat != null){
-//						sendButton.setEnabled(true);
-//					}
-//
-//				}
-//			}));
-//		}
-//		
+
+		if(EmotApplication.getConnection() != null){
+			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
+			
+			runOnUiThread(new Thread(new Runnable() {
+				@Override
+				public void run() {
+					if(chat != null){
+						sendButton.setEnabled(true);
+					}
+
+				}
+			}));
+		}
+		
 		//EmotApplication.startConnection();
 
 		//startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
