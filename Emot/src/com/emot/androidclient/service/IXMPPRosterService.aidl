@@ -24,6 +24,7 @@ interface IXMPPRosterService {
 	void renameRosterItem(String user, String newName);
 	void moveRosterItemToGroup(String user, String group);
 	String changePassword(String newPassword);
+	void setAvatar(String file);
 	
 	/* callback methods */
 	

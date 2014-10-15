@@ -7,7 +7,7 @@ import com.emot.androidclient.service.IXMPPChatService;
 
 public class XMPPChatServiceAdapter {
 
-	private static final String TAG = "yaxim.XMPPCSAdapter";
+	private static final String TAG = XMPPChatServiceAdapter.class.getSimpleName();
 	private IXMPPChatService xmppServiceStub;
 	private String jabberID;
 

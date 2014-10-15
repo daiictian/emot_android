@@ -28,7 +28,7 @@ import org.xmlpull.v1.XmlPullParser;
 import android.util.Log;
 
 public class XmppStreamHandler {
-	private static final String TAG = "yaxim.StreamHandler";
+	private static final String TAG = XmppStreamHandler.class.getSimpleName();
 	private static final String URN_SM_2 = "urn:xmpp:sm:2";
 	private static final int MAX_OUTGOING_QUEUE_SIZE = 200;
 	private static final int REQUEST_ACK_AFTER_STANZAS = 10;

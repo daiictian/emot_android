@@ -1,25 +1,21 @@
 package com.emot.androidclient.util;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.emot.androidclient.exceptions.YaximXMPPAdressMalformedException;
-
+import gnu.inet.encoding.Stringprep;
+import gnu.inet.encoding.StringprepException;
 import android.content.Context;
 import android.text.Editable;
 import android.util.TypedValue;
 
-import gnu.inet.encoding.Stringprep;
-import gnu.inet.encoding.StringprepException;
+import com.emot.androidclient.exceptions.EmotXMPPAdressMalformedException;
 
 public class XMPPHelper {
 
 	public static String verifyJabberID(String jid)
-			throws YaximXMPPAdressMalformedException {
+			throws EmotXMPPAdressMalformedException {
 		try {
 			String parts[] = jid.split("@");
 			if (parts.length != 2 || parts[0].length() == 0 || parts[1].length() == 0)
-				throw new YaximXMPPAdressMalformedException(
+				throw new EmotXMPPAdressMalformedException(
 						"Configured Jabber-ID is incorrect!");
 			StringBuilder sb = new StringBuilder();
 			sb.append(Stringprep.nodeprep(parts[0]));
@@ -27,14 +23,14 @@ public class XMPPHelper {
 			sb.append(Stringprep.nameprep(parts[1]));
 			return sb.toString();
 		} catch (StringprepException spe) {
-			throw new YaximXMPPAdressMalformedException(spe);
+			throw new EmotXMPPAdressMalformedException(spe);
 		} catch (NullPointerException e) {
-			throw new YaximXMPPAdressMalformedException("Jabber-ID wasn't set!");
+			throw new EmotXMPPAdressMalformedException("Jabber-ID wasn't set!");
 		}
 	}
 
 	public static String verifyJabberID(Editable jid)
-			throws YaximXMPPAdressMalformedException {
+			throws EmotXMPPAdressMalformedException {
 		return verifyJabberID(jid.toString());
 	}
 	

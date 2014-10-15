@@ -309,7 +309,7 @@ public class Registration extends ActionBarActivity {
 										startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
 										finish();
 									}
-								});
+								}, null);
 							}
 						} catch (JSONException e) {
 

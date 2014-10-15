@@ -32,11 +32,6 @@
             android:theme="@android:style/Theme.Black.NoTitleBar" >
         </activity>
         <activity
-            android:name=".UpdateProfileScreen"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
-        </activity>
-        <activity
             android:name=".ContactScreen"
             android:label="@string/app_name"
             android:theme="@style/CustomActionBarTheme" >
@@ -66,6 +61,16 @@
             android:theme="@style/CustomActionBarTheme"
             android:windowSoftInputMode="stateHidden" >
         </activity>
+        <activity
+            android:name=".UpdateProfileScreen"
+            android:label="@string/app_name"
+            android:theme="@style/CustomActionBarTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <service
             android:name="com.emot.androidclient.service.XMPPService"
@@ -87,6 +92,11 @@
         <provider
             android:name="com.emot.androidclient.data.ChatProvider"
             android:authorities="com.emot.androidclient.provider.Chats"
+            android:exported="false" />
+        
+        <provider
+            android:name="com.emot.androidclient.data.RosterProvider"
+            android:authorities="com.emot.androidclient.provider.Roster"
             android:exported="false" />
         
         <activity android:name="de.duenndns.ssl.MemorizingActivity" />

@@ -3,7 +3,6 @@ package com.emot.androidclient.service;
 import java.util.HashMap;
 import java.util.Map;
 
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -20,15 +19,15 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.emot.androidclient.chat.ChatWindow;
-import com.emot.androidclient.data.YaximConfiguration;
+import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.model.EmotApplication;
 import com.emot.screens.R;
 
 public abstract class GenericService extends Service {
 
-	private static final String TAG = "yaxim.Service";
-	private static final String APP_NAME = "yaxim";
+	private static final String TAG = GenericService.class.getSimpleName();
+	private static final String APP_NAME = "emot";
 	private static final int MAX_TICKER_MSG_LEN = 50;
 
 	private NotificationManager mNotificationMGR;
@@ -43,7 +42,7 @@ public abstract class GenericService extends Service {
 	protected static int SERVICE_NOTIFICATION = 1;
 	private int lastNotificationId = 2;
 
-	protected YaximConfiguration mConfig;
+	protected EmotConfiguration mConfig;
 
 	@Override
 	public void onCreate() {

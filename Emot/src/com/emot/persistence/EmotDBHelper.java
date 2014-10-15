@@ -32,17 +32,17 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 			DBContract.GroupEmotHistoryEntry.DATETIME + " TEXT," +
 			DBContract.GroupEmotHistoryEntry.EMOT_LOCATION + " TEXT " +" )";
 	
-	private static final String SQL_CREATE_TABLE_CONTACTDETAILS = "CREATE TABLE IF NOT EXISTS " +
-			DBContract.ContactsDBEntry.TABLE_NAME +
-			" (" + DBContract.ContactsDBEntry._ID + " INTEGER PRIMARY KEY autoincrement," +
-			DBContract.ContactsDBEntry.CURRENT_STATUS + " VARCHAR(100) NULL," +
-			DBContract.ContactsDBEntry.LAST_SEEN + " DATETIME NULL," +
-			DBContract.ContactsDBEntry.EMOT_NAME + " VARCHAR(100) NULL," +
-			DBContract.ContactsDBEntry.CONTACT_NAME + " VARCHAR(100) NULL," +
-			DBContract.ContactsDBEntry.MOBILE_NUMBER + " VARCHAR(20) UNIQUE," +
-			DBContract.ContactsDBEntry.PROFILE_THUMB + " BLOB NULL," +
-			DBContract.ContactsDBEntry.SUBSCRIBED + " BOOLEAN DEFAULT 0 NOT NULL," +
-			DBContract.ContactsDBEntry.PROFILE_IMG + " VARCHAR(100) NULL" + " )";
+//	private static final String SQL_CREATE_TABLE_CONTACTDETAILS = "CREATE TABLE IF NOT EXISTS " +
+//			DBContract.ContactsDBEntry.TABLE_NAME +
+//			" (" + DBContract.ContactsDBEntry._ID + " INTEGER PRIMARY KEY autoincrement," +
+//			DBContract.ContactsDBEntry.CURRENT_STATUS + " VARCHAR(100) NULL," +
+//			DBContract.ContactsDBEntry.LAST_SEEN + " DATETIME NULL," +
+//			DBContract.ContactsDBEntry.EMOT_NAME + " VARCHAR(100) NULL," +
+//			DBContract.ContactsDBEntry.CONTACT_NAME + " VARCHAR(100) NULL," +
+//			DBContract.ContactsDBEntry.MOBILE_NUMBER + " VARCHAR(20) UNIQUE," +
+//			DBContract.ContactsDBEntry.PROFILE_THUMB + " BLOB NULL," +
+//			DBContract.ContactsDBEntry.SUBSCRIBED + " BOOLEAN DEFAULT 0 NOT NULL," +
+//			DBContract.ContactsDBEntry.PROFILE_IMG + " VARCHAR(100) NULL" + " )";
 	
 	
 	private static EmotDBHelper emotDBHelperInstance;
@@ -170,7 +170,7 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(SQL_CREATE_TABLE_EMOTHISTORY);
-		db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
+		//db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
 		Log.d(TAG, "Tables created !!!");
 		db.execSQL(SQL_CREATE_TABLE_GROUPEMOTHISTORY);
 		

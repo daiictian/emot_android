@@ -1,6 +1,7 @@
 package com.emot.androidclient.chat;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import android.content.ComponentName;
@@ -47,6 +48,7 @@ import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.androidclient.service.XMPPService;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
+import com.emot.emotobjects.ChatMessage;
 import com.emot.model.EmotApplication;
 import com.emot.screens.R;
 
@@ -57,7 +59,7 @@ public class ChatWindow extends ActionBarActivity implements OnKeyListener,
 	public static final String INTENT_EXTRA_USERNAME = ChatWindow.class.getName() + ".username";
 	public static final String INTENT_EXTRA_MESSAGE = ChatWindow.class.getName() + ".message";
 	
-	private static final String TAG = "yaxim.ChatWindow";
+	private static final String TAG = ChatWindow.class.getSimpleName();
 	private static final String[] PROJECTION_FROM = new String[] {
 			ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
 			ChatProvider.ChatConstants.DIRECTION, ChatProvider.ChatConstants.JID,
@@ -80,6 +82,7 @@ public class ChatWindow extends ActionBarActivity implements OnKeyListener,
 	private ServiceConnection mServiceConnection;
 	private XMPPChatServiceAdapter mServiceAdapter;
 	private int mChatFontSize;
+	private ArrayList<ChatMessage> chatList;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -178,7 +181,7 @@ public class ChatWindow extends ActionBarActivity implements OnKeyListener,
 		mServiceIntent = new Intent(this, XMPPService.class);
 		Uri chatURI = Uri.parse(mWithJabberID);
 		mServiceIntent.setData(chatURI);
-		mServiceIntent.setAction("org.yaxim.androidclient.XMPPSERVICE");
+		mServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
 

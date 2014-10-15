@@ -8,14 +8,14 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.Uri;
 import android.util.Log;
 
-import com.emot.androidclient.exceptions.YaximXMPPAdressMalformedException;
+import com.emot.androidclient.exceptions.EmotXMPPAdressMalformedException;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.XMPPHelper;
 import com.emot.screens.R;
 
-public class YaximConfiguration implements OnSharedPreferenceChangeListener {
+public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 
-	private static final String TAG = "yaxim.Configuration";
+	private static final String TAG = EmotConfiguration.class.getSimpleName();
 
 	private static final String GMAIL_SERVER = "talk.google.com";
 
@@ -71,7 +71,7 @@ public class YaximConfiguration implements OnSharedPreferenceChangeListener {
 
 	private final SharedPreferences prefs;
 
-	public YaximConfiguration(SharedPreferences _prefs) {
+	public EmotConfiguration(SharedPreferences _prefs) {
 		prefs = _prefs;
 		prefs.registerOnSharedPreferenceChangeListener(this);
 		loadPrefs(prefs);
@@ -129,7 +129,7 @@ public class YaximConfiguration implements OnSharedPreferenceChangeListener {
 				true);
 		this.password = prefs.getString(PreferenceConstants.PASSWORD, "");
 		this.ressource = prefs
-				.getString(PreferenceConstants.RESSOURCE, "yaxim");
+				.getString(PreferenceConstants.RESSOURCE, "emot-net");
 		this.port = XMPPHelper.tryToParseInt(prefs.getString(
 				PreferenceConstants.PORT, PreferenceConstants.DEFAULT_PORT),
 				PreferenceConstants.DEFAULT_PORT_INT);
@@ -164,7 +164,7 @@ public class YaximConfiguration implements OnSharedPreferenceChangeListener {
 		try {
 			splitAndSetJabberID(XMPPHelper.verifyJabberID(jabberID));
 			this.jid_configured = true;
-		} catch (YaximXMPPAdressMalformedException e) {
+		} catch (EmotXMPPAdressMalformedException e) {
 			Log.e(TAG, "Exception in getPreferences(): " + e);
 		}
 	}

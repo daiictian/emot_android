@@ -1,7 +1,6 @@
 package com.emot.constants;
 
 public final class PreferenceKeys {
-	public static final String USER_STATUS = "pstatus";
 	public static final String USER_AVATAR = "pavatar";
 	public static final String USER_APPID = "appid";
 	public static final String USER_MOBILE = "user_mobile_number";

@@ -37,7 +37,7 @@ public class ChatProvider extends ContentProvider {
 		URI_MATCHER.addURI(AUTHORITY, "chats/#", MESSAGE_ID);
 	}
 
-	private static final String TAG = "yaxim.ChatProvider";
+	private static final String TAG = ChatProvider.class.getSimpleName();
 
 	private SQLiteOpenHelper mOpenHelper;
 
@@ -195,7 +195,7 @@ public class ChatProvider extends ContentProvider {
 
 	private static class ChatDatabaseHelper extends SQLiteOpenHelper {
 
-		private static final String DATABASE_NAME = "yaxim.db";
+		private static final String DATABASE_NAME = "chats.db";
 		private static final int DATABASE_VERSION = 5;
 
 		public ChatDatabaseHelper(Context context) {
@@ -240,8 +240,8 @@ public class ChatProvider extends ContentProvider {
 		private ChatConstants() {
 		}
 
-		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.yaxim.chat";
-		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.yaxim.chat";
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.emot.chat";
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.emot.chat";
 		public static final String DEFAULT_SORT_ORDER = "_id ASC"; // sort by auto-id
 
 		public static final String DATE = "date";
