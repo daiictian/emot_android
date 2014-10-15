@@ -11,8 +11,8 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 
 
-public class YaximBroadcastReceiver extends BroadcastReceiver {
-	static final String TAG = "yaxim.BroadcastReceiver";
+public class EmotBroadcastReceiver extends BroadcastReceiver {
+	static final String TAG = EmotBroadcastReceiver.class.getSimpleName();
 	private static int networkType = -1;
 	
 	public static void initNetworkStatus(Context context) {
@@ -33,7 +33,7 @@ public class YaximBroadcastReceiver extends BroadcastReceiver {
 		Log.d(TAG, "onReceive " + intent);
 
 		if (intent.getAction().equals(Intent.ACTION_SHUTDOWN)) {
-			Log.d(TAG, "System shutdown, stopping yaxim.");
+			Log.d(TAG, "System shutdown, stopping emot service.");
 			Intent xmppServiceIntent = new Intent(context, XMPPService.class);
 			context.stopService(xmppServiceIntent);
 		} else

@@ -153,7 +153,11 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 	protected void onPostExecute(String result) {
 		Log.i("Registration", "in postExecute");
 		Log.i("task Val", taskCompletedRunnable.toString());
-		taskCompletedRunnable.onTaskComplete(result);
+		if(result!=null){
+			taskCompletedRunnable.onTaskComplete(result);
+		}else{
+			Log.e(TAG, "Server not responding. Received null result");
+		}
 	}
 
 }

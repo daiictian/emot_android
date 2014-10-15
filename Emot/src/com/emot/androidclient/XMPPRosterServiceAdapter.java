@@ -1,15 +1,21 @@
 package com.emot.androidclient;
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+
+import android.graphics.Bitmap;
 import android.os.RemoteException;
 import android.util.Log;
 
 import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.util.ConnectionState;
+import com.emot.common.ImageHelper;
+import com.emot.model.EmotApplication;
 
 public class XMPPRosterServiceAdapter {
 	
-	private static final String TAG = "yaxim.XMPPRSAdapter";
+	private static final String TAG = XMPPRosterServiceAdapter.class.getSimpleName();
 	private IXMPPRosterService xmppServiceStub;
 	
 	public XMPPRosterServiceAdapter(IXMPPRosterService xmppServiceStub) {
@@ -145,7 +151,43 @@ public class XMPPRosterServiceAdapter {
 			return xmppServiceStub.changePassword(newPassword);
 		} catch (RemoteException e) {
 			e.printStackTrace();
-			return "Internal yaxim service connection failure.";
+			return "service connection failure.";
 		}
 	}
+	
+	public void setAvatar(Bitmap bmp){
+		try {
+			Log.i(TAG, "cache directory : "+ImageHelper.getCacheDir(EmotApplication.getAppContext()));
+			String filePath = ImageHelper.getCacheDir(EmotApplication.getAppContext());
+			saveBitmap(bmp, "profile", filePath, false);
+			//Save file bmp to file path
+			xmppServiceStub.setAvatar(filePath + "/" + "profile");
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static File saveBitmap(Bitmap bitmap, String filename, String path, boolean recycle) {
+        FileOutputStream out=null;
+        try {
+            File f = new File(path,filename);
+            if(!f.exists()) {
+                f.createNewFile();
+            }
+            out = new FileOutputStream(f);
+            if(bitmap.compress(Bitmap.CompressFormat.PNG, 90, out)) {
+                return f;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Could not save bitmap", e);
+        } finally {
+            try{
+                out.close();
+            } catch(Throwable ignore) {}
+            if(recycle) {
+                bitmap.recycle();
+            }
+        }
+        return null;
+    }
 }

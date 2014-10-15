@@ -1,5 +1,6 @@
 package com.emot.androidclient.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collection;
 import java.util.Date;
@@ -15,6 +16,7 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterGroup;
 import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
@@ -38,6 +40,7 @@ import org.jivesoftware.smackx.forward.Forwarded;
 import org.jivesoftware.smackx.packet.DelayInfo;
 import org.jivesoftware.smackx.packet.DelayInformation;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
+import org.jivesoftware.smackx.packet.VCard;
 import org.jivesoftware.smackx.packet.Version;
 import org.jivesoftware.smackx.ping.PingManager;
 import org.jivesoftware.smackx.ping.packet.Ping;
@@ -60,24 +63,31 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.emot.androidclient.data.ChatProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
+import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.data.RosterProvider.RosterConstants;
-import com.emot.androidclient.data.YaximConfiguration;
-import com.emot.androidclient.exceptions.YaximXMPPException;
+import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.androidclient.util.StatusMode;
+import com.emot.common.ImageHelper;
+import com.emot.constants.PreferenceKeys;
+import com.emot.constants.WebServiceConstants;
 import com.emot.model.EmotApplication;
+import com.emot.persistence.DBContract;
 
 import de.duenndns.ssl.MemorizingTrustManager;
 
 public class SmackableImp implements Smackable {
-	final static private String TAG = "yaxim.SmackableImp";
+	final static private String TAG = SmackableImp.class.getSimpleName();
 
 	final static private int PACKET_TIMEOUT = 30000;
 
@@ -88,7 +98,7 @@ public class SmackableImp implements Smackable {
 			ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
 			ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_NEW;
 
-	static final DiscoverInfo.Identity YAXIM_IDENTITY = new DiscoverInfo.Identity("client",
+	static final DiscoverInfo.Identity EMOT_IDENTITY = new DiscoverInfo.Identity("client",
 					EmotApplication.XMPP_IDENTITY_NAME,
 					EmotApplication.XMPP_IDENTITY_TYPE);
 
@@ -124,7 +134,7 @@ public class SmackableImp implements Smackable {
 		// add XMPP Ping (XEP-0199)
 		pm.addIQProvider("ping","urn:xmpp:ping", new PingProvider());
 
-		ServiceDiscoveryManager.setDefaultIdentity(YAXIM_IDENTITY);
+		ServiceDiscoveryManager.setDefaultIdentity(EMOT_IDENTITY);
 		
 		// XEP-0115 Entity Capabilities
 		pm.addExtensionProvider("c", "http://jabber.org/protocol/caps", new CapsExtensionProvider());
@@ -132,7 +142,7 @@ public class SmackableImp implements Smackable {
 		XmppStreamHandler.addExtensionProviders();
 	}
 
-	private final YaximConfiguration mConfig;
+	private final EmotConfiguration mConfig;
 	private ConnectionConfiguration mXMPPConfig;
 	private XmppStreamHandler.ExtXMPPConnection mXMPPConnection;
 	private XmppStreamHandler mStreamHandler;
@@ -160,8 +170,8 @@ public class SmackableImp implements Smackable {
 
 	private PendingIntent mPingAlarmPendIntent;
 	private PendingIntent mPongTimeoutAlarmPendIntent;
-	private static final String PING_ALARM = "org.yaxim.androidclient.PING_ALARM";
-	private static final String PONG_TIMEOUT_ALARM = "org.yaxim.androidclient.PONG_TIMEOUT_ALARM";
+	private static final String PING_ALARM = "org.emot.androidclient.PING_ALARM";
+	private static final String PONG_TIMEOUT_ALARM = "org.emot.androidclient.PONG_TIMEOUT_ALARM";
 	private Intent mPingAlarmIntent = new Intent(PING_ALARM);
 	private Intent mPongTimeoutAlarmIntent = new Intent(PONG_TIMEOUT_ALARM);
 	private Service mService;
@@ -170,7 +180,7 @@ public class SmackableImp implements Smackable {
 	private BroadcastReceiver mPingAlarmReceiver = new PingAlarmReceiver();
 
 
-	public SmackableImp(YaximConfiguration config,
+	public SmackableImp(EmotConfiguration config,
 			ContentResolver contentResolver,
 			Service service) {
 		this.mConfig = config;
@@ -221,7 +231,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	// blocking, run from a thread!
-	public boolean doConnect(boolean create_account) throws YaximXMPPException {
+	public boolean doConnect(boolean create_account) throws EmotXMPPException {
 		mRequestedState = ConnectionState.ONLINE;
 		updateConnectionState(ConnectionState.CONNECTING);
 		if (mXMPPConnection == null || mConfig.reconnect_required)
@@ -238,7 +248,7 @@ public class SmackableImp implements Smackable {
 			// we need to "ping" the service to let it know we are actually
 			// connected, even when no roster entries will come in
 			updateConnectionState(ConnectionState.ONLINE);
-		} else throw new YaximXMPPException("SMACK connected, but authentication failed");
+		} else throw new EmotXMPPException("SMACK connected, but authentication failed");
 		return true;
 	}
 
@@ -301,7 +311,7 @@ public class SmackableImp implements Smackable {
 						} catch (IllegalArgumentException e) {
 							// this might happen when DNS resolution in ConnectionConfiguration fails
 							onDisconnected(e);
-						} catch (YaximXMPPException e) {
+						} catch (EmotXMPPException e) {
 							onDisconnected(e);
 						} finally {
 							mAlarmManager.cancel(mPongTimeoutAlarmPendIntent);
@@ -439,11 +449,11 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void addRosterItem(String user, String alias, String group)
-			throws YaximXMPPException {
+			throws EmotXMPPException {
 		tryToAddRosterEntry(user, alias, group);
 	}
 
-	public void removeRosterItem(String user) throws YaximXMPPException {
+	public void removeRosterItem(String user) throws EmotXMPPException {
 		debugLog("removeRosterItem(" + user + ")");
 
 		tryToRemoveRosterEntry(user);
@@ -451,11 +461,11 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void renameRosterItem(String user, String newName)
-			throws YaximXMPPException {
+			throws EmotXMPPException {
 		RosterEntry rosterEntry = mRoster.getEntry(user);
 
 		if (!(newName.length() > 0) || (rosterEntry == null)) {
-			throw new YaximXMPPException("JabberID to rename is invalid!");
+			throw new EmotXMPPException("JabberID to rename is invalid!");
 		}
 		rosterEntry.setName(newName);
 	}
@@ -470,7 +480,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void moveRosterItemToGroup(String user, String group)
-			throws YaximXMPPException {
+			throws EmotXMPPException {
 		tryToMoveRosterEntryToGroup(user, group);
 	}
 
@@ -510,7 +520,7 @@ public class SmackableImp implements Smackable {
 		onDisconnected(reason.getLocalizedMessage());
 	}
 
-	private void tryToConnect(boolean create_account) throws YaximXMPPException {
+	private void tryToConnect(boolean create_account) throws EmotXMPPException {
 		try {
 			if (mXMPPConnection.isConnected()) {
 				try {
@@ -560,12 +570,12 @@ public class SmackableImp implements Smackable {
 
 		} catch (Exception e) {
 			// actually we just care for IllegalState or NullPointer or XMPPEx.
-			throw new YaximXMPPException("tryToConnect failed", e);
+			throw new EmotXMPPException("tryToConnect failed", e);
 		}
 	}
 
 	private void tryToMoveRosterEntryToGroup(String userName, String groupName)
-			throws YaximXMPPException {
+			throws EmotXMPPException {
 
 		RosterGroup rosterGroup = getRosterGroup(groupName);
 		RosterEntry rosterEntry = mRoster.getEntry(userName);
@@ -578,7 +588,7 @@ public class SmackableImp implements Smackable {
 			try {
 				rosterGroup.addEntry(rosterEntry);
 			} catch (XMPPException e) {
-				throw new YaximXMPPException("tryToMoveRosterEntryToGroup", e);
+				throw new EmotXMPPException("tryToMoveRosterEntryToGroup", e);
 			}
 		}
 	}
@@ -595,7 +605,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void removeRosterEntryFromGroups(RosterEntry rosterEntry)
-			throws YaximXMPPException {
+			throws EmotXMPPException {
 		Collection<RosterGroup> oldGroups = rosterEntry.getGroups();
 
 		for (RosterGroup group : oldGroups) {
@@ -604,15 +614,15 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void tryToRemoveUserFromGroup(RosterGroup group,
-			RosterEntry rosterEntry) throws YaximXMPPException {
+			RosterEntry rosterEntry) throws EmotXMPPException {
 		try {
 			group.removeEntry(rosterEntry);
 		} catch (XMPPException e) {
-			throw new YaximXMPPException("tryToRemoveUserFromGroup", e);
+			throw new EmotXMPPException("tryToRemoveUserFromGroup", e);
 		}
 	}
 
-	private void tryToRemoveRosterEntry(String user) throws YaximXMPPException {
+	private void tryToRemoveRosterEntry(String user) throws EmotXMPPException {
 		try {
 			RosterEntry rosterEntry = mRoster.getEntry(user);
 
@@ -625,16 +635,16 @@ public class SmackableImp implements Smackable {
 				mRoster.removeEntry(rosterEntry);
 			}
 		} catch (XMPPException e) {
-			throw new YaximXMPPException("tryToRemoveRosterEntry", e);
+			throw new EmotXMPPException("tryToRemoveRosterEntry", e);
 		}
 	}
 
 	private void tryToAddRosterEntry(String user, String alias, String group)
-			throws YaximXMPPException {
+			throws EmotXMPPException {
 		try {
 			mRoster.createEntry(user, alias, new String[] { group });
 		} catch (XMPPException e) {
-			throw new YaximXMPPException("tryToAddRosterEntry", e);
+			throw new EmotXMPPException("tryToAddRosterEntry", e);
 		}
 	}
 
@@ -808,8 +818,15 @@ public class SmackableImp implements Smackable {
 
 	private void registerRosterListener() {
 		// flush roster on connecting.
+		Log.i(TAG, "-------- Registerng all rosters --------");
 		mRoster = mXMPPConnection.getRoster();
-		mRoster.setSubscriptionMode(Roster.SubscriptionMode.manual);
+		Collection<RosterEntry> rosters = mRoster.getEntries();
+		for(RosterEntry rstr: rosters){
+			Presence p = mRoster.getPresence(rstr.getUser());
+			Log.i(TAG, "Roster status " + rstr.getStatus() + " Presence ="+p.getStatus());
+		}
+		
+		mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
 
 		if (mRosterListener != null)
 			mRoster.removeRosterListener(mRosterListener);
@@ -818,7 +835,7 @@ public class SmackableImp implements Smackable {
 			private boolean first_roster = true;
 
 			public void entriesAdded(Collection<String> entries) {
-				debugLog("entriesAdded(" + entries + ")");
+				Log.i(TAG, "entriesAdded(" + entries + ")");
 
 				ContentValues[] cvs = new ContentValues[entries.size()];
 				int i = 0;
@@ -856,7 +873,7 @@ public class SmackableImp implements Smackable {
 			}
 
 			public void presenceChanged(Presence presence) {
-				debugLog("presenceChanged(" + presence.getFrom() + "): " + presence);
+				Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): " + presence);
 
 				String jabberID = getBareJID(presence.getFrom());
 				RosterEntry rosterEntry = mRoster.getEntry(jabberID);
@@ -1157,7 +1174,20 @@ public class SmackableImp implements Smackable {
 		} else
 			values.put(RosterConstants.STATUS_MESSAGE, presence.getStatus());
 		values.put(RosterConstants.GROUP, getGroup(entry.getGroups()));
+		VCard vCard = new VCard();
+		Log.i(TAG, "B4 try catch");
 
+		try {
+			vCard.load(mXMPPConnection, entry.getUser());
+			byte[] avatar = vCard.getAvatar();
+			if(avatar!=null){
+				Log.i(TAG, "Avatar = "+avatar);
+				values.put(RosterConstants.AVATAR, avatar);
+			}
+		} catch (XMPPException e) {
+			e.printStackTrace();
+		}
+		Log.i(TAG, "presence values = "+presence.getStatus());
 		return values;
 	}
 
@@ -1222,5 +1252,73 @@ public class SmackableImp implements Smackable {
 	@Override
 	public String getLastError() {
 		return mLastError;
+	}
+
+	public void setAvatar(String file) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+		Log.i(TAG, "File path = " + file);
+		Bitmap bitmap = BitmapFactory.decodeFile(file, options);
+		Log.i(TAG, "BMP: "+bitmap);
+		new UpdateAvatarTask(bitmap).execute();
+	}
+	
+	public class UpdateAvatarTask extends AsyncTask<Void, Void, Boolean>{
+
+		private Bitmap bmp;
+
+		public UpdateAvatarTask(Bitmap bmp){
+			this.bmp = bmp;
+		}
+
+		
+
+		@Override
+		protected Boolean doInBackground(Void... params) {
+			SmackAndroid.init(EmotApplication.getAppContext());
+			//ProviderManager.getInstance().addIQProvider("vCard","vcard-temp", new VCardProvider());
+			EmotApplication.configure(ProviderManager.getInstance());
+			VCard vCard = new VCard();
+
+			bmp = Bitmap.createScaledBitmap(bmp, 120, 120, false);
+			try {
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+				Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
+				byte[] bytes = stream.toByteArray();
+				String encodedImage = StringUtils.encodeBase64(bytes);
+				vCard.setAvatar(bytes);
+				//vCard.setEncodedImage(encodedImage);
+//				vCard.setField("PHOTO", 
+//						"<TYPE>image/jpeg</TYPE><BINVAL>"
+//								+ encodedImage + 
+//								"</BINVAL>", 
+//								true);
+				vCard.save(mXMPPConnection);
+				EmotApplication.setValue(PreferenceKeys.USER_AVATAR, encodedImage);
+				Log.i(TAG, "Setting preference value ...");
+			}  catch (XMPPException e) {
+				Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+				e.printStackTrace();
+				return false;
+			}	catch(Exception e){
+				Log.i(TAG, " EXCEPTION  ------ ");
+				e.printStackTrace();
+				return false;
+			}
+			
+			
+			return true;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			if(result){
+				//Handle Result
+			}else{
+				//Handle error
+			}
+		}
+
 	}
 }

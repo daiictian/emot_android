@@ -22,7 +22,7 @@ import android.util.Log;
 
 public class RosterProvider extends ContentProvider {
 
-	public static final String AUTHORITY = "org.yaxim.androidclient.provider.Roster";
+	public static final String AUTHORITY = "com.emot.androidclient.provider.Roster";
 	public static final String TABLE_ROSTER = "roster";
 	public static final String TABLE_GROUPS = "groups";
 	public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY
@@ -45,7 +45,7 @@ public class RosterProvider extends ContentProvider {
 		URI_MATCHER.addURI(AUTHORITY, "groups/*", GROUP_MEMBERS);
 	}
 
-	private static final String TAG = "yaxim.RosterProvider";
+	private static final String TAG = RosterProvider.class.getSimpleName();
 
 	private Runnable mNotifyChange = new Runnable() {
 		public void run() {
@@ -265,6 +265,8 @@ public class RosterProvider extends ContentProvider {
 					+ RosterConstants.ALIAS
 					+ " TEXT, " + RosterConstants.STATUS_MODE + " INTEGER, "
 					+ RosterConstants.STATUS_MESSAGE + " TEXT, "
+					+ RosterConstants.AVATAR + " BLOB NULL, "
+					+ RosterConstants.LAST_SEEN + " DATETIME NULL, "
 					+ RosterConstants.GROUP + " TEXT);");
 			db.execSQL("CREATE INDEX idx_roster_group ON " + TABLE_ROSTER
 				        + " (" + RosterConstants.GROUP + ")");
@@ -291,14 +293,16 @@ public class RosterProvider extends ContentProvider {
 		private RosterConstants() {
 		}
 
-		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.yaxim.roster";
-		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.yaxim.roster";
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.emot.roster";
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.emot.roster";
 
 		public static final String JID = "jid";
 		public static final String ALIAS = "alias";
 		public static final String STATUS_MODE = "status_mode";
 		public static final String STATUS_MESSAGE = "status_message";
 		public static final String GROUP = "roster_group";
+		public static final String AVATAR = "avatar";
+		public static final String LAST_SEEN = "last_seen";
 
 		public static final String DEFAULT_SORT_ORDER = STATUS_MODE + " DESC, " + ALIAS + " COLLATE NOCASE";
 
@@ -309,6 +313,8 @@ public class RosterProvider extends ContentProvider {
 			tmpList.add(STATUS_MODE);
 			tmpList.add(STATUS_MESSAGE);
 			tmpList.add(GROUP);
+			//tmpList.add(AVATAR);
+			//tmpList.add(LAST_SEEN);
 			return tmpList;
 		}
 

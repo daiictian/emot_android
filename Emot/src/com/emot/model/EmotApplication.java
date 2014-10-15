@@ -46,7 +46,7 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.emot.androidclient.data.YaximConfiguration;
+import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.emotobjects.ConnectionQueue;
 
 import de.duenndns.ssl.MemorizingTrustManager;
@@ -59,7 +59,7 @@ public class EmotApplication extends Application {
 	private static XMPPConnection connection;
 	private static boolean connecting = false;
 	public MemorizingTrustManager mMTM;
-	private YaximConfiguration mConfig;
+	private EmotConfiguration mConfig;
 	
 	public static final String XMPP_IDENTITY_NAME = "emot";
 	public static final String XMPP_IDENTITY_TYPE = "phone";
@@ -71,12 +71,12 @@ public class EmotApplication extends Application {
 		prefs = PreferenceManager.getDefaultSharedPreferences(context
 				.getApplicationContext());
 		mMTM = new MemorizingTrustManager(this);
-		mConfig = new YaximConfiguration(PreferenceManager
+		mConfig = new EmotConfiguration(PreferenceManager
 				.getDefaultSharedPreferences(this));
 
 	}
 	
-	public static YaximConfiguration getConfig(Context ctx) {
+	public static EmotConfiguration getConfig(Context ctx) {
 		return ((EmotApplication)getAppContext()).mConfig;
 	}
 	

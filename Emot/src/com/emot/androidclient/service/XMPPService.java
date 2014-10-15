@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
@@ -20,7 +21,7 @@ import android.util.Log;
 
 import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.data.RosterProvider;
-import com.emot.androidclient.exceptions.YaximXMPPException;
+import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.screens.ContactScreen;
@@ -31,7 +32,7 @@ public class XMPPService extends GenericService {
 	private AtomicBoolean mConnectionDemanded = new AtomicBoolean(false); // should we try to reconnect?
 	private static final int RECONNECT_AFTER = 5;
 	private static final int RECONNECT_MAXIMUM = 10*60;
-	private static final String RECONNECT_ALARM = "org.yaxim.androidclient.RECONNECT_ALARM";
+	private static final String RECONNECT_ALARM = "org.emot.androidclient.RECONNECT_ALARM";
 	private static final String TAG = XMPPService.class.getSimpleName();
 	private int mReconnectTimeout = RECONNECT_AFTER;
 	private String mReconnectInfo = "";
@@ -95,7 +96,7 @@ public class XMPPService extends GenericService {
 					PendingIntent.FLAG_UPDATE_CURRENT);
 		registerReceiver(mAlarmReceiver, new IntentFilter(RECONNECT_ALARM));
 
-		YaximBroadcastReceiver.initNetworkStatus(getApplicationContext());
+		EmotBroadcastReceiver.initNetworkStatus(getApplicationContext());
 
 		if (mConfig.autoConnect && mConfig.jid_configured) {
 			/*
@@ -220,7 +221,7 @@ public class XMPPService extends GenericService {
 					throws RemoteException {
 				try {
 					mSmackable.addRosterItem(user, alias, group);
-				} catch (YaximXMPPException e) {
+				} catch (EmotXMPPException e) {
 					shortToastNotify(e);
 				}
 			}
@@ -232,7 +233,7 @@ public class XMPPService extends GenericService {
 			public void removeRosterItem(String user) throws RemoteException {
 				try {
 					mSmackable.removeRosterItem(user);
-				} catch (YaximXMPPException e) {
+				} catch (EmotXMPPException e) {
 					shortToastNotify(e);
 				}
 			}
@@ -241,7 +242,7 @@ public class XMPPService extends GenericService {
 					throws RemoteException {
 				try {
 					mSmackable.moveRosterItemToGroup(user, group);
-				} catch (YaximXMPPException e) {
+				} catch (EmotXMPPException e) {
 					shortToastNotify(e);
 				}
 			}
@@ -250,7 +251,7 @@ public class XMPPService extends GenericService {
 					throws RemoteException {
 				try {
 					mSmackable.renameRosterItem(user, newName);
-				} catch (YaximXMPPException e) {
+				} catch (EmotXMPPException e) {
 					shortToastNotify(e);
 				}
 			}
@@ -279,6 +280,11 @@ public class XMPPService extends GenericService {
 			public void sendPresenceRequest(String jid, String type)
 					throws RemoteException {
 				mSmackable.sendPresenceRequest(jid, type);
+			}
+
+			@Override
+			public void setAvatar(String file) throws RemoteException {
+				mSmackable.setAvatar(file);
 			}
 
 		};
