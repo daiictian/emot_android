@@ -111,6 +111,8 @@ public class ContactUpdater {
 					}
 				});
 				contactCall.execute();
+			}else{
+				ContactUpdater.taskCompleteHandler.onTaskComplete(null);
 			}
 		}
 		
@@ -141,14 +143,17 @@ public class ContactUpdater {
 		protected Void doInBackground(Void... params) {
 
 			//Wait till connected
-			while (ContactUpdater.serviceAdapter==null || !ContactUpdater.serviceAdapter.isAuthenticated()){
-				Log.i(TAG, "Wait for connection to establish");
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			if(ContactUpdater.serviceAdapter==null || !ContactUpdater.serviceAdapter.isAuthenticated()){
+				return null;
 			}
+//			while (ContactUpdater.serviceAdapter==null || !ContactUpdater.serviceAdapter.isAuthenticated()){
+//				Log.i(TAG, "Wait for connection to establish");
+//				try {
+//					Thread.sleep(5000);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//			}
 			
 			int len = emotters.length();
 			for(int i=0; i<len; i++){

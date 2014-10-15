@@ -34,7 +34,7 @@ import com.emot.persistence.ContactUpdater;
 
 public class ContactScreen extends ActionBarActivity{
 	private ListView listviewContact;
-	private static String TAG = ContactScreen.class.getName();
+	private static String TAG = ContactScreen.class.getSimpleName();
 	private ArrayList<Contact> contacts;
 	private ShowContacts showContactsThread;
 
@@ -87,11 +87,12 @@ public class ContactScreen extends ActionBarActivity{
 
 	public void updateContacts(){
 		//Update Contacts
+		Log.i(TAG, "Updating contacts !!!!");
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 			@Override
 			public void onTaskComplete(String result) {
-
+				
 			}
 		}, serviceAdapter);
 	}
