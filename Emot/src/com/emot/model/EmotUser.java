@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.util.Base64;
 import android.util.Log;
 
+import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.constants.PreferenceKeys;
 import com.emot.screens.R;
 
@@ -44,7 +45,7 @@ public class EmotUser {
 	}
 	
 	public static String getStatus(){
-		return EmotApplication.getValue(PreferenceKeys.USER_STATUS, "Default status");
+		return EmotApplication.getValue(PreferenceConstants.STATUS_MESSAGE, "Default status");
 	}
 	
 	public static void updateAvatar(Bitmap bmp){
@@ -76,6 +77,6 @@ public class EmotUser {
 	public static void updateStatus(String status){
 		Presence presence = new Presence(Presence.Type.available, status, 1, Mode.available);
 		EmotApplication.getConnection().sendPacket(presence);
-		EmotApplication.setValue(PreferenceKeys.USER_STATUS, status);
+		EmotApplication.setValue(PreferenceConstants.STATUS_MESSAGE, status);
 	}
 }

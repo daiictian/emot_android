@@ -8,35 +8,41 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 
 import android.content.ComponentName;
-import android.content.Context;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.emot.adapters.ChatListArrayAdapter;
+import com.emot.androidclient.chat.XMPPChatServiceAdapter;
+import com.emot.androidclient.data.ChatProvider;
+import com.emot.androidclient.data.ChatProvider.ChatConstants;
+import com.emot.androidclient.service.IXMPPChatService;
+import com.emot.androidclient.service.XMPPService;
 import com.emot.common.EmotEditText;
+import com.emot.common.EmotTextView;
 import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
 import com.emot.model.EmotApplication;
-import com.emot.persistence.DBContract;
-import com.emot.persistence.EmotDBHelper;
-import com.emot.services.ChatService;
 
 public class ChatScreen extends ActionBarActivity{
 
@@ -44,189 +50,133 @@ public class ChatScreen extends ActionBarActivity{
 	private ImageView sendButton;
 	private EmotEditText chatEntry;
 	private TextView userTitle;
-	private EmotDBHelper emotHistoryDB;
 	private View emotSuggestion;
 	private LinearLayout emotSuggestionLayout;
 	private static String TAG = "ChatScreen";
 	private ListView chatView;
-	private Handler handler;
 	private String chatFriend;
-	private TextView mUserName;
+	private Messenger mMessengerService = null;
+	private boolean mMessengerServiceConnected = false;
+	private Intent mServiceIntent;
+	private ServiceConnection mServiceConnection;
+	private XMPPChatServiceAdapter mServiceAdapter;
+	private static final int DELAY_NEWMSG = 2000;
 
-	private class EmotHistoryTask extends AsyncTask<EmotDBHelper, ChatMessage, Void>{
+	private static final String[] PROJECTION_FROM = new String[] {
+		ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
+		ChatProvider.ChatConstants.DIRECTION, ChatProvider.ChatConstants.JID,
+		ChatProvider.ChatConstants.MESSAGE, ChatProvider.ChatConstants.DELIVERY_STATUS };
 
-
-
-		@Override
-		protected void onPostExecute(Void result) {
-			
-			Log.i(TAG, "chats = "+chatList.size());
-			//chatView.setSelection(chatList.size()-1);
-		}
-		
-		@Override
-		protected void onProgressUpdate(ChatMessage... values) {
-			if(values!=null){
-				chatList.add(values[0]);
-				chatlistAdapter.notifyDataSetChanged();
-			}
-			super.onProgressUpdate(values);
-		}
-
-		@Override
-		protected Void doInBackground(EmotDBHelper... params) {
-			EmotDBHelper emotHistory = params[0];
-			Cursor result = emotHistory.getEmotHistory(chatFriend);
-			boolean valid  = result.moveToFirst();
-			String chat = "";
-			String location = "";
-			String datetime = "";
-			boolean emotlocation = false;
-			if(valid && result != null && result.getCount() > 0){
-				for(int i = 0; i < result.getCount(); i++){
-					chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
-					location = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOT_LOCATION));
-					datetime = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
-					result.moveToNext();
-					Log.i(TAG, "chat from DB is " +chat);
-					ChatMessage newChat = null;
-					if(location.equals("left")){
-						newChat = new ChatMessage(chat,datetime, false);
-					}else if(location.equals("right")){
-						newChat = new ChatMessage(chat,datetime, true);
-					}
-					publishProgress(newChat);
-				}
-
-			}
-			result.close();
-			return null;
-		}
-
-	}
+	private static final int[] PROJECTION_TO = new int[] { R.id.chat_date,
+		R.id.chat_from, R.id.chat_message };
+	//
+	//	private class EmotHistoryTask extends AsyncTask<EmotDBHelper, ChatMessage, Void>{
+	//
+	//
+	//
+	//		@Override
+	//		protected void onPostExecute(Void result) {
+	//			
+	//			Log.i(TAG, "chats = "+chatList.size());
+	//			//chatView.setSelection(chatList.size()-1);
+	//		}
+	//		
+	//		@Override
+	//		protected void onProgressUpdate(ChatMessage... values) {
+	//			if(values!=null){
+	//				chatList.add(values[0]);
+	//				chatlistAdapter.notifyDataSetChanged();
+	//			}
+	//			super.onProgressUpdate(values);
+	//		}
+	//
+	//		@Override
+	//		protected Void doInBackground(EmotDBHelper... params) {
+	//			EmotDBHelper emotHistory = params[0];
+	//			Cursor result = emotHistory.getEmotHistory(chatFriend);
+	//			boolean valid  = result.moveToFirst();
+	//			String chat = "";
+	//			String location = "";
+	//			String datetime = "";
+	//			boolean emotlocation = false;
+	//			if(valid && result != null && result.getCount() > 0){
+	//				for(int i = 0; i < result.getCount(); i++){
+	//					chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
+	//					location = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOT_LOCATION));
+	//					datetime = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
+	//					result.moveToNext();
+	//					Log.i(TAG, "chat from DB is " +chat);
+	//					ChatMessage newChat = null;
+	//					if(location.equals("left")){
+	//						newChat = new ChatMessage(chat,datetime, false);
+	//					}else if(location.equals("right")){
+	//						newChat = new ChatMessage(chat,datetime, true);
+	//					}
+	//					publishProgress(newChat);
+	//				}
+	//
+	//			}
+	//			result.close();
+	//			return null;
+	//		}
+	//
+	//	}
+	//
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
 		super.onResume();
-		/**/	
+		bindXMPPService();
 	}
-
-	private void connectToUser(final String userName){
-
-
-	}
-
-
 
 	@Override
 	protected void onPause() {
-		// TODO Auto-generated method stub
 		super.onPause();
+		unbindXMPPService();
 	}
 
-	@Override
-	protected void onStop() {
-		// TODO Auto-generated method stub
-		super.onStop();
+	private void registerXMPPService() {
+		Log.i(TAG, "called startXMPPService()");
+		mServiceIntent = new Intent(this, XMPPService.class);
+		Uri chatURI = Uri.parse(chatFriend);
+		mServiceIntent.setData(chatURI);
+		mServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
 
-	}
+		mServiceConnection = new ServiceConnection() {
 
-	@Override
-	protected void onDestroy() {
-		// TODO Auto-generated method stub
-		super.onDestroy();
-		if (mMessengerServiceConnected) {
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				Log.i(TAG, "called onServiceConnected()");
+				mServiceAdapter = new XMPPChatServiceAdapter(
+						IXMPPChatService.Stub.asInterface(service),
+						chatFriend);
 
-			unbindService(mChatServiceConnection);
-
-			chatList.clear();
-
-			mMessengerServiceConnected = false;
-
-		}
-	}
-
-	
-	@Override
-	protected void onStart() {
-		super.onStart();
-//		Intent serviceIntent = new Intent();
-//		serviceIntent.setAction("com.emot.services.ChatService");
-//		startService(serviceIntent);
-		 Intent chatservice = new Intent("com.emot.services.ChatService");
-		 bindService(chatservice, mChatServiceConnection, Context.BIND_AUTO_CREATE);
-	}
-	 
-
-
-
-	private Messenger mMessengerService = null;
-	private boolean mMessengerServiceConnected = false;
-	private ChatListArrayAdapter chatlistAdapter;
-	ArrayList<ChatMessage> chatList;
-
-
-	private ServiceConnection mChatServiceConnection = new ServiceConnection() {
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			mMessengerService = null;
-			mMessengerServiceConnected = false;
-
-		}
-
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			Log.i("XMPPClient", "Activity Connected to Service");
-			mMessengerService = new Messenger(service);
-			mMessengerServiceConnected = true;
-			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
-			Bundle data = new Bundle();
-			data.putString("chat_friend", chatFriend);
-			data.putBoolean("create_chat", true);
-			Log.i("XMPPClient", "meg reply to is " +msg.replyTo + " friend = "+chatFriend);
-			msg.replyTo = mMessenger;
-			msg.setData(data);
-			try {
-				mMessengerService.send(msg);
-			} catch (RemoteException e) {
-
-				e.printStackTrace();
+				mServiceAdapter.clearNotifications(chatFriend);
 			}
 
-		}
-	};
+			public void onServiceDisconnected(ComponentName name) {
+				Log.i(TAG, "called onServiceDisconnected()");
+			}
 
-
-
-	private final Messenger mMessenger = new Messenger(new IncomingHandler());
-	class IncomingHandler extends Handler{
-
-		@Override
-		public void handleMessage(android.os.Message pMessage) {
-			// TODO Auto-generated method stub
-			super.handleMessage(pMessage);
-			Log.i("XMPPClient", "received message from service");
-			Bundle b = pMessage.getData();
-			String s = b.getString("chat");
-			String time = b.getString("time");
-
-			chatList.add(new ChatMessage(s,time, false));
-			chatlistAdapter.notifyDataSetChanged();
-
-		}
-
-
-
-
+		};
 	}
+
+	private void unbindXMPPService() {
+		try {
+			unbindService(mServiceConnection);
+		} catch (IllegalArgumentException e) {
+			Log.e(TAG, "Service wasn't bound!");
+		}
+	}
+
+	private void bindXMPPService() {
+		bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Intent incomingIntent = getIntent();
-		String userName = "";
 		chatFriend = incomingIntent.getStringExtra(IntentStrings.CHAT_FRIEND);
 		Log.i(TAG, "chatFriend is " +chatFriend);
 		if (chatFriend==null){
@@ -245,63 +195,30 @@ public class ChatScreen extends ActionBarActivity{
 		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);
 		userTitle.setText(chatFriend);
 		ActionBar ab = getSupportActionBar();
-	    ab.setTitle(chatFriend);
+		ab.setTitle(chatFriend);
 		/*if(incomingIntent != null){
 
 			userName = incomingIntent.getStringExtra("USERNAME");
 			userTitle.setText(userName);
 		}*/
-		chatList = new ArrayList<ChatMessage>();
-		handler = new Handler();
-		emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
-		EmotHistoryTask eht = new EmotHistoryTask();
-		eht.execute(new EmotDBHelper[]{emotHistoryDB});
+		//handler = new Handler();
+		//emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
+		//EmotHistoryTask eht = new EmotHistoryTask();
+		//eht.execute(new EmotDBHelper[]{emotHistoryDB});
 		//chatList.add("Howdy");
-		chatlistAdapter = new ChatListArrayAdapter(this, R.layout.chat_row, chatList);  
 
 		sendButton.setEnabled(true);
 
 		sendButton.setOnClickListener(new View.OnClickListener() {
-			String chat;
 			@Override
 			public void onClick(View v) {
-				try {
-					Log.i("XMPPClient", "Send onClick called");
-					SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-					Date now = new Date();
-					String strDate = sdfDate.format(now);
-					final String dateTime[] = strDate.split(" ");
-					Bundle data = new Bundle();
-
-					data.putString("chat_friend", chatFriend);
-					data.putString("chat", chatEntry.getText().toString());
-					//data.putCharSequence("chat", chatEntry.getText().toString());
-					android.os.Message msg = android.os.Message.obtain();
-					msg.setData(data);
-					msg.replyTo = mMessenger;
-					mMessengerService.send(msg);
-					chat = chatEntry.getText().toString();
-					new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							emotHistoryDB.insertChat(chatFriend, chat, dateTime[0], dateTime[1], "right");
-
-						}
-					}).start(); 
-					chatList.add(new ChatMessage(chat, dateTime[1],true));
-					chatlistAdapter.notifyDataSetChanged();
-					chatEntry.setText("");
-					chatEntry.clearSuggestion();
-
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-
+				sendMessage(chatEntry.getText().toString());
 			}
 		});
-		chatView.setAdapter(chatlistAdapter);
-
+		
+		//chatView.setAdapter(chatlistAdapter);
+		setChatWindowAdapter();
+		
 
 		if(EmotApplication.getConnection() != null){
 			ChatManager current_chat  = EmotApplication.getConnection().getChatManager();
@@ -324,30 +241,192 @@ public class ChatScreen extends ActionBarActivity{
 				emotSuggestion.setVisibility(View.VISIBLE);
 			}
 		});
-		
-//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
-		
-//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
-//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("INSERT INTO emots select * from emoticons");
-		
-		
-//		ContentValues cvs = new ContentValues();
-//		String imgHash = EmotApplication.randomId();
-//		Log.i(TAG, "Image hash  = "+ imgHash);
-//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
-//		cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
-//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.mad)));
-//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
-//		
-//		cvs = new ContentValues();
-//		imgHash = EmotApplication.randomId();
-//		Log.i(TAG, "Image hash  = "+ imgHash);
-//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
-//		cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
-//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.sad)));
-//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+		registerXMPPService();
+		//setChatWindowAdapter();
+
+		//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
+
+		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
+		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("INSERT INTO emots select * from emoticons");
+
+
+		//		ContentValues cvs = new ContentValues();
+		//		String imgHash = EmotApplication.randomId();
+		//		Log.i(TAG, "Image hash  = "+ imgHash);
+		//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+		//		cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
+		//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.mad)));
+		//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+		//		
+		//		cvs = new ContentValues();
+		//		imgHash = EmotApplication.randomId();
+		//		Log.i(TAG, "Image hash  = "+ imgHash);
+		//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+		//		cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
+		//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.sad)));
+		//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 
 	}
+
+	private void sendMessage(String message) {
+		chatEntry.setText(null);
+		mServiceAdapter.sendMessage(chatFriend, message);
+		if (!mServiceAdapter.isServiceAuthenticated()){
+			//Show single tick and try later
+			//showToastNotification(R.string.toast_stored_offline);
+		}
+	}
+
+	private void markAsReadDelayed(final int id, final int delay) {
+		new Thread() {
+			@Override
+			public void run() {
+				try { Thread.sleep(delay); } catch (Exception e) {}
+				markAsRead(id);
+			}
+		}.start();
+	}
+
+	private void markAsRead(int id) {
+		Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/" + ChatProvider.TABLE_NAME + "/" + id);
+		Log.d(TAG, "markAsRead: " + rowuri);
+		ContentValues values = new ContentValues();
+		values.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+		getContentResolver().update(rowuri, values, null, null);
+	}
+
+	private void setChatWindowAdapter() {
+		String selection = ChatConstants.JID + "='" + chatFriend + "'";
+		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM, selection, null, null);
+		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM, PROJECTION_TO, chatFriend, chatFriend);
+
+		chatView.setAdapter(adapter);
+	}
+	
+	class ChatScreenAdapter extends SimpleCursorAdapter {
+		String mScreenName, mJID;
+
+		public ChatScreenAdapter(Cursor cursor, String[] from, int[] to, String JID, String screenName) {
+			super(ChatScreen.this, R.layout.chat_row, cursor, from, to);
+			mScreenName = screenName;
+			mJID = JID;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View row = convertView;
+			ChatItemWrapper wrapper = null;
+			Cursor cursor = this.getCursor();
+			cursor.moveToPosition(position);
+
+			long dateMilliseconds = cursor.getLong(cursor
+					.getColumnIndex(ChatProvider.ChatConstants.DATE));
+
+			int _id = cursor.getInt(cursor
+					.getColumnIndex(ChatProvider.ChatConstants._ID));
+			String date = getDateString(dateMilliseconds);
+			String message = cursor.getString(cursor
+					.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
+			boolean from_me = (cursor.getInt(cursor
+					.getColumnIndex(ChatProvider.ChatConstants.DIRECTION)) ==
+					ChatConstants.OUTGOING);
+			String jid = cursor.getString(cursor
+					.getColumnIndex(ChatProvider.ChatConstants.JID));
+			int delivery_status = cursor.getInt(cursor
+					.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
+
+			if (row == null) {
+				LayoutInflater inflater = getLayoutInflater();
+				row = inflater.inflate(R.layout.chat_row, null);
+				wrapper = new ChatItemWrapper(row);
+				row.setTag(wrapper);
+			} else {
+				wrapper = (ChatItemWrapper) row.getTag();
+			}
+
+			if (!from_me && delivery_status == ChatConstants.DS_NEW) {
+				markAsReadDelayed(_id, DELAY_NEWMSG);
+			}
+
+			String from = jid;
+			if (jid.equals(mJID))
+				from = mScreenName;
+			wrapper.populateFrom(date, from_me, from, message, delivery_status);
+
+			return row;
+		}
+	}
+	
+	private String getDateString(long milliSeconds) {
+		SimpleDateFormat dateFormater = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+		Date date = new Date(milliSeconds);
+		return dateFormater.format(date);
+	}
+
+	public class ChatItemWrapper {
+		public EmotTextView mChatTextLeft; 
+		public View chatBoxLeft;
+		public TextView mDateTimeLeft;
+		
+		public EmotTextView mChatTextRight; 
+		public View chatBoxRight;
+		public TextView mDateTimeRight;
+		
+
+		ChatItemWrapper(View base) {
+			chatBoxLeft = base.findViewById(R.id.messageContainerLeft);
+			mDateTimeLeft = (TextView)base.findViewById(R.id.chatDateLeft);
+			mChatTextLeft = (EmotTextView) base.findViewById(R.id.chatContentLeft); 
+			
+			chatBoxRight = base.findViewById(R.id.messageContainerRight);
+			mDateTimeRight = (TextView)base.findViewById(R.id.chatDateRight);
+			mChatTextRight = (EmotTextView) base.findViewById(R.id.chatContentRight);
+		}
+
+		void populateFrom(String date, boolean from_me, String from, String message,
+				int delivery_status) {
+//			Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " + message + ")");
+			
+			if (from_me) {
+				chatBoxRight.setVisibility(View.GONE);
+				chatBoxLeft.setVisibility(View.VISIBLE);
+				mDateTimeLeft.setText(date);
+				mChatTextLeft.setText(message);
+				switch (delivery_status) {
+					case ChatConstants.DS_NEW:
+						break;
+					case ChatConstants.DS_SENT_OR_READ:
+						break;
+					case ChatConstants.DS_ACKED:
+						break;
+					case ChatConstants.DS_FAILED:
+						break;
+				}
+			} else {
+				chatBoxLeft.setVisibility(View.GONE);
+				chatBoxRight.setVisibility(View.VISIBLE);
+				mDateTimeRight.setText(date);
+				mChatTextRight.setText(message);
+				switch (delivery_status) {
+					case ChatConstants.DS_NEW:
+						break;
+					case ChatConstants.DS_SENT_OR_READ:
+						break;
+					case ChatConstants.DS_ACKED:
+						break;
+					case ChatConstants.DS_FAILED:
+						break;
+				}
+			}
+			
+//			getMessageView().setText(message);
+//			getMessageView().setTextSize(TypedValue.COMPLEX_UNIT_SP, chatWindow.mChatFontSize);
+//			getDateView().setTextSize(TypedValue.COMPLEX_UNIT_SP, chatWindow.mChatFontSize*2/3);
+//			getFromView().setTextSize(TypedValue.COMPLEX_UNIT_SP, chatWindow.mChatFontSize*2/3);
+		}
+	}
+
+
 
 }
 

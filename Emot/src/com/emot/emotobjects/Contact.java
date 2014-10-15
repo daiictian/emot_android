@@ -2,14 +2,14 @@ package com.emot.emotobjects;
 
 public class Contact {
 	private String name;
-	private String mobile;
+	private String jid;
 	private String profileImgUrl;
 	private String status;
 	private byte[] avatar;
 	
-	public Contact(String name, String mobile){
+	public Contact(String name, String jid){
 		this.setName(name);
-		this.setMobile(mobile);
+		this.setJID(jid);
 	}
 
 	public String getName() {
@@ -20,12 +20,12 @@ public class Contact {
 		this.name = name;
 	}
 
-	public String getMobile() {
-		return mobile;
+	public String getJID() {
+		return jid;
 	}
 
-	public void setMobile(String mobile) {
-		this.mobile = mobile;
+	public void setJID(String jid) {
+		this.jid = jid;
 	}
 
 	public String getProfileImgUrl() {

@@ -25,6 +25,7 @@ import org.json.JSONObject;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -39,6 +40,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.ApplicationConstants;
@@ -165,6 +167,8 @@ public class Registration extends ActionBarActivity {
 							catch (JSONException e) {
 
 								e.printStackTrace();
+							}catch(Exception e){
+								e.printStackTrace();
 							}
 
 						}
@@ -222,6 +226,14 @@ public class Registration extends ActionBarActivity {
 								EmotApplication.setValue(PreferenceKeys.USER_APPID, resultJson.getString("appid"));
 								EmotApplication.setValue(PreferenceKeys.USER_MOBILE, mMobileNumber);
 								EmotApplication.setValue(PreferenceKeys.USER_PWD, mRN);
+								EmotApplication.setValue(PreferenceConstants.JID, mMobileNumber+"@"+WebServiceConstants.CHAT_DOMAIN);
+								EmotApplication.setValue(PreferenceConstants.PASSWORD, mRN);
+								EmotApplication.setValue(PreferenceConstants.CUSTOM_SERVER, WebServiceConstants.CHAT_SERVER);
+								EmotApplication.setValue(PreferenceConstants.RESSOURCE, WebServiceConstants.CHAT_DOMAIN);
+								Editor e = EmotApplication.getPrefs().edit();
+								e.putBoolean(PreferenceConstants.REQUIRE_SSL, false);
+								e.commit();
+								//EmotApplication.setValue(PreferenceConstants.RESSOURCE, WebServiceConstants.CHAT_DOMAIN);
 								Thread login = new Thread(new Runnable() {
 
 									@Override
@@ -230,7 +242,7 @@ public class Registration extends ActionBarActivity {
 
 										// Create a connection
 										ConnectionConfiguration connConfig = new ConnectionConfiguration(WebServiceConstants.CHAT_SERVER, WebServiceConstants.CHAT_PORT, WebServiceConstants.CHAT_DOMAIN);
-										connConfig.setSASLAuthenticationEnabled(true);
+										//connConfig.setSASLAuthenticationEnabled(true);
 										//connConfig.setCompressionEnabled(true);
 										connConfig.setSecurityMode(SecurityMode.enabled);
 
@@ -269,7 +281,7 @@ public class Registration extends ActionBarActivity {
 
 
 										try {
-											connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""));
+											connection.login(EmotApplication.getValue(PreferenceKeys.USER_MOBILE, ""),EmotApplication.getValue(PreferenceKeys.USER_PWD, ""));
 											if(connection.isAuthenticated()){
 												Log.i(TAG, "Authenticated : "+connection.isAuthenticated());
 												///In a UI thread launch contacts Activity
@@ -297,7 +309,7 @@ public class Registration extends ActionBarActivity {
 										startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
 										finish();
 									}
-								});
+								}, null);
 							}
 						} catch (JSONException e) {
 

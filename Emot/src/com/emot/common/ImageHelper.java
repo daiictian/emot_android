@@ -3,6 +3,7 @@ package com.emot.common;
 import java.io.ByteArrayOutputStream;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -13,6 +14,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
+import android.os.Environment;
 
 public class ImageHelper {
 	public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, int pixels) {
@@ -76,6 +78,10 @@ public class ImageHelper {
         } else {
             return data.getByteCount();
         }
+    }
+	
+	public static String getCacheDir(Context ctx) {
+        return ctx.getCacheDir().getPath();
     }
 
 }

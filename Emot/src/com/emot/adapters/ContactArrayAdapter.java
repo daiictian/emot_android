@@ -40,7 +40,7 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> {
 	    ImageView profile = (ImageView)view.findViewById(R.id.image_contact_profile);
 	    TextView status = (TextView)view.findViewById(R.id.text_contact_status);
 	    name.setText(contacts.get(position).getName());
-	    mobile.setText(contacts.get(position).getMobile());
+	    mobile.setText(contacts.get(position).getJID());
 	    status.setText(contacts.get(position).getStatus());
 	    Bitmap bitmap = null;
 	    if(contacts.get(position).getAvatar()!=null){

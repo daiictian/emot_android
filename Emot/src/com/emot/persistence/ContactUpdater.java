@@ -15,7 +15,6 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -24,6 +23,7 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 
+import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.constants.PreferenceKeys;
@@ -35,6 +35,7 @@ public class ContactUpdater {
 	private static String TAG = ContactUpdater.class.getSimpleName();
 	private static HashMap<String, String> contacts;
 	private static TaskCompletedRunnable taskCompleteHandler;
+	private static XMPPRosterServiceAdapter serviceAdapter;
 	
 	@SuppressLint("InlinedApi")
 	private final static String[] FROM_COLUMN = {
@@ -45,9 +46,10 @@ public class ContactUpdater {
 	};
 
 
-	public static void updateContacts(final TaskCompletedRunnable taskCompleteHandler){
+	public static void updateContacts(final TaskCompletedRunnable taskCompleteHandler, XMPPRosterServiceAdapter serviceAdapter){
 
 		ContactUpdater.taskCompleteHandler = taskCompleteHandler;
+		ContactUpdater.serviceAdapter = serviceAdapter;
 		new GetContacts().execute();
 	}
 
@@ -164,21 +166,29 @@ public class ContactUpdater {
 					JSONObject emotter = emotters.getJSONObject(i);
 					
 					//Database entry
-					ContentValues cvs = new ContentValues();
-					cvs.put(DBContract.ContactsDBEntry.MOBILE_NUMBER, emotter.getString("mobile"));
-					cvs.put(DBContract.ContactsDBEntry.EMOT_NAME, emotter.getString("name"));
-					cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
-					//cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
-					//cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
-					Cursor cr = db.query(DBContract.ContactsDBEntry.TABLE_NAME, new String[] {DBContract.ContactsDBEntry.MOBILE_NUMBER} , DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+emotter.getString("mobile")+"';", null, null, null, null, null);
-					if(cr.getCount()==0){
-						db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
-						//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
-						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
-					}else{
-						Log.i(TAG, "Already in DB "+emotter.getString("mobile"));
+//					ContentValues cvs = new ContentValues();
+//					cvs.put(DBContract.ContactsDBEntry.MOBILE_NUMBER, emotter.getString("mobile"));
+//					cvs.put(DBContract.ContactsDBEntry.EMOT_NAME, emotter.getString("name"));
+//					cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
+//					cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
+//					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
+//					Cursor cr = db.query(DBContract.ContactsDBEntry.TABLE_NAME, new String[] {DBContract.ContactsDBEntry.MOBILE_NUMBER} , DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+emotter.getString("mobile")+"';", null, null, null, null, null);
+//					if(cr.getCount()==0){
+//						db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+//						//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
+//						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
+//					}else{
+//						Log.i(TAG, "Already in DB "+emotter.getString("mobile"));
+//					}
+					
+					
+					//Log.i(TAG, "Service adapter value = "+ContactUpdater.serviceAdapter + ContactUpdater.serviceAdapter.isAuthenticated());
+					if(ContactUpdater.serviceAdapter!=null && ContactUpdater.serviceAdapter.isAuthenticated()){
+						Log.i(TAG, "Adding roster "+emotter.getString("mobile"));
+						ContactUpdater.serviceAdapter.addRosterItem(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN, contacts.get(emotter.getString("mobile")), null);
+						ContactUpdater.serviceAdapter.sendPresenceRequest(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN, "subscribe");
 					}
-					cr.close();
+					//cr.close();
 				} catch (JSONException e) {
 					e.printStackTrace();
 				} catch (Exception e) {

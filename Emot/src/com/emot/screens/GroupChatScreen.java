@@ -28,12 +28,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.emot.adapters.GroupChatListArrayAdapter;
+import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
-import com.emot.services.ChatService;
 
 public class GroupChatScreen extends Activity{
 	
@@ -73,10 +73,10 @@ public class GroupChatScreen extends Activity{
 				 result.moveToNext();
 				Log.i(TAG, "chat from DB is " +chat);
 				if(location.equals("left")){
-				chatList.add(new ChatMessage(user, chat,datetime, false));
+				chatList.add(new ChatMessage(user, chat,datetime, false, ChatConstants.DS_NEW));
 				grpchatlistAdapter.notifyDataSetChanged();
 				}else if(location.equals("right")){
-					chatList.add(new ChatMessage(user,chat,datetime, true));
+					chatList.add(new ChatMessage(user,chat,datetime, true, ChatConstants.DS_NEW));
 					grpchatlistAdapter.notifyDataSetChanged();
 				}
 				
@@ -175,22 +175,22 @@ public class GroupChatScreen extends Activity{
 		
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
-			Log.i(TAG, "Activity Connected to Service");
-			mMessengerService = new Messenger(service);
-			mMessengerServiceConnected = true;
-			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
-			Bundle data = new Bundle();
-			data.putBoolean("join_room", true);
-			data.putString("chat_friend", mGroupName);
-			Log.i(TAG, "meg reply to is " +msg.replyTo + " friend = "+mGroupName);
-			msg.replyTo = mMessenger;
-			msg.setData(data);
-			try {
-			mMessengerService.send(msg);
-			} catch (RemoteException e) {
-				
-				e.printStackTrace();
-			}
+//			Log.i(TAG, "Activity Connected to Service");
+//			mMessengerService = new Messenger(service);
+//			mMessengerServiceConnected = true;
+//			android.os.Message msg = android.os.Message.obtain(null,ChatService.MESSAGE_TYPE_TEXT);
+//			Bundle data = new Bundle();
+//			data.putBoolean("join_room", true);
+//			data.putString("chat_friend", mGroupName);
+//			Log.i(TAG, "meg reply to is " +msg.replyTo + " friend = "+mGroupName);
+//			msg.replyTo = mMessenger;
+//			msg.setData(data);
+//			try {
+//			mMessengerService.send(msg);
+//			} catch (RemoteException e) {
+//				
+//				e.printStackTrace();
+//			}
 			
 		}
 	};
@@ -210,7 +210,7 @@ public class GroupChatScreen extends Activity{
 			String u = b.getString("user");
 			String time = b.getString("time");
 			
-			chatList.add(new ChatMessage(u,s,time, false));
+			chatList.add(new ChatMessage(u,s,time, false, ChatConstants.DS_NEW));
 			grpchatlistAdapter.notifyDataSetChanged();
 			
 		}
@@ -282,7 +282,7 @@ public class GroupChatScreen extends Activity{
 
 						}
 					}).start(); 
-					chatList.add(new ChatMessage("me",chat, dateTime[1],true));
+					chatList.add(new ChatMessage("me",chat, dateTime[1],true, ChatConstants.DS_NEW));
 					grpchatlistAdapter.notifyDataSetChanged();
 					chatEntry.setText("");
 					
