@@ -16,7 +16,6 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterGroup;
 import org.jivesoftware.smack.RosterListener;
-import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
@@ -48,6 +47,7 @@ import org.jivesoftware.smackx.ping.provider.PingProvider;
 import org.jivesoftware.smackx.provider.DelayInfoProvider;
 import org.jivesoftware.smackx.provider.DiscoverInfoProvider;
 import org.jivesoftware.smackx.provider.DiscoverItemsProvider;
+import org.jivesoftware.smackx.provider.VCardProvider;
 import org.jivesoftware.smackx.receipts.DeliveryReceipt;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptRequest;
@@ -62,9 +62,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -81,6 +81,7 @@ import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.ImageHelper;
 import com.emot.model.EmotApplication;
+import com.emot.screens.UpdateProfileScreen;
 
 import de.duenndns.ssl.MemorizingTrustManager;
 
@@ -131,6 +132,7 @@ public class SmackableImp implements Smackable {
 		pm.addExtensionProvider(DeliveryReceiptRequest.ELEMENT, DeliveryReceipt.NAMESPACE, new DeliveryReceiptRequest.Provider());
 		// add XMPP Ping (XEP-0199)
 		pm.addIQProvider("ping","urn:xmpp:ping", new PingProvider());
+		pm.addIQProvider("vCard","vcard-temp", new VCardProvider());
 
 		ServiceDiscoveryManager.setDefaultIdentity(EMOT_IDENTITY);
 		
@@ -246,6 +248,7 @@ public class SmackableImp implements Smackable {
 			// we need to "ping" the service to let it know we are actually
 			// connected, even when no roster entries will come in
 			updateConnectionState(ConnectionState.ONLINE);
+			setAvatar();
 		} else throw new EmotXMPPException("SMACK connected, but authentication failed");
 		return true;
 	}
@@ -1173,13 +1176,13 @@ public class SmackableImp implements Smackable {
 			values.put(RosterConstants.STATUS_MESSAGE, presence.getStatus());
 		values.put(RosterConstants.GROUP, getGroup(entry.getGroups()));
 		VCard vCard = new VCard();
-		Log.i(TAG, "B4 try catch");
+		Log.i(TAG, "B4 try catch. user = "+entry.getUser());
 
 		try {
 			vCard.load(mXMPPConnection, entry.getUser());
 			byte[] avatar = vCard.getAvatar();
+			Log.i(TAG, "Avatar = "+avatar);
 			if(avatar!=null){
-				Log.i(TAG, "Avatar = "+avatar);
 				values.put(RosterConstants.AVATAR, avatar);
 			}
 		} catch (XMPPException e) {
@@ -1251,15 +1254,24 @@ public class SmackableImp implements Smackable {
 	public String getLastError() {
 		return mLastError;
 	}
-
-	public void setAvatar(String file) {
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-		Log.i(TAG, "File path = " + file);
-		Bitmap bitmap = BitmapFactory.decodeFile(file, options);
-		Log.i(TAG, "BMP: "+bitmap);
-		new UpdateAvatarTask(bitmap).execute();
+	
+	public void setAvatar() {
+		if(!EmotApplication.getPrefs().getBoolean(PreferenceConstants.AVATAR_UPDATED, false)){
+			Bitmap bitmap = UpdateProfileScreen.getAvatar();
+			new UpdateAvatarTask(bitmap).execute();
+		}else{
+			Log.i(TAG, "Avatar already updated");
+		}
 	}
+
+//	public void setAvatar(String file) {
+//		BitmapFactory.Options options = new BitmapFactory.Options();
+//		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+//		Log.i(TAG, "File path = " + file);
+//		Bitmap bitmap = BitmapFactory.decodeFile(file, options);
+//		Log.i(TAG, "BMP: "+bitmap);
+//		new UpdateAvatarTask(bitmap).execute();
+//	}
 	
 	public class UpdateAvatarTask extends AsyncTask<Void, Void, Boolean>{
 
@@ -1273,9 +1285,9 @@ public class SmackableImp implements Smackable {
 
 		@Override
 		protected Boolean doInBackground(Void... params) {
-			SmackAndroid.init(EmotApplication.getAppContext());
+			//SmackAndroid.init(EmotApplication.getAppContext());
 			//ProviderManager.getInstance().addIQProvider("vCard","vcard-temp", new VCardProvider());
-			EmotApplication.configure(ProviderManager.getInstance());
+			//EmotApplication.configure(ProviderManager.getInstance());
 			VCard vCard = new VCard();
 
 			bmp = Bitmap.createScaledBitmap(bmp, 120, 120, false);
@@ -1303,6 +1315,10 @@ public class SmackableImp implements Smackable {
 				Log.i(TAG, " EXCEPTION  ------ ");
 				e.printStackTrace();
 				return false;
+			}finally{
+				Editor c = EmotApplication.getPrefs().edit();
+				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
+				c.commit();
 			}
 			
 			

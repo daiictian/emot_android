@@ -2,15 +2,23 @@ package com.emot.screens;
 
 import java.util.ArrayList;
 
+import android.app.SearchManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -27,7 +35,6 @@ import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.service.XMPPService;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.common.TaskCompletedRunnable;
-import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.ContactUpdater;
@@ -53,17 +60,20 @@ public class ContactScreen extends ActionBarActivity{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mConfig = EmotApplication.getConfig(this);
 		setContentView(R.layout.contacts);
+		
+		getSupportActionBar().setTitle("Contacts");
+		
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
-		showContactsThread = new ShowContacts();
-		showContactsThread.execute();
+		contacts = new ArrayList<Contact>();
+		contactAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
+		listviewContact.setAdapter(contactAdapter);
+		refreshContacts();
 
-
+		mConfig = EmotApplication.getConfig(this);
 		Intent i = new Intent();
 		i.setAction("com.emot.services.ChatService");
 		this.startService(i);
-		contacts = new ArrayList<Contact>();
 		listviewContact.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -73,7 +83,7 @@ public class ContactScreen extends ActionBarActivity{
 
 				String jid = contacts.get(position).getJID();
 				Intent chatIntent = new Intent(ContactScreen.this, ChatScreen.class);
-				chatIntent.putExtra(IntentStrings.CHAT_FRIEND, jid);
+				chatIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, jid);
 				startActivity(chatIntent);
 
 				//startChatActivity(mobile+"@"+WebServiceConstants.CHAT_DOMAIN, "alias", null);
@@ -81,8 +91,11 @@ public class ContactScreen extends ActionBarActivity{
 			}
 		});
 		registerXMPPService();
-		contactAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
-		listviewContact.setAdapter(contactAdapter);
+	}
+	
+	public void refreshContacts(){
+		showContactsThread = new ShowContacts();
+		showContactsThread.execute();
 	}
 
 	public void updateContacts(){
@@ -116,6 +129,52 @@ public class ContactScreen extends ActionBarActivity{
 		showContactsThread.cancel(true);
 		super.onStop();
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    // Inflate the menu items for use in the action bar
+		Log.i(TAG, "Action bar creating menu");
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.menu_actions, menu);
+	    SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView search = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
+        search.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+        search.setOnQueryTextListener(new OnQueryTextListener() { 
+            @Override 
+            public boolean onQueryTextChange(String query) {
+            	Log.i(TAG, "Sstring change : "+query);
+            	contactAdapter.getFilter().filter(query);
+                return true; 
+            }
+
+			@Override
+			public boolean onQueryTextSubmit(String arg0) {
+				Log.i(TAG, "Sstring submit : "+arg0);
+				contactAdapter.getFilter().filter(arg0);
+				return true;
+			} 
+ 
+        });
+	    return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+        
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case R.id.action_profile:
+	            startActivity(new Intent(ContactScreen.this, UpdateProfileScreen.class));
+	            return true;
+	        case android.R.id.home:
+	        	Log.i(TAG, "back pressed");
+	            this.finish();
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+
 
 
 	public class ShowContacts extends AsyncTask<Void, Contact, Boolean>{
@@ -123,14 +182,13 @@ public class ContactScreen extends ActionBarActivity{
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			try{
-				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI,
-				CONTACT_PROJECTION, null,
-				null, null);
+				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
 				
 				Log.i(TAG, "contacts found  = "+cr.getCount());
 				while (cr.moveToNext()) {
 				    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
 				    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
+				    contact.setAvatar(cr.getBlob(cr.getColumnIndex(RosterConstants.AVATAR)));
 				    publishProgress(contact);
 				}
 				cr.close();

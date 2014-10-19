@@ -155,13 +155,21 @@ public class XMPPRosterServiceAdapter {
 		}
 	}
 	
+	public void setAvatar(){
+		try {
+			xmppServiceStub.setAvatar();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void setAvatar(Bitmap bmp){
 		try {
 			Log.i(TAG, "cache directory : "+ImageHelper.getCacheDir(EmotApplication.getAppContext()));
 			String filePath = ImageHelper.getCacheDir(EmotApplication.getAppContext());
 			saveBitmap(bmp, "profile", filePath, false);
 			//Save file bmp to file path
-			xmppServiceStub.setAvatar(filePath + "/" + "profile");
+			xmppServiceStub.setAvatar();
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}

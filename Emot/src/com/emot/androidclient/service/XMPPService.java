@@ -283,8 +283,8 @@ public class XMPPService extends GenericService {
 			}
 
 			@Override
-			public void setAvatar(String file) throws RemoteException {
-				mSmackable.setAvatar(file);
+			public void setAvatar() throws RemoteException {
+				mSmackable.setAvatar();
 			}
 
 		};

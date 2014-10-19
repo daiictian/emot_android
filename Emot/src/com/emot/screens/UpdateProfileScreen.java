@@ -7,14 +7,18 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Base64;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -29,7 +33,6 @@ import com.emot.androidclient.service.XMPPService;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.model.EmotApplication;
-import com.emot.model.EmotUser;
 
 public class UpdateProfileScreen extends ActionBarActivity {
 	private EditText editStatus;
@@ -46,12 +49,14 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		setContentView(R.layout.profile);
 		editStatus = (EditText)findViewById(R.id.editTextStatus);
-		editStatus.setText(EmotUser.getStatus());
+		editStatus.setText(UpdateProfileScreen.getStatus());
 		saveButton = (Button)findViewById(R.id.buttonProfileSave);
 		imageAvatar = (ImageView)findViewById(R.id.imageAvatar);
-		imageAvatar.setImageBitmap(EmotUser.getAvatar());
+		imageAvatar.setImageBitmap(UpdateProfileScreen.getAvatar());
 		saveButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -179,6 +184,19 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		startActivityForResult(Intent.createChooser(intent, "Complete action using"), PICK_FROM_GALLERY);
 
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case android.R.id.home:
+	        	Log.i(TAG, "back pressed");
+	            this.finish();
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -194,7 +212,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				}else{
 					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG).show();
 				}
-				imageAvatar.setImageBitmap(EmotUser.getAvatar());
+				imageAvatar.setImageBitmap(UpdateProfileScreen.getAvatar());
 			}
 		};
 
@@ -212,6 +230,13 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
+				
+				Editor c = EmotApplication.getPrefs().edit();
+				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
+				c.commit();
+				mServiceAdapter.setAvatar();
+				
+				imageAvatar.setImageBitmap(yourImage);
 			}
 			break;
 		case PICK_FROM_GALLERY:
@@ -227,7 +252,12 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte imageInByte[] = stream.toByteArray();
 				Log.e("output before conversion", imageInByte.toString());
-				mServiceAdapter.setAvatar(yourImage);
+				
+				Editor c = EmotApplication.getPrefs().edit();
+				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
+				c.commit();
+				mServiceAdapter.setAvatar();
+				
 				imageAvatar.setImageBitmap(yourImage);
 			}
 
@@ -253,6 +283,24 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		}
 		// this is our fallback here
 		return uri.getPath();
+	}
+	
+	public static Bitmap getAvatar(){
+		String img = EmotApplication.getValue(PreferenceConstants.USER_AVATAR, null);
+		Bitmap bitmap;
+		Log.i(TAG, "img is "+img);
+		if(img==null){
+			bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+		}else{
+			byte[] bArray =  Base64.decode(img, Base64.DEFAULT);
+			bitmap = BitmapFactory.decodeByteArray(bArray , 0, bArray.length);
+		}
+		
+		return bitmap;
+	}
+	
+	public static String getStatus(){
+		return EmotApplication.getValue(PreferenceConstants.STATUS_MESSAGE, "Default status");
 	}
 	
 }

@@ -21,11 +21,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:screenOrientation="portrait"
-        android:theme="@android:style/Theme.Light.Panel" >
+        android:theme="@style/Theme.AppCompat.Light" >
         <activity
             android:name=".ChatScreen"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
+            android:label="@string/app_name" >
         </activity>
         <activity
             android:name=".Emots"
@@ -33,43 +32,27 @@
         </activity>
         <activity
             android:name=".ContactScreen"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="com.emot.services.ChatService" />
             </intent-filter>
         </activity>
         <activity
             android:name=".GroupChatScreen"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
+            android:label="@string/app_name" >
         </activity>
         <activity
             android:name=".Registration"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name="com.emot.androidclient.chat.ChatWindow"
-            android:alwaysRetainTaskState="true"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme"
-            android:windowSoftInputMode="stateHidden" >
         </activity>
         <activity
             android:name=".UpdateProfileScreen"
-            android:label="@string/app_name"
-            android:theme="@style/CustomActionBarTheme" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:label="@string/app_name" >
         </activity>
 
         <service
