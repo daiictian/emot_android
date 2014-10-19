@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManager;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -19,7 +18,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -29,9 +27,7 @@ import android.widget.TextView;
 
 import com.emot.adapters.GroupChatListArrayAdapter;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
-import com.emot.constants.IntentStrings;
 import com.emot.emotobjects.ChatMessage;
-import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmotDBHelper;
 
@@ -225,7 +221,7 @@ public class GroupChatScreen extends Activity{
 		super.onCreate(savedInstanceState);
 		Intent incomingIntent = getIntent();
 		String userName = "";
-		mGroupName = incomingIntent.getStringExtra(IntentStrings.CHAT_FRIEND);
+		mGroupName = incomingIntent.getStringExtra(ChatScreen.INTENT_CHAT_FRIEND);
 		Log.i(TAG, "chatFriend is " +mGroupName);
 //		if (mGroupName==null){
 //			Toast.makeText(EmotApplication.getAppContext(), "Incorrect username", Toast.LENGTH_LONG).show();

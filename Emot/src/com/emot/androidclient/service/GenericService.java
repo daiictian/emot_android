@@ -18,10 +18,10 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.emot.androidclient.chat.ChatWindow;
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.model.EmotApplication;
+import com.emot.screens.ChatScreen;
 import com.emot.screens.R;
 
 public abstract class GenericService extends Service {
@@ -69,7 +69,7 @@ public abstract class GenericService extends Service {
 
 	private void addNotificationMGR() {
 		mNotificationMGR = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		mNotificationIntent = new Intent(this, ChatWindow.class);
+		mNotificationIntent = new Intent(this, ChatScreen.class);
 	}
 
 	protected void notifyClient(String fromJid, String fromUserName, String message,
@@ -165,7 +165,8 @@ public abstract class GenericService extends Service {
 		mNotification.defaults = 0;
 		Uri userNameUri = Uri.parse(fromJid);
 		mNotificationIntent.setData(userNameUri);
-		mNotificationIntent.putExtra(ChatWindow.INTENT_EXTRA_USERNAME, fromUserId);
+		Log.i(TAG, "Notificaiton from user = "+fromUserId);
+		mNotificationIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, fromJid);
 		mNotificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		
 		//need to set flag FLAG_UPDATE_CURRENT to get extras transferred

@@ -28,6 +28,7 @@
 
         <TextView android:id="@+id/chatStatusLeft" 
             android:layout_width="wrap_content"
+            android:layout_below="@id/chatDateLeft"
             android:layout_height="wrap_content"/>
     </RelativeLayout>
 
@@ -54,6 +55,7 @@
             android:textSize="8sp" />
         <TextView android:id="@+id/chatStatusRight"
             android:layout_width="wrap_content"
+            android:layout_below="@id/chatDateRight"
             android:layout_height="wrap_content" />
     </RelativeLayout>
 

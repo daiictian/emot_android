@@ -1,11 +1,9 @@
 package com.emot.screens;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 
 import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManager;
 
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -19,8 +17,8 @@ import android.os.Messenger;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -32,16 +30,14 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.emot.adapters.ChatListArrayAdapter;
 import com.emot.androidclient.chat.XMPPChatServiceAdapter;
 import com.emot.androidclient.data.ChatProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
+import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.androidclient.service.XMPPService;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
-import com.emot.constants.IntentStrings;
-import com.emot.emotobjects.ChatMessage;
 import com.emot.model.EmotApplication;
 
 public class ChatScreen extends ActionBarActivity{
@@ -61,6 +57,9 @@ public class ChatScreen extends ActionBarActivity{
 	private ServiceConnection mServiceConnection;
 	private XMPPChatServiceAdapter mServiceAdapter;
 	private static final int DELAY_NEWMSG = 2000;
+	private String chatAlias;
+	public final static String INTENT_CHAT_FRIEND = "chat_friend";
+	public final static String INTENT_CHAT_ALIAS = "chat_alias";
 
 	private static final String[] PROJECTION_FROM = new String[] {
 		ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
@@ -171,13 +170,32 @@ public class ChatScreen extends ActionBarActivity{
 	private void bindXMPPService() {
 		bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case android.R.id.home:
+	        	Log.i(TAG, "back pressed");
+	            this.finish();
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
 
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		Intent incomingIntent = getIntent();
-		chatFriend = incomingIntent.getStringExtra(IntentStrings.CHAT_FRIEND);
+		chatFriend = incomingIntent.getStringExtra(ChatScreen.INTENT_CHAT_FRIEND);
+		chatAlias = incomingIntent.getStringExtra(ChatScreen.INTENT_CHAT_ALIAS);
+		if(chatAlias==null){
+			setAliasFromDB();
+		}
 		Log.i(TAG, "chatFriend is " +chatFriend);
 		if (chatFriend==null){
 			Toast.makeText(EmotApplication.getAppContext(), "Incorrect username", Toast.LENGTH_LONG).show();
@@ -195,7 +213,7 @@ public class ChatScreen extends ActionBarActivity{
 		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);
 		userTitle.setText(chatFriend);
 		ActionBar ab = getSupportActionBar();
-		ab.setTitle(chatFriend);
+		ab.setTitle(chatAlias);
 		/*if(incomingIntent != null){
 
 			userName = incomingIntent.getStringExtra("USERNAME");
@@ -261,6 +279,18 @@ public class ChatScreen extends ActionBarActivity{
 			//showToastNotification(R.string.toast_stored_offline);
 		}
 	}
+	
+	private void setAliasFromDB(){
+		String selection = RosterProvider.RosterConstants.JID + "='" + chatFriend + "'";;
+		String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS};
+		Cursor cursor = managedQuery(RosterProvider.CONTENT_URI, projection, selection, null, null);
+		Log.i(TAG, "users found length = "+cursor.getCount());
+		while(cursor.moveToNext()){
+			chatAlias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
+			Log.i(TAG, "chat alias : "+chatAlias);
+		}
+		cursor.close();
+	}
 
 	private void markAsReadDelayed(final int id, final int delay) {
 		new Thread() {
@@ -284,7 +314,6 @@ public class ChatScreen extends ActionBarActivity{
 		String selection = ChatConstants.JID + "='" + chatFriend + "'";
 		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM, selection, null, null);
 		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM, PROJECTION_TO, chatFriend, chatFriend);
-
 		chatView.setAdapter(adapter);
 	}
 	
@@ -352,20 +381,24 @@ public class ChatScreen extends ActionBarActivity{
 		public EmotTextView mChatTextLeft; 
 		public View chatBoxLeft;
 		public TextView mDateTimeLeft;
+		public TextView mChatStatusLeft;
 		
 		public EmotTextView mChatTextRight; 
 		public View chatBoxRight;
 		public TextView mDateTimeRight;
+		public TextView mChatStatusRight;
 		
 
 		ChatItemWrapper(View base) {
 			chatBoxLeft = base.findViewById(R.id.messageContainerLeft);
 			mDateTimeLeft = (TextView)base.findViewById(R.id.chatDateLeft);
 			mChatTextLeft = (EmotTextView) base.findViewById(R.id.chatContentLeft); 
+			mChatStatusLeft = (TextView) base.findViewById(R.id.chatStatusLeft);
 			
 			chatBoxRight = base.findViewById(R.id.messageContainerRight);
 			mDateTimeRight = (TextView)base.findViewById(R.id.chatDateRight);
 			mChatTextRight = (EmotTextView) base.findViewById(R.id.chatContentRight);
+			mChatStatusRight = (TextView) base.findViewById(R.id.chatStatusRight);
 		}
 
 		void populateFrom(String date, boolean from_me, String from, String message,
@@ -379,12 +412,16 @@ public class ChatScreen extends ActionBarActivity{
 				mChatTextLeft.setText(message);
 				switch (delivery_status) {
 					case ChatConstants.DS_NEW:
+						mChatStatusLeft.setText("new");
 						break;
 					case ChatConstants.DS_SENT_OR_READ:
+						mChatStatusLeft.setText("sent or read");
 						break;
 					case ChatConstants.DS_ACKED:
+						mChatStatusLeft.setText("acknowledged");
 						break;
 					case ChatConstants.DS_FAILED:
+						mChatStatusLeft.setText("failed");
 						break;
 				}
 			} else {
@@ -393,14 +430,18 @@ public class ChatScreen extends ActionBarActivity{
 				mDateTimeRight.setText(date);
 				mChatTextRight.setText(message);
 				switch (delivery_status) {
-					case ChatConstants.DS_NEW:
-						break;
-					case ChatConstants.DS_SENT_OR_READ:
-						break;
-					case ChatConstants.DS_ACKED:
-						break;
-					case ChatConstants.DS_FAILED:
-						break;
+				case ChatConstants.DS_NEW:
+					mChatStatusRight.setText("new");
+					break;
+				case ChatConstants.DS_SENT_OR_READ:
+					mChatStatusRight.setText("sent or read");
+					break;
+				case ChatConstants.DS_ACKED:
+					mChatStatusRight.setText("acknowledged");
+					break;
+				case ChatConstants.DS_FAILED:
+					mChatStatusRight.setText("failed");
+					break;
 				}
 			}
 			

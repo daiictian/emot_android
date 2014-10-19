@@ -29,7 +29,7 @@ public interface Smackable {
 	
 	void registerCallback(XMPPServiceCallback callBack);
 	void unRegisterCallback();
-	void setAvatar(String file);
+	void setAvatar();
 	
 	String getNameForJID(String jid);
 }
