@@ -2,6 +2,8 @@ package com.emot.screens;
 
 import java.io.ByteArrayOutputStream;
 
+import org.jivesoftware.smack.util.StringUtils;
+
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
@@ -147,9 +149,9 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	public void callCamera() {
 		Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 		cameraIntent.putExtra("crop", "true");
-		cameraIntent.putExtra("aspectX", 0);
-		cameraIntent.putExtra("aspectY", 0);
-		cameraIntent.putExtra("outputX", 200);
+		cameraIntent.putExtra("aspectX", 1);
+		cameraIntent.putExtra("aspectY", 1);
+		cameraIntent.putExtra("outputX", 150);
 		cameraIntent.putExtra("outputY", 150);
 		startActivityForResult(cameraIntent, CAMERA_REQUEST);
 
@@ -176,8 +178,8 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		intent.setType("image/*");
 		intent.setAction(Intent.ACTION_GET_CONTENT);
 		intent.putExtra("crop", "true");
-		intent.putExtra("aspectX", 0);
-		intent.putExtra("aspectY", 0);
+		intent.putExtra("aspectX", 1);
+		intent.putExtra("aspectY", 1);
 		intent.putExtra("outputX", 150);
 		intent.putExtra("outputY", 150);
 		intent.putExtra("return-data", true);
@@ -232,10 +234,10 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				Log.e("output before conversion", imageInByte.toString());
 				
 				Editor c = EmotApplication.getPrefs().edit();
-				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
+				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
 				c.commit();
+				EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
 				mServiceAdapter.setAvatar();
-				
 				imageAvatar.setImageBitmap(yourImage);
 			}
 			break;
@@ -254,10 +256,10 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				Log.e("output before conversion", imageInByte.toString());
 				
 				Editor c = EmotApplication.getPrefs().edit();
-				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
+				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
 				c.commit();
+				EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
 				mServiceAdapter.setAvatar();
-				
 				imageAvatar.setImageBitmap(yourImage);
 			}
 

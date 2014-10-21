@@ -15,4 +15,5 @@
     <item name="black" type="color">#000000</item>
     <item name="grey" type="color">#eeeeee</item>
     <item name="dark_grey" type="color">#706F6F</item>
+    <item name="light_bg" type="color">#F5F6FA</item>
 </resources>
