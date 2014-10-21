@@ -683,16 +683,19 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void setStatusFromConfig() {
-		// TODO: only call this when carbons changed, not on every presence change
-		CarbonManager.getInstanceFor(mXMPPConnection).sendCarbonsEnabled(mConfig.messageCarbons);
+		try{
+			CarbonManager.getInstanceFor(mXMPPConnection).sendCarbonsEnabled(mConfig.messageCarbons);
 
-		Presence presence = new Presence(Presence.Type.available);
-		Mode mode = Mode.valueOf(mConfig.statusMode);
-		presence.setMode(mode);
-		presence.setStatus(mConfig.statusMessage);
-		presence.setPriority(mConfig.priority);
-		mXMPPConnection.sendPacket(presence);
-		mConfig.presence_required = false;
+			Presence presence = new Presence(Presence.Type.available);
+			Mode mode = Mode.valueOf(mConfig.statusMode);
+			presence.setMode(mode);
+			presence.setStatus(mConfig.statusMessage);
+			presence.setPriority(mConfig.priority);
+			mXMPPConnection.sendPacket(presence);
+			mConfig.presence_required = false;
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	public void sendOfflineMessages() {
@@ -1305,8 +1308,7 @@ public class SmackableImp implements Smackable {
 //								"</BINVAL>", 
 //								true);
 				vCard.save(mXMPPConnection);
-				EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
-				Log.i(TAG, "Setting preference value ...");
+				//EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
 			}  catch (XMPPException e) {
 				Log.i(TAG, "XMPP EXCEPTION  ----------- ");
 				e.printStackTrace();
@@ -1319,6 +1321,7 @@ public class SmackableImp implements Smackable {
 				Editor c = EmotApplication.getPrefs().edit();
 				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
 				c.commit();
+				Log.i(TAG, "Setting preference value ...");
 			}
 			
 			

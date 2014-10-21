@@ -5,37 +5,51 @@
     android:background="@color/white"
     android:orientation="vertical" >
 
-    <ImageView
-        android:id="@+id/imageAvatar"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/simple_border"
+        android:orientation="vertical"
+        android:padding="2dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/margin_twenty"
-        android:src="@drawable/blank_user_image" />
+        android:layout_marginTop="@dimen/margin_twenty" >
 
-    <LinearLayout
+        <ImageView
+            android:id="@+id/imageAvatar"
+            android:layout_width="150dip"
+            android:layout_height="150dip"
+            android:src="@drawable/blank_user_image" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/viewStatusUpdate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_twenty"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_five" >
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/text_bordered"
+        android:padding="5dp" >
 
         <EditText
             android:id="@+id/editTextStatus"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:lines="3"
-            android:ems="10" >
-
-            <requestFocus />
-        </EditText>
+            android:layout_height="50dp"
+            android:layout_alignParentTop="true"
+            android:background="@color/light_bg"
+            android:ems="10"
+            android:hint="What&apos;s up !"
+            android:inputType="textMultiLine"
+            android:maxLength="140" />
 
         <Button
             android:id="@+id/buttonProfileSave"
-            android:layout_width="match_parent"
+            style="@style/btnStyleOrange"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/save" />
-
-    </LinearLayout>
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/editTextStatus"
+            android:text="DONE" />
+    </RelativeLayout>
 
 </LinearLayout>
