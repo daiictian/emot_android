@@ -20,7 +20,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;
-import android.widget.*;
+import android.widget.ExpandableListView;
+import android.widget.ImageView;
+import android.widget.ResourceCursorTreeAdapter;
+import android.widget.TextView;
 
 /**
  * An easy adapter to map columns from a cursor to TextViews or ImageViews

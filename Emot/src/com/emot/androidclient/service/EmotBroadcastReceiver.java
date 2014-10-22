@@ -1,14 +1,14 @@
 package com.emot.androidclient.service;
 
-import com.emot.androidclient.util.PreferenceConstants;
-
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.BroadcastReceiver;
-import android.util.Log;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
+import android.util.Log;
+
+import com.emot.androidclient.util.PreferenceConstants;
 
 
 public class EmotBroadcastReceiver extends BroadcastReceiver {

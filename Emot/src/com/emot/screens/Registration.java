@@ -37,9 +37,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.emot.adapters.ContactArrayAdapter;
-import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.IXMPPRosterCallback.Stub;
+import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.service.XMPPService;
@@ -349,7 +348,7 @@ public class Registration extends ActionBarActivity {
 
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
-		mConfig = EmotApplication.getConfig(this);
+		mConfig = EmotApplication.getConfig();
 		Log.i(TAG, "USERNAME = "+mConfig.jabberID + " password = "+mConfig.password);
 		xmppServiceIntent = new Intent(this, XMPPService.class);
 		xmppServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");

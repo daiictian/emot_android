@@ -2,8 +2,6 @@ package com.emot.androidclient.data;
 
 import java.util.ArrayList;
 
-import com.emot.androidclient.util.LogConstants;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -15,10 +13,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Handler;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
-import android.os.Handler;
 import android.util.Log;
+
+import com.emot.androidclient.util.LogConstants;
 
 public class RosterProvider extends ContentProvider {
 
