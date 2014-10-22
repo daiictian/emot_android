@@ -38,12 +38,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".GroupChatScreen"
+            android:name=".LastChatScreen"
             android:label="@string/app_name" >
-        </activity>
-        <activity
-            android:name=".Registration"
-            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -51,10 +47,18 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".GroupChatScreen"
+            android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name=".Registration"
+            android:label="@string/app_name">
+        </activity>
+        <activity
             android:name=".UpdateProfileScreen"
             android:label="@string/app_name" >
         </activity>
-
+        
         <service
             android:name="com.emot.androidclient.service.XMPPService"
             android:exported="true"
@@ -83,6 +87,7 @@
             android:exported="false" />
         
         <activity android:name="de.duenndns.ssl.MemorizingActivity" />
+        
     </application>
 
 </manifest>

@@ -1,16 +1,11 @@
 package com.emot.model;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.provider.PrivacyProvider;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smackx.GroupChatInvitation;
@@ -42,12 +37,13 @@ import org.jivesoftware.smackx.search.UserSearch;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
+import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.emot.androidclient.data.EmotConfiguration;
-import com.emot.emotobjects.ConnectionQueue;
+import com.emot.androidclient.data.RosterProvider;
 
 import de.duenndns.ssl.MemorizingTrustManager;
 
@@ -74,7 +70,7 @@ public class EmotApplication extends Application {
 
 	}
 	
-	public static EmotConfiguration getConfig(Context ctx) {
+	public static EmotConfiguration getConfig() {
 		return ((EmotApplication)getAppContext()).mConfig;
 	}
 	
@@ -213,5 +209,27 @@ public class EmotApplication extends Application {
 		return new BigInteger(130, new SecureRandom()).toString(32);
 	}
 
+	public static void setAliasFromDB(final String jid, final TextView holder){
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";;
+				String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS};
+				Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
+				Log.i(TAG, "users found length = "+cursor.getCount());
+				if(cursor.getCount()>0){
+					while(cursor.moveToNext()){
+						String chatAlias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
+						Log.i(TAG, "chat alias : "+chatAlias);
+						holder.setText(chatAlias);
+					}
+					cursor.close();
+				}else{
+					holder.setText(jid.split("@")[0]);
+				}
+			}
+		}).start();
+	}
 	
 }

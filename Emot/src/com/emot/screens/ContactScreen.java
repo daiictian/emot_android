@@ -61,6 +61,8 @@ public class ContactScreen extends ActionBarActivity{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.contacts);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		
 		getSupportActionBar().setTitle("Contacts");
 		
@@ -70,7 +72,7 @@ public class ContactScreen extends ActionBarActivity{
 		listviewContact.setAdapter(contactAdapter);
 		refreshContacts();
 
-		mConfig = EmotApplication.getConfig(this);
+		mConfig = EmotApplication.getConfig();
 		Intent i = new Intent();
 		i.setAction("com.emot.services.ChatService");
 		this.startService(i);
@@ -94,6 +96,7 @@ public class ContactScreen extends ActionBarActivity{
 	}
 	
 	public void refreshContacts(){
+		Log.i(TAG, "Refreshing contacts !!!!");
 		showContactsThread = new ShowContacts();
 		showContactsThread.execute();
 	}

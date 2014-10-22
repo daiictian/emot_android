@@ -2,8 +2,6 @@ package com.emot.androidclient.data;
 
 import java.util.ArrayList;
 
-import com.emot.androidclient.util.LogConstants;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -18,6 +16,8 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.emot.androidclient.util.LogConstants;
 
 public class ChatProvider extends ContentProvider {
 
@@ -147,8 +147,7 @@ public class ChatProvider extends ContentProvider {
 		}
 
 		SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-		Cursor ret = qBuilder.query(db, projectionIn, selection, selectionArgs,
-				null, null, orderBy);
+		Cursor ret = qBuilder.query(db, projectionIn, selection, selectionArgs, null, null, orderBy);
 
 		if (ret == null) {
 			infoLog("ChatProvider.query: failed");

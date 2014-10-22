@@ -1,6 +1,5 @@
 package com.emot.androidclient.service;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

@@ -1,8 +1,8 @@
 package com.emot.androidclient.service;
 
-import android.util.Log;
 import android.app.Notification;
 import android.app.Service;
+import android.util.Log;
 
 // Code to make a Service stay in the foreground from
 // http://devtcg.blogspot.com/2009/12/gracefully-supporting-multiple-android.html

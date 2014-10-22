@@ -14,7 +14,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
-import android.os.Environment;
 
 public class ImageHelper {
 	public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, int pixels) {
