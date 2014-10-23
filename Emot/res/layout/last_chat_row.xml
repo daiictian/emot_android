@@ -2,20 +2,50 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="horizontal" >
 
-    <TextView
-        android:id="@+id/textLastChatUser"
+    <FrameLayout
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center" >
+
+        <ImageView
+            android:id="@+id/image_last_chat"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="6dp"
+            android:src="@drawable/blank_user_image" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/frame"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Medium Text"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:orientation="vertical"
+        android:layout_gravity="center" >
 
-    <com.emot.common.EmotTextView
-        android:id="@+id/textLastChatItem"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:lines="1"
-        android:text="TextView" />
+        <TextView
+            android:id="@+id/textLastChatUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Name"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/dark_grey"
+            android:textSize="14sp" />
+
+        <com.emot.common.EmotTextView
+            android:id="@+id/textLastChatItem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:lines="1"
+            android:text="chat"
+            android:textColor="@color/blue"
+            android:textSize="10sp" />
+    </LinearLayout>
 
 </LinearLayout>

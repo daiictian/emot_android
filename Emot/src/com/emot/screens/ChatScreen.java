@@ -366,7 +366,7 @@ public class ChatScreen extends ActionBarActivity{
 			if (jid.equals(mJID))
 				from = mScreenName;
 			wrapper.populateFrom(date, from_me, from, message, delivery_status);
-
+			//cursor.close();
 			return row;
 		}
 	}
@@ -381,24 +381,24 @@ public class ChatScreen extends ActionBarActivity{
 		public EmotTextView mChatTextLeft; 
 		public View chatBoxLeft;
 		public TextView mDateTimeLeft;
-		public TextView mChatStatusLeft;
+		public ImageView mChatTickLeft;
 		
 		public EmotTextView mChatTextRight; 
 		public View chatBoxRight;
 		public TextView mDateTimeRight;
-		public TextView mChatStatusRight;
+		public ImageView mChatTickRight;
 		
 
 		ChatItemWrapper(View base) {
 			chatBoxLeft = base.findViewById(R.id.messageContainerLeft);
 			mDateTimeLeft = (TextView)base.findViewById(R.id.chatDateLeft);
 			mChatTextLeft = (EmotTextView) base.findViewById(R.id.chatContentLeft); 
-			mChatStatusLeft = (TextView) base.findViewById(R.id.chatStatusLeft);
+			mChatTickLeft = (ImageView) base.findViewById(R.id.chatTickLeft);
 			
 			chatBoxRight = base.findViewById(R.id.messageContainerRight);
 			mDateTimeRight = (TextView)base.findViewById(R.id.chatDateRight);
 			mChatTextRight = (EmotTextView) base.findViewById(R.id.chatContentRight);
-			mChatStatusRight = (TextView) base.findViewById(R.id.chatStatusRight);
+			mChatTickRight = (ImageView) base.findViewById(R.id.chatTickRight);
 		}
 
 		void populateFrom(String date, boolean from_me, String from, String message,
@@ -412,16 +412,16 @@ public class ChatScreen extends ActionBarActivity{
 				mChatTextLeft.setText(message);
 				switch (delivery_status) {
 					case ChatConstants.DS_NEW:
-						mChatStatusLeft.setText("new");
+						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.wait_tick));
 						break;
 					case ChatConstants.DS_SENT_OR_READ:
-						mChatStatusLeft.setText("sent or read");
+						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.single_tick));
 						break;
 					case ChatConstants.DS_ACKED:
-						mChatStatusLeft.setText("acknowledged");
+						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.double_tick));
 						break;
 					case ChatConstants.DS_FAILED:
-						mChatStatusLeft.setText("failed");
+						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.fail_tick));
 						break;
 				}
 			} else {
@@ -430,18 +430,18 @@ public class ChatScreen extends ActionBarActivity{
 				mDateTimeRight.setText(date);
 				mChatTextRight.setText(message);
 				switch (delivery_status) {
-				case ChatConstants.DS_NEW:
-					mChatStatusRight.setText("new");
-					break;
-				case ChatConstants.DS_SENT_OR_READ:
-					mChatStatusRight.setText("sent or read");
-					break;
-				case ChatConstants.DS_ACKED:
-					mChatStatusRight.setText("acknowledged");
-					break;
-				case ChatConstants.DS_FAILED:
-					mChatStatusRight.setText("failed");
-					break;
+					case ChatConstants.DS_NEW:
+						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.wait_tick));
+						break;
+					case ChatConstants.DS_SENT_OR_READ:
+						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.single_tick));
+						break;
+					case ChatConstants.DS_ACKED:
+						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.double_tick));
+						break;
+					case ChatConstants.DS_FAILED:
+						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.fail_tick));
+						break;
 				}
 			}
 			

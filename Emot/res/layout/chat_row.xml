@@ -15,21 +15,27 @@
             android:id="@+id/chatContentLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="someting rubissh for testing the layout bro"
             android:textColor="@color/black" />
 
         <TextView
             android:id="@+id/chatDateLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
             android:layout_below="@id/chatContentLeft"
+            android:text="10-08-2014 10:19 PM"
             android:textColor="@color/dark_grey"
             android:textSize="8sp" />
 
-        <TextView android:id="@+id/chatStatusLeft" 
-            android:layout_width="wrap_content"
-            android:layout_below="@id/chatDateLeft"
-            android:layout_height="wrap_content"/>
+        <ImageView
+            android:id="@+id/chatTickLeft"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_below="@id/chatContentLeft"
+            android:layout_toRightOf="@id/chatDateLeft"
+            android:src="@drawable/double_tick"
+            android:layout_marginLeft="5dp" />
+
     </RelativeLayout>
 
     <RelativeLayout
@@ -43,20 +49,25 @@
             android:id="@+id/chatContentRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Some rubbish again brother."
             android:textColor="@color/black" />
 
         <TextView
             android:id="@+id/chatDateRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
             android:layout_below="@id/chatContentRight"
             android:textColor="@color/dark_grey"
+            android:text="23-10-2014 10:17 AM"
             android:textSize="8sp" />
-        <TextView android:id="@+id/chatStatusRight"
-            android:layout_width="wrap_content"
-            android:layout_below="@id/chatDateRight"
-            android:layout_height="wrap_content" />
+     
+        <ImageView android:id="@+id/chatTickRight"
+            android:src="@drawable/single_tick"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_toRightOf="@id/chatDateRight"
+            android:layout_below="@id/chatContentRight"
+            android:layout_marginLeft="5dp"/>
     </RelativeLayout>
 
 </LinearLayout>

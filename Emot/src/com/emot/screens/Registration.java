@@ -18,13 +18,16 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences.Editor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -38,6 +41,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.emot.androidclient.IXMPPRosterCallback.Stub;
+import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.service.IXMPPRosterService;
@@ -90,10 +94,11 @@ public class Registration extends ActionBarActivity {
 		}
 	}
 	
+
 	@Override
-	protected void onStop() {
-		// TODO Auto-generated method stub
-		super.onPause();
+	protected void onDestroy() {
+		Log.i(TAG, "Activity destroy called !!!");
+		super.onDestroy();
 		unbindXMPPService();
 	}
 
@@ -102,10 +107,11 @@ public class Registration extends ActionBarActivity {
 
 		super.onCreate(savedInstanceState);
 		if(EmotApplication.getValue(PreferenceConstants.USER_APPID, null)!=null){
-			startActivity(new Intent(this, ContactScreen.class));
+			startActivity(new Intent(this, LastChatScreen.class));
 			finish();
 		}
 		setContentView(R.layout.layout_register_screen);
+		createUICallback();
 		initializeUI();
 		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 		suggestCountryOnEntry();
@@ -332,6 +338,20 @@ public class Registration extends ActionBarActivity {
 		mCountrySelector.setThreshold(1);//will start working from first character  
 		mCountrySelector.setAdapter(adapter);//setting the adapter data into the AutoCompleteTextView  
 	}
+	
+	private void createUICallback() {
+		rosterCallback = new IXMPPRosterCallback.Stub() {
+			@Override
+			public void connectionStateChanged(final int connectionstate) throws RemoteException {
+				Log.i(TAG, "Connection state changed to "+connectionstate);
+				if(connectionstate == ConnectionState.ONLINE.ordinal()){
+					Log.i(TAG, " ---- Connected ----");
+					serviceAdapter.unregisterUICallback(rosterCallback);
+					openContactScreen();
+				}
+			}
+		};
+	}
 
 	private void initializeUI() {
 		mEnterMobile = (EditText)findViewById(R.id.enterNumber);
@@ -360,13 +380,12 @@ public class Registration extends ActionBarActivity {
 				serviceAdapter = new XMPPRosterServiceAdapter(
 						IXMPPRosterService.Stub.asInterface(service));
 				serviceAdapter.registerUICallback(rosterCallback);
-				Log.i(TAG, "getConnectionState(): "
-						+ serviceAdapter.getConnectionState());
+				Log.i(TAG, "getConnectionState(): " + serviceAdapter.getConnectionState());
 				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
-				ConnectionState cs = serviceAdapter.getConnectionState();
+				//ConnectionState cs = serviceAdapter.getConnectionState();
 
 				serviceAdapter.connect();
-				openContactScreen();
+				//openContactScreen();
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
@@ -382,15 +401,6 @@ public class Registration extends ActionBarActivity {
 			
 			@Override
 			public void run() {
-				while(serviceAdapter==null || !serviceAdapter.isAuthenticated()){
-					Log.i(TAG, "Waiting for connection to authenticate ...");
-					try {
-						Thread.sleep(500);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						break;
-					}
-				}
 				
 				ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 					@Override

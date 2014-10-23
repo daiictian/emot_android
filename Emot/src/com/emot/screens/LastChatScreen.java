@@ -1,15 +1,13 @@
 package com.emot.screens;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,12 +17,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.emot.androidclient.data.ChatProvider;
+import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
+import com.emot.androidclient.data.RosterProvider.RosterConstants;
+import com.emot.common.ImageHelper;
+import com.emot.common.TaskCompletedRunnable;
+import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 
 public class LastChatScreen extends ActionBarActivity {
@@ -138,21 +142,64 @@ public class LastChatScreen extends ActionBarActivity {
 	class LastChatWrapper{
 		public TextView username;
 		public TextView lastchat;
+		public ImageView useravatar;
 		
 		public LastChatWrapper(View base){
 			username = (TextView)base.findViewById(R.id.textLastChatUser);
 			lastchat = (TextView)base.findViewById(R.id.textLastChatItem);
+			useravatar = (ImageView)base.findViewById(R.id.image_last_chat);
 		}
 		
 		public void populateRow(String user, String last_chat, boolean isNew){
 			//username.setText(user);
-			EmotApplication.setAliasFromDB(user, username);
+			new UpdateRow().execute(user);
 			lastchat.setText(last_chat);
 			if(isNew){
 				lastchat.setTextColor(EmotApplication.getAppContext().getResources().getColor(R.color.green));
 			}else{
-				lastchat.setTextColor(EmotApplication.getAppContext().getResources().getColor(R.color.black));
+				lastchat.setTextColor(EmotApplication.getAppContext().getResources().getColor(R.color.blue));
 			}
 		}
+		
+		
+		private class UpdateRow extends AsyncTask<String, Void, Contact> {
+
+	        @Override
+	        protected Contact doInBackground(String... params) {
+	        	String jid = params[0];
+				String alias = jid.split("@")[0];
+				byte[] avatar = null;
+				String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";
+				String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS, RosterProvider.RosterConstants.AVATAR};
+				Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
+				Log.i(TAG, "users found length = "+cursor.getCount());
+				if(cursor.getCount()>0){
+					while(cursor.moveToNext()){
+						alias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
+						Log.i(TAG, "chat alias : "+alias);
+						avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
+						Log.i(TAG, "avatar : "+avatar);
+						
+					}
+				}
+				cursor.close();
+				Contact contact = new Contact(alias, jid);
+				contact.setAvatar(avatar);
+				return contact;
+	        }
+
+	        @Override
+	        protected void onPostExecute(Contact contact) {
+	        	username.setText(contact.getName());
+	        	byte[] avatar = contact.getAvatar();
+	        	Bitmap bitmap;
+	        	if(avatar!=null){
+					bitmap = BitmapFactory.decodeByteArray(avatar , 0, avatar.length);
+				}else{
+					bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+				}
+	        	useravatar.setImageBitmap(ImageHelper.getRoundedCornerBitmap(bitmap, 10));
+	        }
+	    }
 	}
 }

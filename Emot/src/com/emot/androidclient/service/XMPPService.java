@@ -185,6 +185,7 @@ public class XMPPService extends GenericService {
 
 			public void registerRosterCallback(IXMPPRosterCallback callback)
 					throws RemoteException {
+				Log.i(TAG, "Registering callback "+callback);
 				if (callback != null)
 					mRosterCallbacks.register(callback);
 			}
@@ -317,9 +318,10 @@ public class XMPPService extends GenericService {
 			cs = mSmackable.getConnectionState();
 		}
 
+		Log.i(TAG, "Broadcasting "+cs);
 		// HACK to trigger show-offline when XEP-0198 reconnect is going on
-		getContentResolver().notifyChange(RosterProvider.CONTENT_URI, null);
-		getContentResolver().notifyChange(RosterProvider.GROUPS_URI, null);
+//		getContentResolver().notifyChange(RosterProvider.CONTENT_URI, null);
+//		getContentResolver().notifyChange(RosterProvider.GROUPS_URI, null);
 		// end-of-HACK
 
 		broadcastConnectionState(cs);

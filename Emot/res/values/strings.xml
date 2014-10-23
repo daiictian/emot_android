@@ -296,4 +296,6 @@
 	<string name="country">Please select your country</string>
 	<string name="profile">Profile</string>
 	<string name="search">Search</string>
+	<string name="submit">SUBMIT</string>
+	<string name="send">SEND</string>
 </resources>

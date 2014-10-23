@@ -25,26 +25,30 @@
             android:paddingTop="5dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/country"  />
+            android:text="@string/country"
+            android:textColor="@color/black"  />
 
      
         <AutoCompleteTextView 
             android:id="@+id/countryselector"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:hint="@string/country" />
 
         <EditText
             android:id="@+id/enterNumber"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:hint="@string/enterMobileNumber"
+            android:text="9342464980"
             android:inputType="numberDecimal" />
 
         <Button
             android:id="@+id/submitNumber"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:text="submit" />
+            android:text="@string/submit"
+            style="@style/btnStyleOrange" />
     </LinearLayout>
 
     <LinearLayout
@@ -52,7 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        
+        android:visibility="gone"
         android:orientation="vertical" >
 
         <EditText
@@ -60,13 +64,15 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:hint="@string/enterVerificationCode"
-            android:inputType="numberDecimal" />
+            android:inputType="numberDecimal"
+            android:text="1234" />
 
         <Button
             android:id="@+id/sendVerificationCode"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:text="Send" />
+            android:text="@string/send"
+            style="@style/btnStyleOrange" />
     </LinearLayout>
 
 </LinearLayout>

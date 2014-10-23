@@ -38,12 +38,18 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.TextView;
 
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.RosterProvider;
+import com.emot.androidclient.data.RosterProvider.RosterConstants;
+import com.emot.common.ImageHelper;
+import com.emot.common.TaskCompletedRunnable;
+import com.emot.emotobjects.Contact;
+import com.emot.screens.R;
 
 import de.duenndns.ssl.MemorizingTrustManager;
 
@@ -209,27 +215,5 @@ public class EmotApplication extends Application {
 		return new BigInteger(130, new SecureRandom()).toString(32);
 	}
 
-	public static void setAliasFromDB(final String jid, final TextView holder){
-		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";;
-				String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS};
-				Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
-				Log.i(TAG, "users found length = "+cursor.getCount());
-				if(cursor.getCount()>0){
-					while(cursor.moveToNext()){
-						String chatAlias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
-						Log.i(TAG, "chat alias : "+chatAlias);
-						holder.setText(chatAlias);
-					}
-					cursor.close();
-				}else{
-					holder.setText(jid.split("@")[0]);
-				}
-			}
-		}).start();
-	}
 	
 }
