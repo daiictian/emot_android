@@ -16,4 +16,6 @@
     <item name="grey" type="color">#eeeeee</item>
     <item name="dark_grey" type="color">#706F6F</item>
     <item name="light_bg" type="color">#F5F6FA</item>
+    <item name="light_yellow" type="color">#FEFFED</item>
+    <item name="bagni" type="color">#7677B5</item>
 </resources>

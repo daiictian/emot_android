@@ -123,7 +123,7 @@ public class ContactUpdater {
 			while (phones.moveToNext())
 			{
 				String name=phones.getString(phones.getColumnIndex(FROM_COLUMN[0]));
-				String mobile = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).replace("-", "");
+				String mobile = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).replaceAll("[^\\d.]", "");
 				//Log.i(TAG, "name = " + name + ". Phone = " + mobile); 
 				cntcts.put(mobile,  name);
 			}

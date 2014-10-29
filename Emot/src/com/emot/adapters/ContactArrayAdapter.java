@@ -104,4 +104,8 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> implements Filter
 	public int getCount(){
 		return contacts.size();
 	}
+	
+	public Contact getItem(int position){
+		return contacts.get(position);
+	}
 }

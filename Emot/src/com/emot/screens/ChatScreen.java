@@ -32,15 +32,18 @@ import android.widget.Toast;
 
 import com.emot.androidclient.chat.XMPPChatServiceAdapter;
 import com.emot.androidclient.data.ChatProvider;
+import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.androidclient.service.XMPPService;
+import com.emot.androidclient.util.ConnectionState;
+import com.emot.androidclient.util.StatusMode;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
 import com.emot.model.EmotApplication;
 
-public class ChatScreen extends ActionBarActivity{
+public class ChatScreen extends ActionBarActivity {
 
 	private Chat chat;
 	private ImageView sendButton;
@@ -51,75 +54,81 @@ public class ChatScreen extends ActionBarActivity{
 	private static String TAG = "ChatScreen";
 	private ListView chatView;
 	private String chatFriend;
+	private String chatAlias;
 	private Messenger mMessengerService = null;
 	private boolean mMessengerServiceConnected = false;
 	private Intent mServiceIntent;
 	private ServiceConnection mServiceConnection;
 	private XMPPChatServiceAdapter mServiceAdapter;
+	private String lastSeen;
 	private static final int DELAY_NEWMSG = 2000;
-	private String chatAlias;
 	public final static String INTENT_CHAT_FRIEND = "chat_friend";
-	public final static String INTENT_CHAT_ALIAS = "chat_alias";
 
 	private static final String[] PROJECTION_FROM = new String[] {
-		ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
-		ChatProvider.ChatConstants.DIRECTION, ChatProvider.ChatConstants.JID,
-		ChatProvider.ChatConstants.MESSAGE, ChatProvider.ChatConstants.DELIVERY_STATUS };
+			ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
+			ChatProvider.ChatConstants.DIRECTION,
+			ChatProvider.ChatConstants.JID, ChatProvider.ChatConstants.MESSAGE,
+			ChatProvider.ChatConstants.DELIVERY_STATUS };
 
 	private static final int[] PROJECTION_TO = new int[] { R.id.chat_date,
-		R.id.chat_from, R.id.chat_message };
+			R.id.chat_from, R.id.chat_message };
+
 	//
-	//	private class EmotHistoryTask extends AsyncTask<EmotDBHelper, ChatMessage, Void>{
+	// private class EmotHistoryTask extends AsyncTask<EmotDBHelper,
+	// ChatMessage, Void>{
 	//
 	//
 	//
-	//		@Override
-	//		protected void onPostExecute(Void result) {
-	//			
-	//			Log.i(TAG, "chats = "+chatList.size());
-	//			//chatView.setSelection(chatList.size()-1);
-	//		}
-	//		
-	//		@Override
-	//		protected void onProgressUpdate(ChatMessage... values) {
-	//			if(values!=null){
-	//				chatList.add(values[0]);
-	//				chatlistAdapter.notifyDataSetChanged();
-	//			}
-	//			super.onProgressUpdate(values);
-	//		}
+	// @Override
+	// protected void onPostExecute(Void result) {
 	//
-	//		@Override
-	//		protected Void doInBackground(EmotDBHelper... params) {
-	//			EmotDBHelper emotHistory = params[0];
-	//			Cursor result = emotHistory.getEmotHistory(chatFriend);
-	//			boolean valid  = result.moveToFirst();
-	//			String chat = "";
-	//			String location = "";
-	//			String datetime = "";
-	//			boolean emotlocation = false;
-	//			if(valid && result != null && result.getCount() > 0){
-	//				for(int i = 0; i < result.getCount(); i++){
-	//					chat = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
-	//					location = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOT_LOCATION));
-	//					datetime = result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
-	//					result.moveToNext();
-	//					Log.i(TAG, "chat from DB is " +chat);
-	//					ChatMessage newChat = null;
-	//					if(location.equals("left")){
-	//						newChat = new ChatMessage(chat,datetime, false);
-	//					}else if(location.equals("right")){
-	//						newChat = new ChatMessage(chat,datetime, true);
-	//					}
-	//					publishProgress(newChat);
-	//				}
+	// Log.i(TAG, "chats = "+chatList.size());
+	// //chatView.setSelection(chatList.size()-1);
+	// }
 	//
-	//			}
-	//			result.close();
-	//			return null;
-	//		}
+	// @Override
+	// protected void onProgressUpdate(ChatMessage... values) {
+	// if(values!=null){
+	// chatList.add(values[0]);
+	// chatlistAdapter.notifyDataSetChanged();
+	// }
+	// super.onProgressUpdate(values);
+	// }
 	//
-	//	}
+	// @Override
+	// protected Void doInBackground(EmotDBHelper... params) {
+	// EmotDBHelper emotHistory = params[0];
+	// Cursor result = emotHistory.getEmotHistory(chatFriend);
+	// boolean valid = result.moveToFirst();
+	// String chat = "";
+	// String location = "";
+	// String datetime = "";
+	// boolean emotlocation = false;
+	// if(valid && result != null && result.getCount() > 0){
+	// for(int i = 0; i < result.getCount(); i++){
+	// chat =
+	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
+	// location =
+	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOT_LOCATION));
+	// datetime =
+	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
+	// result.moveToNext();
+	// Log.i(TAG, "chat from DB is " +chat);
+	// ChatMessage newChat = null;
+	// if(location.equals("left")){
+	// newChat = new ChatMessage(chat,datetime, false);
+	// }else if(location.equals("right")){
+	// newChat = new ChatMessage(chat,datetime, true);
+	// }
+	// publishProgress(newChat);
+	// }
+	//
+	// }
+	// result.close();
+	// return null;
+	// }
+	//
+	// }
 	//
 
 	@Override
@@ -139,15 +148,14 @@ public class ChatScreen extends ActionBarActivity{
 		mServiceIntent = new Intent(this, XMPPService.class);
 		Uri chatURI = Uri.parse(chatFriend);
 		mServiceIntent.setData(chatURI);
-		mServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
+		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.i(TAG, "called onServiceConnected()");
 				mServiceAdapter = new XMPPChatServiceAdapter(
-						IXMPPChatService.Stub.asInterface(service),
-						chatFriend);
+						IXMPPChatService.Stub.asInterface(service), chatFriend);
 
 				mServiceAdapter.clearNotifications(chatFriend);
 			}
@@ -170,60 +178,62 @@ public class ChatScreen extends ActionBarActivity{
 	private void bindXMPPService() {
 		bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle presses on the action bar items
-	    switch (item.getItemId()) {
-	        case android.R.id.home:
-	        	Log.i(TAG, "back pressed");
-	            this.finish();
-	            return true;
-	        default:
-	            return super.onOptionsItemSelected(item);
-	    }
+		// Handle presses on the action bar items
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			Log.i(TAG, "back pressed");
+			this.finish();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		getSupportActionBar().setHomeButtonEnabled(true);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		ActionBar ab = getSupportActionBar();
+		ab.setHomeButtonEnabled(true);
+		ab.setDisplayHomeAsUpEnabled(true);
 		Intent incomingIntent = getIntent();
-		chatFriend = incomingIntent.getStringExtra(ChatScreen.INTENT_CHAT_FRIEND);
-		chatAlias = incomingIntent.getStringExtra(ChatScreen.INTENT_CHAT_ALIAS);
-		if(chatAlias==null){
-			setAliasFromDB();
-		}
-		Log.i(TAG, "chatFriend is " +chatFriend);
-		if (chatFriend==null){
-			Toast.makeText(EmotApplication.getAppContext(), "Incorrect username", Toast.LENGTH_LONG).show();
+		chatFriend = incomingIntent
+				.getStringExtra(ChatScreen.INTENT_CHAT_FRIEND);
+		setAliasFromDB();
+
+		Log.i(TAG, "chatFriend is " + chatFriend);
+		if (chatFriend == null) {
+			Toast.makeText(EmotApplication.getAppContext(),
+					"Incorrect username", Toast.LENGTH_LONG).show();
 			finish();
 		}
 
 		setContentView(R.layout.activity_chat_screen);
-		chatView = (ListView)findViewById(R.id.chatView);
-		sendButton = (ImageView)findViewById(R.id.dove_send);
-		userTitle = (TextView)findViewById(R.id.username);
+		chatView = (ListView) findViewById(R.id.chatView);
+		sendButton = (ImageView) findViewById(R.id.dove_send);
+		userTitle = (TextView) findViewById(R.id.username);
 		emotSuggestion = findViewById(R.id.viewEmotSuggestion);
-		emotSuggestionLayout = (LinearLayout)findViewById(R.id.viewEmotSuggestionLayout);
+		emotSuggestionLayout = (LinearLayout) findViewById(R.id.viewEmotSuggestionLayout);
 
-		chatEntry = (EmotEditText)findViewById(R.id.editTextStatus);
+		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
 		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);
 		userTitle.setText(chatFriend);
-		ActionBar ab = getSupportActionBar();
-		ab.setTitle(chatAlias);
-		/*if(incomingIntent != null){
 
-			userName = incomingIntent.getStringExtra("USERNAME");
-			userTitle.setText(userName);
-		}*/
-		//handler = new Handler();
-		//emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
-		//EmotHistoryTask eht = new EmotHistoryTask();
-		//eht.execute(new EmotDBHelper[]{emotHistoryDB});
-		//chatList.add("Howdy");
+		ab.setTitle(chatAlias);
+		ab.setSubtitle(lastSeen);
+		/*
+		 * if(incomingIntent != null){
+		 * 
+		 * userName = incomingIntent.getStringExtra("USERNAME");
+		 * userTitle.setText(userName); }
+		 */
+		// handler = new Handler();
+		// emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
+		// EmotHistoryTask eht = new EmotHistoryTask();
+		// eht.execute(new EmotDBHelper[]{emotHistoryDB});
+		// chatList.add("Howdy");
 
 		sendButton.setEnabled(true);
 
@@ -233,10 +243,10 @@ public class ChatScreen extends ActionBarActivity{
 				sendMessage(chatEntry.getText().toString());
 			}
 		});
-		
-		//chatView.setAdapter(chatlistAdapter);
+
+		// chatView.setAdapter(chatlistAdapter);
 		setChatWindowAdapter();
-		
+
 		chatEntry.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -245,49 +255,79 @@ public class ChatScreen extends ActionBarActivity{
 			}
 		});
 		registerXMPPService();
-		//setChatWindowAdapter();
+		// setChatWindowAdapter();
 
-		//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
+		// new
+		// EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 
-		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
-		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("INSERT INTO emots select * from emoticons");
+		// EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
+		// EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("INSERT INTO emots select * from emoticons");
 
-
-		//		ContentValues cvs = new ContentValues();
-		//		String imgHash = EmotApplication.randomId();
-		//		Log.i(TAG, "Image hash  = "+ imgHash);
-		//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
-		//		cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
-		//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.mad)));
-		//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
-		//		
-		//		cvs = new ContentValues();
-		//		imgHash = EmotApplication.randomId();
-		//		Log.i(TAG, "Image hash  = "+ imgHash);
-		//		cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
-		//		cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
-		//		cvs.put(DBContract.EmotsDBEntry.EMOT_IMG, ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.sad)));
-		//		EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons", null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+		// ContentValues cvs = new ContentValues();
+		// String imgHash = EmotApplication.randomId();
+		// Log.i(TAG, "Image hash  = "+ imgHash);
+		// cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+		// cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
+		// cvs.put(DBContract.EmotsDBEntry.EMOT_IMG,
+		// ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.mad)));
+		// EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons",
+		// null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+		//
+		// cvs = new ContentValues();
+		// imgHash = EmotApplication.randomId();
+		// Log.i(TAG, "Image hash  = "+ imgHash);
+		// cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
+		// cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
+		// cvs.put(DBContract.EmotsDBEntry.EMOT_IMG,
+		// ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.sad)));
+		// EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons",
+		// null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 
 	}
 
 	private void sendMessage(String message) {
 		chatEntry.setText(null);
 		mServiceAdapter.sendMessage(chatFriend, message);
-		if (!mServiceAdapter.isServiceAuthenticated()){
-			//Show single tick and try later
-			//showToastNotification(R.string.toast_stored_offline);
+		if (!mServiceAdapter.isServiceAuthenticated()) {
+			// Show single tick and try later
+			// showToastNotification(R.string.toast_stored_offline);
 		}
 	}
-	
-	private void setAliasFromDB(){
-		String selection = RosterProvider.RosterConstants.JID + "='" + chatFriend + "'";;
-		String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS};
-		Cursor cursor = managedQuery(RosterProvider.CONTENT_URI, projection, selection, null, null);
-		Log.i(TAG, "users found length = "+cursor.getCount());
-		while(cursor.moveToNext()){
-			chatAlias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
-			Log.i(TAG, "chat alias : "+chatAlias);
+
+	private void setAliasFromDB() {
+		chatAlias = chatFriend.split("@")[0];
+		lastSeen = "";
+		String selection = RosterProvider.RosterConstants.JID + "='"
+				+ chatFriend + "'";
+		;
+		String[] projection = new String[] {
+				RosterProvider.RosterConstants.ALIAS,
+				RosterProvider.RosterConstants.LAST_SEEN,
+				RosterProvider.RosterConstants.STATUS_MODE };
+		Cursor cursor = EmotApplication
+				.getAppContext()
+				.getContentResolver()
+				.query(RosterProvider.CONTENT_URI, projection, selection, null,
+						null);
+		Log.i(TAG, "users found length = " + cursor.getCount());
+		while (cursor.moveToNext()) {
+			int mode = cursor
+					.getInt(cursor
+							.getColumnIndex(RosterProvider.RosterConstants.STATUS_MODE));
+			String name = cursor.getString(cursor
+					.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
+			String last_seen = cursor.getString(cursor
+					.getColumnIndex(RosterProvider.RosterConstants.LAST_SEEN));
+			if (mode == StatusMode.available.ordinal()) {
+				lastSeen = "online";
+			} else if (last_seen != null) {
+				lastSeen = last_seen;
+			} else {
+				lastSeen = "away";
+			}
+			chatAlias = name;
+			Log.i(TAG, "chat alias : " + chatAlias);
+			Log.i(TAG, "last seen : " + lastSeen);
 		}
 		cursor.close();
 	}
@@ -296,14 +336,18 @@ public class ChatScreen extends ActionBarActivity{
 		new Thread() {
 			@Override
 			public void run() {
-				try { Thread.sleep(delay); } catch (Exception e) {}
+				try {
+					Thread.sleep(delay);
+				} catch (Exception e) {
+				}
 				markAsRead(id);
 			}
 		}.start();
 	}
 
 	private void markAsRead(int id) {
-		Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/" + ChatProvider.TABLE_NAME + "/" + id);
+		Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
+				+ ChatProvider.TABLE_NAME + "/" + id);
 		Log.d(TAG, "markAsRead: " + rowuri);
 		ContentValues values = new ContentValues();
 		values.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
@@ -312,15 +356,18 @@ public class ChatScreen extends ActionBarActivity{
 
 	private void setChatWindowAdapter() {
 		String selection = ChatConstants.JID + "='" + chatFriend + "'";
-		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM, selection, null, null);
-		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM, PROJECTION_TO, chatFriend, chatFriend);
+		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
+				selection, null, null);
+		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM,
+				PROJECTION_TO, chatFriend, chatFriend);
 		chatView.setAdapter(adapter);
 	}
-	
+
 	class ChatScreenAdapter extends SimpleCursorAdapter {
 		String mScreenName, mJID;
 
-		public ChatScreenAdapter(Cursor cursor, String[] from, int[] to, String JID, String screenName) {
+		public ChatScreenAdapter(Cursor cursor, String[] from, int[] to,
+				String JID, String screenName) {
 			super(ChatScreen.this, R.layout.chat_row, cursor, from, to);
 			mScreenName = screenName;
 			mJID = JID;
@@ -342,12 +389,12 @@ public class ChatScreen extends ActionBarActivity{
 			String message = cursor.getString(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 			boolean from_me = (cursor.getInt(cursor
-					.getColumnIndex(ChatProvider.ChatConstants.DIRECTION)) ==
-					ChatConstants.OUTGOING);
+					.getColumnIndex(ChatProvider.ChatConstants.DIRECTION)) == ChatConstants.OUTGOING);
 			String jid = cursor.getString(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.JID));
-			int delivery_status = cursor.getInt(cursor
-					.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
+			int delivery_status = cursor
+					.getInt(cursor
+							.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
 
 			if (row == null) {
 				LayoutInflater inflater = getLayoutInflater();
@@ -366,63 +413,70 @@ public class ChatScreen extends ActionBarActivity{
 			if (jid.equals(mJID))
 				from = mScreenName;
 			wrapper.populateFrom(date, from_me, from, message, delivery_status);
-			//cursor.close();
+			// cursor.close();
 			return row;
 		}
 	}
-	
+
 	private String getDateString(long milliSeconds) {
-		SimpleDateFormat dateFormater = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+		SimpleDateFormat dateFormater = new SimpleDateFormat(
+				"yy-MM-dd HH:mm:ss");
 		Date date = new Date(milliSeconds);
 		return dateFormater.format(date);
 	}
 
 	public class ChatItemWrapper {
-		public EmotTextView mChatTextLeft; 
+		public EmotTextView mChatTextLeft;
 		public View chatBoxLeft;
 		public TextView mDateTimeLeft;
 		public ImageView mChatTickLeft;
-		
-		public EmotTextView mChatTextRight; 
+
+		public EmotTextView mChatTextRight;
 		public View chatBoxRight;
 		public TextView mDateTimeRight;
 		public ImageView mChatTickRight;
-		
 
 		ChatItemWrapper(View base) {
 			chatBoxLeft = base.findViewById(R.id.messageContainerLeft);
-			mDateTimeLeft = (TextView)base.findViewById(R.id.chatDateLeft);
-			mChatTextLeft = (EmotTextView) base.findViewById(R.id.chatContentLeft); 
+			mDateTimeLeft = (TextView) base.findViewById(R.id.chatDateLeft);
+			mChatTextLeft = (EmotTextView) base
+					.findViewById(R.id.chatContentLeft);
 			mChatTickLeft = (ImageView) base.findViewById(R.id.chatTickLeft);
-			
+
 			chatBoxRight = base.findViewById(R.id.messageContainerRight);
-			mDateTimeRight = (TextView)base.findViewById(R.id.chatDateRight);
-			mChatTextRight = (EmotTextView) base.findViewById(R.id.chatContentRight);
+			mDateTimeRight = (TextView) base.findViewById(R.id.chatDateRight);
+			mChatTextRight = (EmotTextView) base
+					.findViewById(R.id.chatContentRight);
 			mChatTickRight = (ImageView) base.findViewById(R.id.chatTickRight);
 		}
 
-		void populateFrom(String date, boolean from_me, String from, String message,
-				int delivery_status) {
-//			Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " + message + ")");
-			
+		void populateFrom(String date, boolean from_me, String from,
+				String message, int delivery_status) {
+			// Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " +
+			// message + ")");
+
 			if (from_me) {
 				chatBoxRight.setVisibility(View.GONE);
 				chatBoxLeft.setVisibility(View.VISIBLE);
 				mDateTimeLeft.setText(date);
 				mChatTextLeft.setText(message);
 				switch (delivery_status) {
-					case ChatConstants.DS_NEW:
-						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.wait_tick));
-						break;
-					case ChatConstants.DS_SENT_OR_READ:
-						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.single_tick));
-						break;
-					case ChatConstants.DS_ACKED:
-						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.double_tick));
-						break;
-					case ChatConstants.DS_FAILED:
-						mChatTickLeft.setImageDrawable(getResources().getDrawable(R.drawable.fail_tick));
-						break;
+				case ChatConstants.DS_NEW:
+					mChatTickLeft.setImageDrawable(getResources().getDrawable(
+							R.drawable.wait_tick));
+					break;
+				case ChatConstants.DS_SENT_OR_READ:
+					mChatTickLeft.setImageDrawable(getResources().getDrawable(
+							R.drawable.single_tick));
+					break;
+				case ChatConstants.DS_ACKED:
+					mChatTickLeft.setImageDrawable(getResources().getDrawable(
+							R.drawable.double_tick));
+					break;
+				case ChatConstants.DS_FAILED:
+					mChatTickLeft.setImageDrawable(getResources().getDrawable(
+							R.drawable.fail_tick));
+					break;
 				}
 			} else {
 				chatBoxLeft.setVisibility(View.GONE);
@@ -430,31 +484,33 @@ public class ChatScreen extends ActionBarActivity{
 				mDateTimeRight.setText(date);
 				mChatTextRight.setText(message);
 				switch (delivery_status) {
-					case ChatConstants.DS_NEW:
-						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.wait_tick));
-						break;
-					case ChatConstants.DS_SENT_OR_READ:
-						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.single_tick));
-						break;
-					case ChatConstants.DS_ACKED:
-						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.double_tick));
-						break;
-					case ChatConstants.DS_FAILED:
-						mChatTickRight.setImageDrawable(getResources().getDrawable(R.drawable.fail_tick));
-						break;
+				case ChatConstants.DS_NEW:
+					mChatTickRight.setImageDrawable(getResources().getDrawable(
+							R.drawable.wait_tick));
+					break;
+				case ChatConstants.DS_SENT_OR_READ:
+					mChatTickRight.setImageDrawable(getResources().getDrawable(
+							R.drawable.single_tick));
+					break;
+				case ChatConstants.DS_ACKED:
+					mChatTickRight.setImageDrawable(getResources().getDrawable(
+							R.drawable.double_tick));
+					break;
+				case ChatConstants.DS_FAILED:
+					mChatTickRight.setImageDrawable(getResources().getDrawable(
+							R.drawable.fail_tick));
+					break;
 				}
 			}
-			
-//			getMessageView().setText(message);
-//			getMessageView().setTextSize(TypedValue.COMPLEX_UNIT_SP, chatWindow.mChatFontSize);
-//			getDateView().setTextSize(TypedValue.COMPLEX_UNIT_SP, chatWindow.mChatFontSize*2/3);
-//			getFromView().setTextSize(TypedValue.COMPLEX_UNIT_SP, chatWindow.mChatFontSize*2/3);
+
+			// getMessageView().setText(message);
+			// getMessageView().setTextSize(TypedValue.COMPLEX_UNIT_SP,
+			// chatWindow.mChatFontSize);
+			// getDateView().setTextSize(TypedValue.COMPLEX_UNIT_SP,
+			// chatWindow.mChatFontSize*2/3);
+			// getFromView().setTextSize(TypedValue.COMPLEX_UNIT_SP,
+			// chatWindow.mChatFontSize*2/3);
 		}
 	}
 
-
-
 }
-
-
-

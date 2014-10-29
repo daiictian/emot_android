@@ -311,8 +311,8 @@ public class RosterProvider extends ContentProvider {
 			tmpList.add(JID);
 			tmpList.add(ALIAS);
 			tmpList.add(STATUS_MODE);
-			tmpList.add(STATUS_MESSAGE);
 			tmpList.add(GROUP);
+			//tmpList.add(STATUS_MESSAGE);
 			//tmpList.add(AVATAR);
 			//tmpList.add(LAST_SEEN);
 			return tmpList;

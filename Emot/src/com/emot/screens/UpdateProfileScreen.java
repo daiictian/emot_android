@@ -116,7 +116,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
-		mServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
+		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
 
@@ -302,7 +302,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	}
 	
 	public static String getStatus(){
-		return EmotApplication.getValue(PreferenceConstants.STATUS_MESSAGE, "Default status");
+		return EmotApplication.getValue(PreferenceConstants.STATUS_MESSAGE, null);
 	}
 	
 }

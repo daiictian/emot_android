@@ -2,8 +2,10 @@ package com.emot.androidclient.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
@@ -170,14 +172,14 @@ public class SmackableImp implements Smackable {
 
 	private PendingIntent mPingAlarmPendIntent;
 	private PendingIntent mPongTimeoutAlarmPendIntent;
-	private static final String PING_ALARM = "org.emot.androidclient.PING_ALARM";
-	private static final String PONG_TIMEOUT_ALARM = "org.emot.androidclient.PONG_TIMEOUT_ALARM";
+	private static final String PING_ALARM = "com.emot.androidclient.PING_ALARM";
+	private static final String PONG_TIMEOUT_ALARM = "com.emot.androidclient.PONG_TIMEOUT_ALARM";
 	private Intent mPingAlarmIntent = new Intent(PING_ALARM);
 	private Intent mPongTimeoutAlarmIntent = new Intent(PONG_TIMEOUT_ALARM);
 	private Service mService;
 
 	private PongTimeoutAlarmReceiver mPongTimeoutAlarmReceiver = new PongTimeoutAlarmReceiver();
-	private BroadcastReceiver mPingAlarmReceiver = new PingAlarmReceiver();
+	private PingAlarmReceiver mPingAlarmReceiver = new PingAlarmReceiver();
 
 
 	public SmackableImp(EmotConfiguration config,
@@ -206,17 +208,17 @@ public class SmackableImp implements Smackable {
 			this.mXMPPConfig.setSecurityMode(ConnectionConfiguration.SecurityMode.required);
 
 		// register MemorizingTrustManager for HTTPS
-		try {
-			SSLContext sc = SSLContext.getInstance("TLS");
-			MemorizingTrustManager mtm = EmotApplication.getApp(mService).mMTM;
-			sc.init(null, new X509TrustManager[] { mtm },
-					new java.security.SecureRandom());
-			this.mXMPPConfig.setCustomSSLContext(sc);
-			this.mXMPPConfig.setHostnameVerifier(mtm.wrapHostnameVerifier(
-						new org.apache.http.conn.ssl.StrictHostnameVerifier()));
-		} catch (java.security.GeneralSecurityException e) {
-			debugLog("initialize MemorizingTrustManager: " + e);
-		}
+//		try {
+//			SSLContext sc = SSLContext.getInstance("TLS");
+//			MemorizingTrustManager mtm = EmotApplication.getApp(mService).mMTM;
+//			sc.init(null, new X509TrustManager[] { mtm },
+//					new java.security.SecureRandom());
+//			this.mXMPPConfig.setCustomSSLContext(sc);
+//			this.mXMPPConfig.setHostnameVerifier(mtm.wrapHostnameVerifier(
+//						new org.apache.http.conn.ssl.StrictHostnameVerifier()));
+//		} catch (java.security.GeneralSecurityException e) {
+//			debugLog("initialize MemorizingTrustManager: " + e);
+//		}
 
 		this.mXMPPConnection = new XmppStreamHandler.ExtXMPPConnection(mXMPPConfig);
 		this.mStreamHandler = new XmppStreamHandler(mXMPPConnection, mConfig.smackdebug);
@@ -780,6 +782,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void registerCallback(XMPPServiceCallback callBack) {
+		Log.i(TAG, "Callback registering !!!");
 		this.mServiceCallBack = callBack;
 		mService.registerReceiver(mPingAlarmReceiver, new IntentFilter(PING_ALARM));
 		mService.registerReceiver(mPongTimeoutAlarmReceiver, new IntentFilter(PONG_TIMEOUT_ALARM));
@@ -934,24 +937,24 @@ public class SmackableImp implements Smackable {
 	 */
 	public void sendServerPing() {
 		if (mXMPPConnection == null || !mXMPPConnection.isAuthenticated()) {
-			debugLog("Ping: requested, but not connected to server.");
+			Log.i(TAG, "Ping: requested, but not connected to server.");
 			requestConnectionState(ConnectionState.ONLINE, false);
 			return;
 		}
 		if (mPingID != null) {
-			debugLog("Ping: requested, but still waiting for " + mPingID);
+			Log.i(TAG, "Ping: requested, but still waiting for " + mPingID);
 			return; // a ping is still on its way
 		}
 
 		if (mStreamHandler.isSmEnabled()) {
-			debugLog("Ping: sending SM request");
+			Log.i(TAG, "Ping: sending SM request");
 			mPingID = "" + mStreamHandler.requestAck();
 		} else {
 			Ping ping = new Ping();
 			ping.setType(Type.GET);
 			ping.setTo(mConfig.server);
 			mPingID = ping.getPacketID();
-			debugLog("Ping: sending ping " + mPingID);
+			Log.i(TAG, "Ping: sending ping " + mPingID);
 			mXMPPConnection.sendPacket(ping);
 		}
 
@@ -960,6 +963,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void gotServerPong(String pongID) {
+		Log.i(TAG, "pong ID : "+pongID + " ping ID : "+mPingID);
 		long latency = System.currentTimeMillis() - mPingTimestamp;
 		if (pongID != null && pongID.equals(mPingID))
 			Log.i(TAG, String.format("Ping: server latency %1.3fs",
@@ -975,7 +979,7 @@ public class SmackableImp implements Smackable {
 	private void registerPongTimeout(long wait_time, String id) {
 		mPingID = id;
 		mPingTimestamp = System.currentTimeMillis();
-		debugLog(String.format("Ping: registering timeout for %s: %1.3fs", id, wait_time/1000.));
+		Log.i(TAG, String.format("Ping: registering timeout for %s: %1.3fs", id, wait_time/1000.));
 		mAlarmManager.set(AlarmManager.RTC_WAKEUP,
 				System.currentTimeMillis() + wait_time,
 				mPongTimeoutAlarmPendIntent);
@@ -986,7 +990,7 @@ public class SmackableImp implements Smackable {
 	 */
 	private class PongTimeoutAlarmReceiver extends BroadcastReceiver {
 		public void onReceive(Context ctx, Intent i) {
-			debugLog("Ping: timeout for " + mPingID);
+			Log.i(TAG, "Ping: timeout for " + mPingID);
 			onDisconnected("Ping timeout");
 		}
 	}
@@ -996,6 +1000,7 @@ public class SmackableImp implements Smackable {
 	 */
 	private class PingAlarmReceiver extends BroadcastReceiver {
 		public void onReceive(Context ctx, Intent i) {
+				Log.i(TAG, "Received PING broadcast");
 				sendServerPing();
 		}
 	}
@@ -1029,8 +1034,10 @@ public class SmackableImp implements Smackable {
 					PendingIntent.FLAG_UPDATE_CURRENT);
 		mPongTimeoutAlarmPendIntent = PendingIntent.getBroadcast(mService.getApplicationContext(), 0, mPongTimeoutAlarmIntent,
 					PendingIntent.FLAG_UPDATE_CURRENT);
+//		mAlarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, 
+//				System.currentTimeMillis() + AlarmManager.INTERVAL_FIFTEEN_MINUTES, AlarmManager.INTERVAL_FIFTEEN_MINUTES, mPingAlarmPendIntent);
 		mAlarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, 
-				System.currentTimeMillis() + AlarmManager.INTERVAL_FIFTEEN_MINUTES, AlarmManager.INTERVAL_FIFTEEN_MINUTES, mPingAlarmPendIntent);
+				System.currentTimeMillis() + 60*1000, 60*1000, mPingAlarmPendIntent);
 	}
 	private void unregisterPongListener() {
 		mAlarmManager.cancel(mPingAlarmPendIntent);
@@ -1164,6 +1171,12 @@ public class SmackableImp implements Smackable {
 
 		mContentResolver.insert(ChatProvider.CONTENT_URI, values);
 	}
+	
+	private String getDateTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
+	}
 
 	private ContentValues getContentValuesForRosterEntry(final RosterEntry entry) {
 		final ContentValues values = new ContentValues();
@@ -1172,26 +1185,34 @@ public class SmackableImp implements Smackable {
 		values.put(RosterConstants.ALIAS, getName(entry));
 
 		Presence presence = mRoster.getPresence(entry.getUser());
-		values.put(RosterConstants.STATUS_MODE, getStatusInt(presence));
+		int currentStatus = getStatusInt(presence);
+		values.put(RosterConstants.STATUS_MODE, currentStatus);
+		//Log.i(TAG, "Presence = " + presence);
+		
+		if(currentStatus==StatusMode.available.ordinal()){
+			//Log.i(TAG, "ONLINE STATUS");
+			values.put(RosterConstants.LAST_SEEN, getDateTime());
+		}
 		if (presence.getType() == Presence.Type.error) {
 			values.put(RosterConstants.STATUS_MESSAGE, presence.getError().toString());
-		} else
+		} else if(presence.getStatus()!=null){
 			values.put(RosterConstants.STATUS_MESSAGE, presence.getStatus());
+		}
 		values.put(RosterConstants.GROUP, getGroup(entry.getGroups()));
 		VCard vCard = new VCard();
-		Log.i(TAG, "B4 try catch. user = "+entry.getUser());
+		//Log.i(TAG, "B4 try catch. user = "+entry.getUser());
 
 		try {
 			vCard.load(mXMPPConnection, entry.getUser());
 			byte[] avatar = vCard.getAvatar();
-			Log.i(TAG, "Avatar = "+avatar);
+			//Log.i(TAG, "Avatar = "+avatar);
 			if(avatar!=null){
 				values.put(RosterConstants.AVATAR, avatar);
 			}
 		} catch (XMPPException e) {
 			e.printStackTrace();
 		}
-		Log.i(TAG, "presence values = "+presence.getStatus());
+		//Log.i(TAG, "presence values = "+presence.getStatus());
 		return values;
 	}
 
@@ -1259,11 +1280,15 @@ public class SmackableImp implements Smackable {
 	}
 	
 	public void setAvatar() {
-		if(!EmotApplication.getPrefs().getBoolean(PreferenceConstants.AVATAR_UPDATED, false)){
-			Bitmap bitmap = UpdateProfileScreen.getAvatar();
-			new UpdateAvatarTask(bitmap).execute();
-		}else{
-			Log.i(TAG, "Avatar already updated");
+		try{
+			if(!EmotApplication.getPrefs().getBoolean(PreferenceConstants.AVATAR_UPDATED, false)){
+				Bitmap bitmap = UpdateProfileScreen.getAvatar();
+				//new UpdateAvatarTask(bitmap).execute();
+			}else{
+				Log.i(TAG, "Avatar already updated");
+			}
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 	}
 

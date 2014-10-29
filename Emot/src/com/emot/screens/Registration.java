@@ -371,7 +371,7 @@ public class Registration extends ActionBarActivity {
 		mConfig = EmotApplication.getConfig();
 		Log.i(TAG, "USERNAME = "+mConfig.jabberID + " password = "+mConfig.password);
 		xmppServiceIntent = new Intent(this, XMPPService.class);
-		xmppServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
+		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		xmppServiceConnection = new ServiceConnection() {
 

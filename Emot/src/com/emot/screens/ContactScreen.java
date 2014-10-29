@@ -72,9 +72,8 @@ public class ContactScreen extends ActionBarActivity{
 		listviewContact.setAdapter(contactAdapter);
 		refreshContacts();
 
-		mConfig = EmotApplication.getConfig();
-		Intent i = new Intent();
-		i.setAction("com.emot.services.ChatService");
+		Intent i = new Intent(this, XMPPService.class);
+		//i.setAction("com.emot.services.ChatService");
 		this.startService(i);
 		listviewContact.setOnItemClickListener(new OnItemClickListener() {
 
@@ -83,7 +82,7 @@ public class ContactScreen extends ActionBarActivity{
 				//startActivity(new Intent(EmotApplication.getAppContext(), UpdateProfileScreen.class));
 
 
-				String jid = contacts.get(position).getJID();
+				String jid = contactAdapter.getItem(position).getJID();
 				Intent chatIntent = new Intent(ContactScreen.this, ChatScreen.class);
 				chatIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, jid);
 				startActivity(chatIntent);
@@ -221,8 +220,9 @@ public class ContactScreen extends ActionBarActivity{
 
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
+		mConfig = EmotApplication.getConfig();
 		xmppServiceIntent = new Intent(this, XMPPService.class);
-		xmppServiceIntent.setAction("org.emot.androidclient.XMPPSERVICE");
+		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		xmppServiceConnection = new ServiceConnection() {
 
@@ -230,10 +230,8 @@ public class ContactScreen extends ActionBarActivity{
 				Log.i(TAG, "called onServiceConnected()");
 				serviceAdapter = new XMPPRosterServiceAdapter(
 						IXMPPRosterService.Stub.asInterface(service));
-				serviceAdapter.registerUICallback(rosterCallback);
-				Log.i(TAG, "getConnectionState(): "
-						+ serviceAdapter.getConnectionState());
-				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
+				//serviceAdapter.registerUICallback(rosterCallback);
+				Log.i(TAG, "getConnectionState(): " + serviceAdapter.getConnectionState());
 				ConnectionState cs = serviceAdapter.getConnectionState();
 				//				updateConnectionState(cs);
 				//				updateRoster();
@@ -241,11 +239,15 @@ public class ContactScreen extends ActionBarActivity{
 				// when returning from prefs to main activity, apply new config
 				if (mConfig.reconnect_required && cs == ConnectionState.ONLINE) {
 					// login config changed, force reconnection
+					Log.i(TAG, "--------- RECONNECTING CONTACTSCREEN ----------");
 					serviceAdapter.disconnect();
 					serviceAdapter.connect();
-				} else if (mConfig.presence_required && isConnected())
+				} else if (mConfig.presence_required && isConnected()){
+					Log.i(TAG, "--------- SETTING STATUS CONTACTSCREEN ----------");
 					serviceAdapter.setStatusFromConfig();
+				}
 				updateContacts();
+				
 				// handle server-related intents after connecting to the backend
 				//handleJabberIntent();
 			}

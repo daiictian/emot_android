@@ -1,11 +1,14 @@
 package com.emot.screens;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -22,10 +25,16 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.emot.androidclient.XMPPRosterServiceAdapter;
+import com.emot.androidclient.IXMPPRosterCallback.Stub;
 import com.emot.androidclient.data.ChatProvider;
+import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.RosterProvider.RosterConstants;
+import com.emot.androidclient.service.IXMPPRosterService;
+import com.emot.androidclient.service.XMPPService;
+import com.emot.androidclient.util.ConnectionState;
 import com.emot.common.ImageHelper;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.emotobjects.Contact;
@@ -34,13 +43,23 @@ import com.emot.model.EmotApplication;
 public class LastChatScreen extends ActionBarActivity {
 	private static String TAG = LastChatScreen.class.getSimpleName();
 	private ListView listLastChat;
+	
+	private Intent xmppServiceIntent;
+	private ServiceConnection xmppServiceConnection;
+	private XMPPRosterServiceAdapter serviceAdapter;
+	private Stub rosterCallback;
+	private EmotConfiguration mConfig;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.last_chat_screen);
+		Intent i = new Intent(this, XMPPService.class);
+		//i.setAction("com.emot.services.ChatService");
+		this.startService(i);
 		intializeUI();
 		setAdapter();
+		registerXMPPService();
 	}
 	
 	@Override
@@ -137,6 +156,50 @@ public class LastChatScreen extends ActionBarActivity {
 			return row;
 		}
 		
+	}
+	
+	private void registerXMPPService() {
+		Log.i(TAG, "called startXMPPService()");
+		mConfig = EmotApplication.getConfig();
+		xmppServiceIntent = new Intent(this, XMPPService.class);
+		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
+
+		xmppServiceConnection = new ServiceConnection() {
+
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				Log.i(TAG, "called onServiceConnected()");
+				serviceAdapter = new XMPPRosterServiceAdapter(
+						IXMPPRosterService.Stub.asInterface(service));
+				//serviceAdapter.registerUICallback(rosterCallback);
+				Log.i(TAG, "getConnectionState(): "
+						+ serviceAdapter.getConnectionState());
+				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
+				ConnectionState cs = serviceAdapter.getConnectionState();
+				//				updateConnectionState(cs);
+				//				updateRoster();
+
+				// when returning from prefs to main activity, apply new config
+				if (mConfig.reconnect_required && cs == ConnectionState.ONLINE) {
+					// login config changed, force reconnection
+					Log.i(TAG, "--------- RECONNECTING LASTCHATSCREEN----------");
+					serviceAdapter.disconnect();
+					serviceAdapter.connect();
+				} else if (mConfig.presence_required && isConnected()){
+					Log.i(TAG, "--------- SETTING STATUS LASTCHATSCREEN ----------");
+					serviceAdapter.setStatusFromConfig();
+				}
+				// handle server-related intents after connecting to the backend
+				//handleJabberIntent();
+			}
+
+			public void onServiceDisconnected(ComponentName name) {
+				Log.i(TAG, "called onServiceDisconnected()");
+			}
+		};
+	}
+	
+	private boolean isConnected() {
+		return serviceAdapter != null && serviceAdapter.isAuthenticated();
 	}
 	
 	class LastChatWrapper{
