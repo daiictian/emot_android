@@ -3,7 +3,7 @@ package com.emot.screens;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smackx.ChatState;
 
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -12,15 +12,20 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -30,14 +35,14 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.emot.androidclient.chat.IXMPPChatCallback;
+import com.emot.androidclient.chat.IXMPPChatCallback.Stub;
 import com.emot.androidclient.chat.XMPPChatServiceAdapter;
 import com.emot.androidclient.data.ChatProvider;
-import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.androidclient.service.XMPPService;
-import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
@@ -45,7 +50,6 @@ import com.emot.model.EmotApplication;
 
 public class ChatScreen extends ActionBarActivity {
 
-	private Chat chat;
 	private ImageView sendButton;
 	private EmotEditText chatEntry;
 	private TextView userTitle;
@@ -63,7 +67,23 @@ public class ChatScreen extends ActionBarActivity {
 	private String lastSeen;
 	private static final int DELAY_NEWMSG = 2000;
 	public final static String INTENT_CHAT_FRIEND = "chat_friend";
-
+	private Stub chatCallback;
+	private String ONLINE_STATUS = "online";
+	private String TYPING_STATUS = "typing ...";
+	private final static int INTERVAL = 1000 * 30;
+	Handler mHandler = new Handler();
+	Runnable mHandlerTask = new Runnable(){
+	     @Override 
+	     public void run() {
+	          setFriendStatusDB();
+	          mHandler.postDelayed(mHandlerTask, INTERVAL);
+	     }
+	};
+	
+	
+	long TYPE_PAUSE_DIFF = 2000;
+	long lastTypingState = 0;
+	
 	private static final String[] PROJECTION_FROM = new String[] {
 			ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
 			ChatProvider.ChatConstants.DIRECTION,
@@ -135,14 +155,16 @@ public class ChatScreen extends ActionBarActivity {
 	protected void onResume() {
 		super.onResume();
 		bindXMPPService();
+		startRepeatingTask();
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
 		unbindXMPPService();
+		stopRepeatingTask();
 	}
-
+	
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
@@ -158,6 +180,7 @@ public class ChatScreen extends ActionBarActivity {
 						IXMPPChatService.Stub.asInterface(service), chatFriend);
 
 				mServiceAdapter.clearNotifications(chatFriend);
+				mServiceAdapter.registerUICallback(chatCallback);
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
@@ -170,6 +193,7 @@ public class ChatScreen extends ActionBarActivity {
 	private void unbindXMPPService() {
 		try {
 			unbindService(mServiceConnection);
+			mServiceAdapter.unregisterUICallback(chatCallback);
 		} catch (IllegalArgumentException e) {
 			Log.e(TAG, "Service wasn't bound!");
 		}
@@ -255,6 +279,65 @@ public class ChatScreen extends ActionBarActivity {
 			}
 		});
 		registerXMPPService();
+		chatCallback = new IXMPPChatCallback.Stub() {
+		
+			@Override
+			public void chatStateChanged(int state, String from) throws RemoteException {
+				Log.i(TAG, "new chat state = "+state + " from = "+from + " composing val = "+ChatState.composing.ordinal());
+				if(state == ChatState.composing.ordinal() && chatFriend.equals(from)){
+					lastSeen = TYPING_STATUS;
+				}else{
+					lastSeen = ONLINE_STATUS;
+				}
+				runOnUiThread(new Runnable(){
+			        @Override
+			        public void run(){
+			        	getSupportActionBar().setSubtitle(lastSeen);
+			        }
+			    });
+			}
+		};
+		
+		chatEntry.setOnFocusChangeListener(new OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+			    if(hasFocus){
+			    	//mServiceAdapter.sendChatState(chatFriend, ChatState.composing.toString());
+			    }else {
+			    	//mServiceAdapter.sendChatState(chatFriend, ChatState.paused.toString());
+			    }
+			}
+		});
+		
+		chatEntry.addTextChangedListener(new TextWatcher() {
+
+			public void afterTextChanged(Editable s) {
+				Log.i(TAG, "Sys time: "+System.currentTimeMillis() + " last time: "+lastTypingState);
+				if(System.currentTimeMillis() - lastTypingState > TYPE_PAUSE_DIFF){
+					lastTypingState = System.currentTimeMillis();
+					mServiceAdapter.sendChatState(chatFriend, ChatState.composing.toString());
+					new Handler().postDelayed(
+							new Runnable() {
+
+								@Override
+								public void run() {
+									mServiceAdapter.sendChatState(chatFriend, ChatState.paused.toString());
+								}
+							}, TYPE_PAUSE_DIFF);
+
+				}
+				Log.i(TAG, "text changed after");
+			}
+
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				Log.i(TAG, "text changed before");
+			}
+
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				Log.i(TAG, "text changed");
+			}
+		});
+		
 		// setChatWindowAdapter();
 
 		// new
@@ -284,6 +367,16 @@ public class ChatScreen extends ActionBarActivity {
 		// null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 
 	}
+	
+	void startRepeatingTask()
+	{
+	    mHandlerTask.run(); 
+	}
+
+	void stopRepeatingTask()
+	{
+	    mHandler.removeCallbacks(mHandlerTask);
+	}
 
 	private void sendMessage(String message) {
 		chatEntry.setText(null);
@@ -297,9 +390,7 @@ public class ChatScreen extends ActionBarActivity {
 	private void setAliasFromDB() {
 		chatAlias = chatFriend.split("@")[0];
 		lastSeen = "";
-		String selection = RosterProvider.RosterConstants.JID + "='"
-				+ chatFriend + "'";
-		;
+		String selection = RosterProvider.RosterConstants.JID + "='" + chatFriend + "'";
 		String[] projection = new String[] {
 				RosterProvider.RosterConstants.ALIAS,
 				RosterProvider.RosterConstants.LAST_SEEN,
@@ -323,7 +414,7 @@ public class ChatScreen extends ActionBarActivity {
 			} else if (last_seen != null) {
 				lastSeen = last_seen;
 			} else {
-				lastSeen = "away";
+				lastSeen = "";
 			}
 			chatAlias = name;
 			Log.i(TAG, "chat alias : " + chatAlias);
@@ -331,7 +422,41 @@ public class ChatScreen extends ActionBarActivity {
 		}
 		cursor.close();
 	}
+	
+	public void setFriendStatusDB(){
+		Log.i(TAG, "Setting friend status from DB");
+		String selection = RosterProvider.RosterConstants.JID + "='" + chatFriend + "'";
+		String[] projection = new String[] {
+				RosterProvider.RosterConstants.LAST_SEEN,
+				RosterProvider.RosterConstants.STATUS_MODE };
+		Cursor cursor = EmotApplication
+				.getAppContext()
+				.getContentResolver()
+				.query(RosterProvider.CONTENT_URI, projection, selection, null,
+						null);
+		Log.i(TAG, "users found length = " + cursor.getCount());
+		while (cursor.moveToNext()) {
+			int mode = cursor
+					.getInt(cursor
+							.getColumnIndex(RosterProvider.RosterConstants.STATUS_MODE));
+			String last_seen = cursor.getString(cursor
+					.getColumnIndex(RosterProvider.RosterConstants.LAST_SEEN));
+			if (mode == StatusMode.available.ordinal()) {
+				if(!getSupportActionBar().getSubtitle().toString().equals(TYPING_STATUS)){
+					getSupportActionBar().setSubtitle(ONLINE_STATUS);
+				}
+			} else if (last_seen != null) {
+				getSupportActionBar().setSubtitle(last_seen);
+			} else {
+				getSupportActionBar().setSubtitle("");
+			}
+			Log.i(TAG, "chat alias : " + chatAlias);
+			Log.i(TAG, "last seen : " + lastSeen);
+		}
+		cursor.close();
+	}
 
+	
 	private void markAsReadDelayed(final int id, final int delay) {
 		new Thread() {
 			@Override

@@ -3,6 +3,7 @@ package com.emot.androidclient.chat;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.service.IXMPPChatService;
 
 public class XMPPChatServiceAdapter {
@@ -40,6 +41,36 @@ public class XMPPChatServiceAdapter {
 		try {
 			xmppServiceStub.clearNotifications(Jid);
 		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void registerUICallback(IXMPPChatCallback uiCallback) {
+		try {
+			xmppServiceStub.registerChatCallback(uiCallback);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void unregisterUICallback(IXMPPChatCallback uiCallback) {
+		try {
+			xmppServiceStub.unregisterChatCallback(uiCallback);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void sendChatState(String chatFriend, String state) {
+		try {
+			xmppServiceStub.sendChatState(chatFriend, state);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
 	}

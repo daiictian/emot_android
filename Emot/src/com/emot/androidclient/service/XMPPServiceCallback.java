@@ -5,4 +5,5 @@ public interface XMPPServiceCallback {
 	void messageError(String from, String errorBody, boolean silent_notification);
 	void connectionStateChanged();
 	void rosterChanged(); // TODO: remove that!
+	void chatStateChanged(int ordinal, String from);
 }

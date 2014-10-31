@@ -19,7 +19,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.emot.androidclient.IXMPPRosterCallback;
-import com.emot.androidclient.data.RosterProvider;
+import com.emot.androidclient.chat.IXMPPChatCallback;
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
@@ -49,6 +49,7 @@ public class XMPPService extends GenericService {
 	private RemoteCallbackList<IXMPPRosterCallback> mRosterCallbacks = new RemoteCallbackList<IXMPPRosterCallback>();
 	private HashSet<String> mIsBoundTo = new HashSet<String>();
 	private Handler mMainHandler = new Handler();
+	private RemoteCallbackList<IXMPPChatCallback> chatCallbacks = new RemoteCallbackList<IXMPPChatCallback>();
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -156,6 +157,16 @@ public class XMPPService extends GenericService {
 
 	private void createServiceChatStub() {
 		mServiceChatConnection = new IXMPPChatService.Stub() {
+			
+			public void registerChatCallback(IXMPPChatCallback chatCallback){
+				Log.i(TAG, "Registering chat callback");
+				chatCallbacks.register(chatCallback);
+			}
+			
+			public void unregisterChatCallback(IXMPPChatCallback chatCallback){
+				Log.i(TAG, "Unregistering chat callback");
+				chatCallbacks.unregister(chatCallback);
+			}
 
 			public void sendMessage(String user, String message)
 					throws RemoteException {
@@ -176,6 +187,13 @@ public class XMPPService extends GenericService {
 			
 			public void clearNotifications(String Jid) throws RemoteException {
 				clearNotification(Jid);
+			}
+
+			@Override
+			public void sendChatState(String user, String state)
+					throws RemoteException {
+				if (mSmackable != null)
+					mSmackable.sendChatState(user, state);
 			}
 		};
 	}
@@ -376,6 +394,19 @@ public class XMPPService extends GenericService {
 		}
 		mRosterCallbacks.finishBroadcast();
 	}
+	
+	private void broadcastChatState(int state, String from) {
+		final int broadCastItems = chatCallbacks.beginBroadcast();
+		Log.i(TAG, "Chat callbacks = "+broadCastItems);
+		for (int i = 0; i < broadCastItems; i++) {
+			try {
+				chatCallbacks.getBroadcastItem(i).chatStateChanged(state, from);
+			} catch (RemoteException e) {
+				Log.i(TAG, "caught RemoteException: " + e.getMessage());
+			}
+		}
+		chatCallbacks.finishBroadcast();
+	}
 
 	private NetworkInfo getNetworkInfo() {
 		Context ctx = getApplicationContext();
@@ -486,6 +517,12 @@ public class XMPPService extends GenericService {
 				default:
 					updateServiceNotification();
 				}
+			}
+
+			@Override
+			public void chatStateChanged(int state, String from) {
+				Log.i(TAG, "state = "+state + " from = "+from );
+				broadcastChatState(state, from);
 			}
 		});
 	}

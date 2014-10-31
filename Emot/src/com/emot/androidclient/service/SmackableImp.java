@@ -25,12 +25,14 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.DNSUtil;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.dns.DNSJavaResolver;
+import org.jivesoftware.smackx.ChatState;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.carbons.Carbon;
 import org.jivesoftware.smackx.carbons.CarbonManager;
@@ -38,6 +40,7 @@ import org.jivesoftware.smackx.entitycaps.EntityCapsManager;
 import org.jivesoftware.smackx.entitycaps.cache.SimpleDirectoryPersistentCache;
 import org.jivesoftware.smackx.entitycaps.provider.CapsExtensionProvider;
 import org.jivesoftware.smackx.forward.Forwarded;
+import org.jivesoftware.smackx.packet.ChatStateExtension;
 import org.jivesoftware.smackx.packet.DelayInfo;
 import org.jivesoftware.smackx.packet.DelayInformation;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
@@ -98,6 +101,13 @@ public class SmackableImp implements Smackable {
 	final static private String SEND_OFFLINE_SELECTION =
 			ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
 			ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_NEW;
+	
+	final static private String[] SEND_FAILED_PROJECTION = new String[] {
+		ChatConstants._ID, ChatConstants.JID,
+		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID };
+	final static private String SEND_FAILED_SELECTION =
+		ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
+		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_FAILED;
 
 	static final DiscoverInfo.Identity EMOT_IDENTITY = new DiscoverInfo.Identity("client",
 					EmotApplication.XMPP_IDENTITY_NAME,
@@ -140,6 +150,13 @@ public class SmackableImp implements Smackable {
 		
 		// XEP-0115 Entity Capabilities
 		pm.addExtensionProvider("c", "http://jabber.org/protocol/caps", new CapsExtensionProvider());
+		
+		// ChatStates
+		pm.addExtensionProvider("active","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
+	    pm.addExtensionProvider("composing","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider()); 
+	    pm.addExtensionProvider("paused","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
+	    pm.addExtensionProvider("inactive","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
+	    pm.addExtensionProvider("gone","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
 
 		XmppStreamHandler.addExtensionProviders();
 	}
@@ -691,6 +708,7 @@ public class SmackableImp implements Smackable {
 			Presence presence = new Presence(Presence.Type.available);
 			Mode mode = Mode.valueOf(mConfig.statusMode);
 			presence.setMode(mode);
+			Log.i(TAG, "Setting status as "+mConfig.statusMessage);
 			presence.setStatus(mConfig.statusMessage);
 			presence.setPriority(mConfig.priority);
 			mXMPPConnection.sendPacket(presence);
@@ -703,6 +721,45 @@ public class SmackableImp implements Smackable {
 	public void sendOfflineMessages() {
 		Cursor cursor = mContentResolver.query(ChatProvider.CONTENT_URI,
 				SEND_OFFLINE_PROJECTION, SEND_OFFLINE_SELECTION,
+				null, null);
+		final int      _ID_COL = cursor.getColumnIndexOrThrow(ChatConstants._ID);
+		final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
+		final int      MSG_COL = cursor.getColumnIndexOrThrow(ChatConstants.MESSAGE);
+		final int       TS_COL = cursor.getColumnIndexOrThrow(ChatConstants.DATE);
+		final int PACKETID_COL = cursor.getColumnIndexOrThrow(ChatConstants.PACKET_ID);
+		ContentValues mark_sent = new ContentValues();
+		mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+		while (cursor.moveToNext()) {
+			int _id = cursor.getInt(_ID_COL);
+			String toJID = cursor.getString(JID_COL);
+			String message = cursor.getString(MSG_COL);
+			String packetID = cursor.getString(PACKETID_COL);
+			long ts = cursor.getLong(TS_COL);
+			Log.d(TAG, "sendOfflineMessages: " + toJID + " > " + message);
+			final Message newMessage = new Message(toJID, Message.Type.chat);
+			newMessage.setBody(message);
+			DelayInformation delay = new DelayInformation(new Date(ts));
+			newMessage.addExtension(delay);
+			newMessage.addExtension(new DelayInfo(delay));
+			newMessage.addExtension(new DeliveryReceiptRequest());
+			if ((packetID != null) && (packetID.length() > 0)) {
+				newMessage.setPacketID(packetID);
+			} else {
+				packetID = newMessage.getPacketID();
+				mark_sent.put(ChatConstants.PACKET_ID, packetID);
+			}
+			Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY
+				+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
+			mContentResolver.update(rowuri, mark_sent,
+						null, null);
+			mXMPPConnection.sendPacket(newMessage);		// must be after marking delivered, otherwise it may override the SendFailListener
+		}
+		cursor.close();
+	}
+	
+	public void sendFailedMessages() {
+		Cursor cursor = mContentResolver.query(ChatProvider.CONTENT_URI,
+				SEND_FAILED_PROJECTION, SEND_FAILED_SELECTION,
 				null, null);
 		final int      _ID_COL = cursor.getColumnIndexOrThrow(ChatConstants._ID);
 		final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
@@ -1055,71 +1112,90 @@ public class SmackableImp implements Smackable {
 			public void processPacket(Packet packet) {
 				Log.i(TAG, "packet is " +packet.toXML());
 				try {
-				if (packet instanceof Message) {
-					Message msg = (Message) packet;
-
-					String fromJID = getBareJID(msg.getFrom());
-					int direction = ChatConstants.INCOMING;
-					Carbon cc = CarbonManager.getCarbon(msg);
-
-					// extract timestamp
-					long ts;
-					DelayInfo timestamp = (DelayInfo)msg.getExtension("delay", "urn:xmpp:delay");
-					if (timestamp == null)
-						timestamp = (DelayInfo)msg.getExtension("x", "jabber:x:delay");
-					if (cc != null) // Carbon timestamp overrides packet timestamp
-						timestamp = cc.getForwarded().getDelayInfo();
-					if (timestamp != null)
-						ts = timestamp.getStamp().getTime();
-					else
-						ts = System.currentTimeMillis();
-
-					// try to extract a carbon
-					if (cc != null) {
-						Log.i(TAG, "carbon: " + cc.toXML());
-						msg = (Message)cc.getForwarded().getForwardedPacket();
-
-						// outgoing carbon: fromJID is actually chat peer's JID
-						if (cc.getDirection() == Carbon.Direction.sent) {
-							fromJID = getBareJID(msg.getTo());
-							direction = ChatConstants.OUTGOING;
-						} else {
-							fromJID = getBareJID(msg.getFrom());
-
-							// hook off carbonated delivery receipts
-							DeliveryReceipt dr = (DeliveryReceipt)msg.getExtension(
-									DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE);
-							if (dr != null) {
-								Log.d(TAG, "got CC'ed delivery receipt for " + dr.getId());
-								changeMessageDeliveryStatus(dr.getId(), ChatConstants.DS_ACKED);
+					if (packet instanceof Message) {
+						Message msg = (Message) packet;
+						String fromJID = getBareJID(msg.getFrom());
+						
+						PacketExtension extension = msg.getExtension("http://jabber.org/protocol/chatstates");
+						Log.i(TAG, "Extension  = "+extension +" composing  = "+ msg.getProperty("composing") + " propetries = "+msg.getPropertyNames().size());
+						
+				        if (extension != null) {
+				            String value = ChatState.valueOf(extension.getElementName()).name();
+				            Log.i(TAG, "Value = " + value);
+				            mServiceCallBack.chatStateChanged(ChatState.valueOf(extension.getElementName()).ordinal(), fromJID);
+				            if (value.equals("composing")) {
+				                Log.i(TAG, "COMPOSING MESSAGE " + value);
+				                //mServiceCallBack.messageComposing(msg.getFrom(), true);
+				            } else {
+				            	Log.i(TAG, "STOPPED COMPOSING MESSAGE "+ value);
+				            	//mServiceCallBack.messageComposing(msg.getFrom(), false);
+				            }
+				        }
+				        
+						int direction = ChatConstants.INCOMING;
+						Carbon cc = CarbonManager.getCarbon(msg);
+	
+						// extract timestamp
+						long ts;
+						DelayInfo timestamp = (DelayInfo)msg.getExtension("delay", "urn:xmpp:delay");
+						if (timestamp == null)
+							timestamp = (DelayInfo)msg.getExtension("x", "jabber:x:delay");
+						if (cc != null) // Carbon timestamp overrides packet timestamp
+							timestamp = cc.getForwarded().getDelayInfo();
+						if (timestamp != null)
+							ts = timestamp.getStamp().getTime();
+						else
+							ts = System.currentTimeMillis();
+	
+						// try to extract a carbon
+						if (cc != null) {
+							Log.i(TAG, "carbon: " + cc.toXML());
+							msg = (Message)cc.getForwarded().getForwardedPacket();
+	
+							// outgoing carbon: fromJID is actually chat peer's JID
+							if (cc.getDirection() == Carbon.Direction.sent) {
+								fromJID = getBareJID(msg.getTo());
+								direction = ChatConstants.OUTGOING;
+							} else {
+								fromJID = getBareJID(msg.getFrom());
+	
+								// hook off carbonated delivery receipts
+								DeliveryReceipt dr = (DeliveryReceipt)msg.getExtension(
+										DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE);
+								if (dr != null) {
+									Log.d(TAG, "got CC'ed delivery receipt for " + dr.getId());
+									changeMessageDeliveryStatus(dr.getId(), ChatConstants.DS_ACKED);
+								}
 							}
 						}
+	
+						String chatMessage = msg.getBody();
+	
+						// display error inline
+						if (msg.getType() == Message.Type.error) {
+							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
+								Log.i(TAG, "message failed !!!");
+								mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
+								//sendFailedMessages();
+							}
+							return; // we do not want to add errors as "incoming messages"
+						}
+	
+						// ignore empty messages
+						if (chatMessage == null) {
+							Log.d(TAG, "empty message.");
+							return;
+						}
+	
+						// carbons are old. all others are new
+						int is_new = (cc == null) ? ChatConstants.DS_NEW : ChatConstants.DS_SENT_OR_READ;
+						if (msg.getType() == Message.Type.error)
+							is_new = ChatConstants.DS_FAILED;
+	
+						addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID());
+						if (direction == ChatConstants.INCOMING)
+							mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null));
 					}
-
-					String chatMessage = msg.getBody();
-
-					// display error inline
-					if (msg.getType() == Message.Type.error) {
-						if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED))
-							mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
-						return; // we do not want to add errors as "incoming messages"
-					}
-
-					// ignore empty messages
-					if (chatMessage == null) {
-						Log.d(TAG, "empty message.");
-						return;
-					}
-
-					// carbons are old. all others are new
-					int is_new = (cc == null) ? ChatConstants.DS_NEW : ChatConstants.DS_SENT_OR_READ;
-					if (msg.getType() == Message.Type.error)
-						is_new = ChatConstants.DS_FAILED;
-
-					addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID());
-					if (direction == ChatConstants.INCOMING)
-						mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null));
-				}
 				} catch (Exception e) {
 					// SMACK silently discards exceptions dropped from processPacket :(
 					Log.e(TAG, "failed to process packet:");
@@ -1282,8 +1358,40 @@ public class SmackableImp implements Smackable {
 	public void setAvatar() {
 		try{
 			if(!EmotApplication.getPrefs().getBoolean(PreferenceConstants.AVATAR_UPDATED, false)){
-				Bitmap bitmap = UpdateProfileScreen.getAvatar();
-				//new UpdateAvatarTask(bitmap).execute();
+				Bitmap bmp = UpdateProfileScreen.getAvatar();
+				//new UpdateAvatarTask(bmp).execute();
+				
+				//Directly
+				VCard vCard = new VCard();
+
+				bmp = Bitmap.createScaledBitmap(bmp, 120, 120, false);
+				try {
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+					Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
+					byte[] bytes = stream.toByteArray();
+					String encodedImage = StringUtils.encodeBase64(bytes);
+					vCard.setAvatar(bytes);
+					//vCard.setEncodedImage(encodedImage);
+//					vCard.setField("PHOTO", 
+//							"<TYPE>image/jpeg</TYPE><BINVAL>"
+//									+ encodedImage + 
+//									"</BINVAL>", 
+//									true);
+					vCard.save(mXMPPConnection);
+					//EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
+				}  catch (XMPPException e) {
+					Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+					e.printStackTrace();
+				}	catch(Exception e){
+					Log.i(TAG, " EXCEPTION  ------ ");
+					e.printStackTrace();
+				}finally{
+					Editor c = EmotApplication.getPrefs().edit();
+					c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
+					c.commit();
+					Log.i(TAG, "Setting preference value ...");
+				}
 			}else{
 				Log.i(TAG, "Avatar already updated");
 			}
@@ -1362,5 +1470,15 @@ public class SmackableImp implements Smackable {
 			}
 		}
 
+	}
+
+	@Override
+	public void sendChatState(String user, String state) {
+		Log.i(TAG, "Sending Chat state");
+		final Message newMessage = new Message(user, Message.Type.normal);
+		newMessage.addExtension(new ChatStateExtension(ChatState.valueOf(state)));
+		if (isAuthenticated()) {
+			mXMPPConnection.sendPacket(newMessage);
+		}
 	}
 }
