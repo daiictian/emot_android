@@ -214,7 +214,9 @@ public class ChatProvider extends ContentProvider {
 					+ ChatConstants.JID + " TEXT,"
 					+ ChatConstants.MESSAGE + " TEXT,"
 					+ ChatConstants.DELIVERY_STATUS + " INTEGER,"
-					+ ChatConstants.PACKET_ID + " TEXT);");
+					+ ChatConstants.PACKET_ID + " TEXT,"
+					+ ChatConstants.CHAT_TYPE + " TEXT," 
+					+ ChatConstants.MESSAGE_SENDER_IN_GROUP + " TEXT "+");");
 		}
 
 		@Override
@@ -249,6 +251,8 @@ public class ChatProvider extends ContentProvider {
 		public static final String MESSAGE = "message";
 		public static final String DELIVERY_STATUS = "read"; // SQLite can not rename columns, reuse old name
 		public static final String PACKET_ID = "pid";
+		public static final String CHAT_TYPE = "type";
+		public static final String MESSAGE_SENDER_IN_GROUP = "occupant";
 
 		// boolean mappings
 		public static final int INCOMING = 0;

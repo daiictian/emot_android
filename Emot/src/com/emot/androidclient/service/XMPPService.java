@@ -1,6 +1,8 @@
 package com.emot.androidclient.service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.app.AlarmManager;
@@ -23,6 +25,7 @@ import com.emot.androidclient.chat.IXMPPChatCallback;
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
+import com.emot.emotobjects.Contact;
 import com.emot.screens.ContactScreen;
 import com.emot.screens.R;
 
@@ -52,16 +55,19 @@ public class XMPPService extends GenericService {
 	private Handler mMainHandler = new Handler();
 	private RemoteCallbackList<IXMPPChatCallback> chatCallbacks = new RemoteCallbackList<IXMPPChatCallback>();
 
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		userStartedWatching();
 
 		String chatPartner = intent.getDataString();
-		if ((chatPartner != null) && !chatPartner.equals("test")) {
+		boolean isforgrpchat = intent.getBooleanExtra("isforgrpchat", false);
+		if ((chatPartner != null) && !isforgrpchat) {
 			resetNotificationCounter(chatPartner);
 			mIsBoundTo.add(chatPartner);
 			return mServiceChatConnection;
-		}else if(chatPartner.equals("test")){
+			
+		}else if(chatPartner != null && isforgrpchat){
 			return mGroupServiceChatConnection;
 		}
 		return mService2RosterConnection;
@@ -164,9 +170,15 @@ public class XMPPService extends GenericService {
 		mGroupServiceChatConnection = new IXMPPGroupChatService.Stub() {
 			
 			@Override
-			public void sendGroupMessage(String user, String message) throws RemoteException {
-				if (mSmackable != null)
-					mSmackable.sendGroupMessage(message);
+			public String sendGroupMessage(String user, String message) throws RemoteException {
+				String pid = "";
+				if (mSmackable != null){
+				//	return mSmackable.sendGroupMessage(message);
+					
+				pid =  mSmackable.sendGroupMessage(message);
+				}
+				return pid;
+				
 				
 			}
 			
@@ -183,6 +195,30 @@ public class XMPPService extends GenericService {
 				// TODO Auto-generated method stub
 				
 			}
+
+			@Override
+			public void createGroup(String grpName,
+					List<Contact> members){
+				mSmackable.initMUC(grpName);
+				mSmackable.joinUsers(members);
+				
+			}
+
+			@Override
+			public void joinGroup(String grpName, boolean isCreateGroup)
+					throws RemoteException {
+				Log.i(TAG, "isCreateGroup is " +isCreateGroup);
+				if(!isCreateGroup){
+					Log.i(TAG, "joining group " +grpName);
+					mSmackable.joinGroup(grpName);
+					
+				}
+				
+			}
+
+			
+
+			
 		};
 	}
 
@@ -517,9 +553,10 @@ public class XMPPService extends GenericService {
 		}
 
 		mSmackable.registerCallback(new XMPPServiceCallback() {
-			public void newMessage(String from, String message, boolean silent_notification) {
+			public void newMessage(String from, String message, boolean silent_notification, boolean grpchat, String msgSenderInGrp) {
 				logInfo("notification: " + from);
-				notifyClient(from, mSmackable.getNameForJID(from), message, !mIsBoundTo.contains(from), silent_notification, false);
+				notifyClient(from, mSmackable.getNameForJID(from), message, !mIsBoundTo.contains(from), silent_notification, false, grpchat,msgSenderInGrp );
+				//notifyClient(from, "testi@conference.emot-net", message, !mIsBoundTo.contains(from), silent_notification, false, grpchat);
 			}
 
 			public void messageError(final String from, final String error, final boolean silent_notification) {
@@ -528,7 +565,7 @@ public class XMPPService extends GenericService {
 					public void run() {
 						// work around Toast fallback for errors
 						notifyClient(from, mSmackable.getNameForJID(from), error,
-							!mIsBoundTo.contains(from), silent_notification, true);
+							!mIsBoundTo.contains(from), silent_notification, true, false, "");
 					}});
 				}
 
@@ -556,6 +593,8 @@ public class XMPPService extends GenericService {
 				broadcastChatState(state, from);
 			}
 		});
+		
+		
 	}
 
 	private class ReconnectAlarmReceiver extends BroadcastReceiver {

@@ -1,0 +1,149 @@
+package com.emot.screens;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.emot.adapters.ContactArrayAdapter;
+import com.emot.adapters.SelectContactArrayAdapter;
+import com.emot.androidclient.data.RosterProvider;
+import com.emot.androidclient.data.RosterProvider.RosterConstants;
+import com.emot.emotobjects.Contact;
+import com.emot.model.EmotApplication;
+import com.emot.screens.ContactScreen.ShowContacts;
+
+import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
+
+public class CreateGroup extends ActionBarActivity {
+	
+	private ListView mContactList;
+	private ArrayList<Contact> contacts;
+	private SelectContactArrayAdapter contactAdapter;
+	private ShowContacts showContactsThread;
+	private Button createGroup;
+	private EditText grpName;
+	private static final String TAG = "CreateGroup";
+	final static private String[] CONTACT_PROJECTION = new String[] {
+		RosterConstants.ALIAS, RosterConstants.STATUS_MESSAGE,
+		RosterConstants.AVATAR, RosterConstants.JID};
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.create_group_screen);
+		mContactList = (ListView)findViewById(R.id.listviewContact);
+		createGroup = (Button)findViewById(R.id.createGroup);
+		grpName = (EditText)findViewById(R.id.grpname);
+		contacts = new ArrayList<Contact>();
+		contactAdapter = new SelectContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
+		mContactList.setAdapter(contactAdapter);
+		setOnClickListeners();
+		refreshContacts();
+	}
+	
+	private void setOnClickListeners(){
+		
+		createGroup.setOnClickListener(new View.OnClickListener() {
+			
+			
+			ArrayList<Contact> selectedContacts = new ArrayList<Contact>();
+			@Override
+			public void onClick(View v) {
+				for(int i=0; i < contacts.size(); i++){
+					if(contacts.get(i).isSelected()){
+						Log.i(TAG, "selected contacts is " + contacts.get(i).getName());
+						selectedContacts.add(contacts.get(i));
+						
+					}
+				}
+				//if(selectedContacts.size() > 0){
+					Intent i = new Intent(CreateGroup.this, GroupChatScreen.class);
+					
+					i.putParcelableArrayListExtra("groupmembers", selectedContacts);
+					i.putExtra("grpName", grpName.getText().toString());
+					i.putExtra("creategroup?", true);
+					startActivity(i);
+					
+			//	}
+				
+			}
+		});
+		
+	}
+	
+	public void refreshContacts(){
+		Log.i(TAG, "Refreshing contacts !!!!");
+		showContactsThread = new ShowContacts();
+		showContactsThread.execute();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.create_group, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+
+	public class ShowContacts extends AsyncTask<Void, Contact, Boolean>{
+
+		@Override
+		protected Boolean doInBackground(Void... params) {
+			try{
+				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
+				
+				Log.i(TAG, "contacts found  = "+cr.getCount());
+				while (cr.moveToNext()) {
+				    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
+				    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
+				    contact.setAvatar(cr.getBlob(cr.getColumnIndex(RosterConstants.AVATAR)));
+				    publishProgress(contact);
+				}
+				cr.close();
+				Log.i(TAG, "time 2");
+				return true;
+			}catch(Exception e){
+				e.printStackTrace();
+				return false;
+			}
+
+		}
+
+		protected void onProgressUpdate(Contact... contact){
+			contacts.add(contact[0]);
+			contactAdapter.notifyDataSetChanged();
+			Log.i(TAG, "Adding contact ...");
+			return;
+		}
+
+		protected void onPostExecute(Boolean resp) {
+			if(!resp){
+				Toast.makeText(EmotApplication.getAppContext(), "Sorry encountered some error while fetching contacts. Please try again later.", Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+}

@@ -87,6 +87,9 @@ public class LastChatScreen extends ActionBarActivity {
 	        case R.id.action_search:
 	            startActivity(new Intent(LastChatScreen.this, ContactScreen.class));
 	            return true;
+	        case R.id.action_settings:
+	        	startActivity(new Intent(LastChatScreen.this, CreateGroup.class));
+	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
@@ -100,7 +103,8 @@ public class LastChatScreen extends ActionBarActivity {
 		Log.i(TAG, "Starting Adapter set ...");
 		String[] projection = new String[] {
 				ChatProvider.ChatConstants._ID,
-				ChatProvider.ChatConstants.JID, 
+				ChatProvider.ChatConstants.JID,
+				ChatProvider.ChatConstants.CHAT_TYPE,
 				"MAX("+ChatProvider.ChatConstants.DATE+")",
 				ChatProvider.ChatConstants.MESSAGE, 
 				ChatProvider.ChatConstants.DELIVERY_STATUS 
@@ -118,9 +122,17 @@ public class LastChatScreen extends ActionBarActivity {
 				Cursor cur = (Cursor) adapter.getItem(position);
 	            cur.moveToPosition(position);
 	            String jid = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.JID));
+	            String type = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
+	            Log.i(TAG, "jid of room or freind is " + jid);
+	            if(type.equals("chat")){
 	            Intent chatIntent = new Intent(LastChatScreen.this, ChatScreen.class);
 				chatIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, jid);
 				startActivity(chatIntent);
+	            }else if(type.equals("groupchat")){
+	            	Intent chatIntent = new Intent(LastChatScreen.this, GroupChatScreen.class);
+					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_NAME, jid);
+					startActivity(chatIntent);	
+	            }
 				//cur.close();
 			}});
 		Log.i(TAG, "Adapter set !!");
@@ -147,6 +159,10 @@ public class LastChatScreen extends ActionBarActivity {
 				wrapper = (LastChatWrapper) row.getTag();
 			}
 			String user = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.JID));
+			String type = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
+			if(type.equals("groupchat")){
+			EmotApplication.addRooms(user);
+			}
 			String message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 			String status = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
 			boolean isNew = false;

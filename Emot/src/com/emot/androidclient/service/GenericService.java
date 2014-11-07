@@ -22,6 +22,7 @@ import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.model.EmotApplication;
 import com.emot.screens.ChatScreen;
+import com.emot.screens.GroupChatScreen;
 import com.emot.screens.R;
 
 public abstract class GenericService extends Service {
@@ -34,6 +35,7 @@ public abstract class GenericService extends Service {
 	private Notification mNotification;
 	private Vibrator mVibrator;
 	private Intent mNotificationIntent;
+	private Intent mGrpNotificationIntent;
 	protected WakeLock mWakeLock;
 	//private int mNotificationCounter = 0;
 	
@@ -43,9 +45,11 @@ public abstract class GenericService extends Service {
 	private int lastNotificationId = 2;
 
 	protected EmotConfiguration mConfig;
+	
 
 	@Override
 	public void onCreate() {
+		
 		Log.i(TAG, "called onCreate()");
 		super.onCreate();
 		mConfig = EmotApplication.getConfig();
@@ -70,10 +74,11 @@ public abstract class GenericService extends Service {
 	private void addNotificationMGR() {
 		mNotificationMGR = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		mNotificationIntent = new Intent(this, ChatScreen.class);
+		mGrpNotificationIntent = new Intent(this, GroupChatScreen.class);
 	}
 
 	protected void notifyClient(String fromJid, String fromUserName, String message,
-			boolean showNotification, boolean silent_notification, boolean is_error) {
+			boolean showNotification, boolean silent_notification, boolean is_error, boolean grpchat, String messageSenderInGrp) {
 		if (!showNotification) {
 			if (is_error)
 				shortToastNotify(getString(R.string.notification_error) + " " + message);
@@ -98,7 +103,7 @@ public abstract class GenericService extends Service {
 			silent_notification = false;		
 		}
 
-		setNotification(fromJid, fromUserName, message, is_error);
+		setNotification(fromJid, fromUserName, message, is_error, grpchat, messageSenderInGrp);
 		setLEDNotification();
 		if (!silent_notification)
 			mNotification.sound = mConfig.notifySound;
@@ -126,7 +131,7 @@ public abstract class GenericService extends Service {
 		mWakeLock.release();
 	}
 	
-	private void setNotification(String fromJid, String fromUserId, String message, boolean is_error) {
+	private void setNotification(String fromJid, String fromUserId, String message, boolean is_error, boolean grpchat, String msgSenderinGrp) {
 		
 		int mNotificationCounter = 0;
 		if (notificationCount.containsKey(fromJid)) {
@@ -140,6 +145,10 @@ public abstract class GenericService extends Service {
 		} else {
 			author = fromUserId;
 		}
+		if(grpchat){
+			author = msgSenderinGrp + "@" + fromJid;
+		}
+		
 		String title = getString(R.string.notification_message, author);
 		String ticker;
 		if (is_error) {
@@ -164,6 +173,7 @@ public abstract class GenericService extends Service {
 				System.currentTimeMillis());
 		mNotification.defaults = 0;
 		Uri userNameUri = Uri.parse(fromJid);
+		if(!grpchat){
 		mNotificationIntent.setData(userNameUri);
 		Log.i(TAG, "Notificaiton from user = "+fromUserId);
 		mNotificationIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, fromJid);
@@ -177,6 +187,18 @@ public abstract class GenericService extends Service {
 		if (mNotificationCounter > 1)
 			mNotification.number = mNotificationCounter;
 		mNotification.flags = Notification.FLAG_AUTO_CANCEL;
+		}else{
+			mGrpNotificationIntent.setData(userNameUri);
+			Log.i(TAG, "Notificaiton from user = "+fromUserId);
+			mGrpNotificationIntent.putExtra("grpName", fromJid);
+			mGrpNotificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			
+			//need to set flag FLAG_UPDATE_CURRENT to get extras transferred
+			PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+					mGrpNotificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+			mNotification.setLatestEventInfo(this, title, message, pendingIntent);	
+		}
 	}
 
 	private void setLEDNotification() {

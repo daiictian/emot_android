@@ -1,8 +1,11 @@
 package com.emot.androidclient.service;
 
 
+import java.util.List;
+
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
+import com.emot.emotobjects.Contact;
 
 
 public interface Smackable {
@@ -25,13 +28,17 @@ public interface Smackable {
 	void setStatusFromConfig();
 	void sendMessage(String user, String message);
 	void sendChatState(String user, String state);
-	void sendGroupMessage(String message);
+	
+	String sendGroupMessage(String message);
+	void createGroup(String grpName);
 	void sendServerPing();
 	void setUserWatching(boolean user_watching);
-	
+	void initMUC(String grpName);
 	void registerCallback(XMPPServiceCallback callBack);
 	void unRegisterCallback();
 	void setAvatar();
+	void joinUsers(List<Contact> members);
+	void joinGroup(String grpName);
 	
 	String getNameForJID(String jid);
 }
