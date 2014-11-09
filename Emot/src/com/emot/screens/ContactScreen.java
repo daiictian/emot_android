@@ -246,7 +246,7 @@ public class ContactScreen extends ActionBarActivity{
 					Log.i(TAG, "--------- SETTING STATUS CONTACTSCREEN ----------");
 					serviceAdapter.setStatusFromConfig();
 				}
-				updateContacts();
+				//updateContacts();
 				
 				// handle server-related intents after connecting to the backend
 				//handleJabberIntent();

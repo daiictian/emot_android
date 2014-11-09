@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -23,6 +24,7 @@ import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 
 import com.emot.androidclient.XMPPRosterServiceAdapter;
+import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.api.EmotHTTPClient;
 import com.emot.common.TaskCompletedRunnable;
@@ -162,15 +164,21 @@ public class ContactUpdater {
 					JSONObject emotter = emotters.getJSONObject(i);
 					
 					//Database entry
-//					ContentValues cvs = new ContentValues();
-//					cvs.put(DBContract.ContactsDBEntry.MOBILE_NUMBER, emotter.getString("mobile"));
-//					cvs.put(DBContract.ContactsDBEntry.EMOT_NAME, emotter.getString("name"));
-//					cvs.put(DBContract.ContactsDBEntry.CONTACT_NAME, contacts.get(emotter.getString("mobile")));
-//					cvs.put(DBContract.ContactsDBEntry.PROFILE_IMG, emotter.getString("profile_image"));
-//					cvs.put(DBContract.ContactsDBEntry.PROFILE_THUMB, emotter.getString("profile_thumbnail"));
-//					Cursor cr = db.query(DBContract.ContactsDBEntry.TABLE_NAME, new String[] {DBContract.ContactsDBEntry.MOBILE_NUMBER} , DBContract.ContactsDBEntry.MOBILE_NUMBER+" = '"+emotter.getString("mobile")+"';", null, null, null, null, null);
+					ContentValues cvs = new ContentValues();
+					cvs.put(RosterProvider.RosterConstants.JID, emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN);
+					cvs.put(RosterProvider.RosterConstants.ALIAS, contacts.get(emotter.getString("mobile")));
+					
+					
+					if(EmotApplication.getAppContext().getContentResolver().update(RosterProvider.CONTENT_URI, cvs, RosterProvider.RosterConstants.JID+" = '"+emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN+"'", null)==0){
+						cvs.put(RosterProvider.RosterConstants.STATUS_MODE, "");
+						cvs.put(RosterProvider.RosterConstants.GROUP, "");
+						EmotApplication.getAppContext().getContentResolver().insert(RosterProvider.CONTENT_URI, cvs);
+						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
+					}
+					
+//					Cursor cr = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, new String[] {RosterProvider.RosterConstants.JID} , RosterProvider.RosterConstants.JID+" = '"+emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN+"'", null, null);
 //					if(cr.getCount()==0){
-//						db.insertWithOnConflict(DBContract.ContactsDBEntry.TABLE_NAME, null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
+//						EmotApplication.getAppContext().getContentResolver().insert(RosterProvider.CONTENT_URI, cvs);
 //						//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
 //						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
 //					}else{

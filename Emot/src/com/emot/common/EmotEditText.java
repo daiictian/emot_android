@@ -186,7 +186,7 @@ public class EmotEditText extends EditText {
 			{
 				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
 				byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-				//Log.i(TAG, "Emot hash is "+hash);
+				Log.i(TAG, "Emot hash is "+hash);
 				Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
 				publishProgress(emot);
 			}

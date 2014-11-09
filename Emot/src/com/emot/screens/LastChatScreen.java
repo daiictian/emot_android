@@ -25,12 +25,12 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.IXMPPRosterCallback.Stub;
+import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.data.ChatProvider;
+import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.RosterProvider;
-import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.RosterProvider.RosterConstants;
 import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.service.XMPPService;
@@ -39,6 +39,7 @@ import com.emot.common.ImageHelper;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
+import com.emot.persistence.ContactUpdater;
 
 public class LastChatScreen extends ActionBarActivity {
 	private static String TAG = LastChatScreen.class.getSimpleName();
@@ -158,6 +159,30 @@ public class LastChatScreen extends ActionBarActivity {
 		
 	}
 	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		bindXMPPService();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unbindXMPPService();
+	}
+	
+	private void unbindXMPPService() {
+		try {
+			unbindService(xmppServiceConnection);
+		} catch (IllegalArgumentException e) {
+			Log.e(TAG, "Service wasn't bound!");
+		}
+	}
+
+	private void bindXMPPService() {
+		bindService(xmppServiceIntent, xmppServiceConnection, BIND_AUTO_CREATE);
+	}
+	
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mConfig = EmotApplication.getConfig();
@@ -188,6 +213,7 @@ public class LastChatScreen extends ActionBarActivity {
 					Log.i(TAG, "--------- SETTING STATUS LASTCHATSCREEN ----------");
 					serviceAdapter.setStatusFromConfig();
 				}
+				updateContacts();
 				// handle server-related intents after connecting to the backend
 				//handleJabberIntent();
 			}
@@ -264,5 +290,17 @@ public class LastChatScreen extends ActionBarActivity {
 	        	useravatar.setImageBitmap(ImageHelper.getRoundedCornerBitmap(bitmap, 10));
 	        }
 	    }
+	}
+	
+	public void updateContacts(){
+		//Update Contacts
+		Log.i(TAG, "Updating contacts !!!!");
+		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
+
+			@Override
+			public void onTaskComplete(String result) {
+				
+			}
+		}, serviceAdapter);
 	}
 }
