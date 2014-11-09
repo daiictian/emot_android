@@ -10,4 +10,8 @@
           android:title="@string/profile"
           android:icon="@drawable/ic_action_person"
           emot:showAsAction="always" />
+    <item android:id="@+id/action_settings"
+          android:title="@string/profile"
+          android:icon="@drawable/icon_setting"
+          emot:showAsAction="always" />
 </menu>

@@ -3,7 +3,9 @@ package com.emot.model;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import org.jivesoftware.smack.provider.PrivacyProvider;
@@ -60,7 +62,7 @@ public class EmotApplication extends Application {
 	private static SharedPreferences prefs;
 	public MemorizingTrustManager mMTM;
 	private EmotConfiguration mConfig;
-	
+	private static List<String> roomJIDs = new ArrayList<String>();
 	public static final String XMPP_IDENTITY_NAME = "emot";
 	public static final String XMPP_IDENTITY_TYPE = "phone";
 
@@ -74,6 +76,14 @@ public class EmotApplication extends Application {
 		mConfig = new EmotConfiguration(PreferenceManager
 				.getDefaultSharedPreferences(this));
 
+	}
+	
+	public static void addRooms(final String room){
+		roomJIDs.add(room);
+	}
+	
+	public static List<String> getRooms(){
+		return roomJIDs;
 	}
 	
 	public static EmotConfiguration getConfig() {

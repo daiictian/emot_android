@@ -87,6 +87,9 @@ public class LastChatScreen extends ActionBarActivity {
 	        case R.id.action_search:
 	            startActivity(new Intent(LastChatScreen.this, ContactScreen.class));
 	            return true;
+	        case R.id.action_settings:
+	        	startActivity(new Intent(LastChatScreen.this, CreateGroup.class));
+	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
@@ -100,7 +103,8 @@ public class LastChatScreen extends ActionBarActivity {
 		Log.i(TAG, "Starting Adapter set ...");
 		String[] projection = new String[] {
 				ChatProvider.ChatConstants._ID,
-				ChatProvider.ChatConstants.JID, 
+				ChatProvider.ChatConstants.JID,
+				ChatProvider.ChatConstants.CHAT_TYPE,
 				"MAX("+ChatProvider.ChatConstants.DATE+")",
 				ChatProvider.ChatConstants.MESSAGE, 
 				ChatProvider.ChatConstants.DELIVERY_STATUS 
@@ -118,9 +122,17 @@ public class LastChatScreen extends ActionBarActivity {
 				Cursor cur = (Cursor) adapter.getItem(position);
 	            cur.moveToPosition(position);
 	            String jid = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.JID));
+	            String type = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
+	            Log.i(TAG, "jid of room or freind is " + jid);
+	            if(type.equals("chat")){
 	            Intent chatIntent = new Intent(LastChatScreen.this, ChatScreen.class);
 				chatIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, jid);
 				startActivity(chatIntent);
+	            }else if(type.equals("groupchat")){
+	            	Intent chatIntent = new Intent(LastChatScreen.this, GroupChatScreen.class);
+					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_NAME, jid);
+					startActivity(chatIntent);	
+	            }
 				//cur.close();
 			}});
 		Log.i(TAG, "Adapter set !!");
@@ -147,6 +159,10 @@ public class LastChatScreen extends ActionBarActivity {
 				wrapper = (LastChatWrapper) row.getTag();
 			}
 			String user = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.JID));
+			String type = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
+			if(type.equals("groupchat")){
+			EmotApplication.addRooms(user);
+			}
 			String message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 			String status = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
 			boolean isNew = false;
@@ -212,6 +228,9 @@ public class LastChatScreen extends ActionBarActivity {
 				} else if (mConfig.presence_required && isConnected()){
 					Log.i(TAG, "--------- SETTING STATUS LASTCHATSCREEN ----------");
 					serviceAdapter.setStatusFromConfig();
+				}else if(!isConnected()){
+					Log.i(TAG, "--------- TRYING TO CONNECT ----------");
+					serviceAdapter.connect();
 				}
 				updateContacts();
 				// handle server-related intents after connecting to the backend
@@ -241,7 +260,42 @@ public class LastChatScreen extends ActionBarActivity {
 		
 		public void populateRow(String user, String last_chat, boolean isNew){
 			//username.setText(user);
-			new UpdateRow().execute(user);
+			
+			
+			//new UpdateRow().execute(user);
+			
+			/*Doing in main thread*/
+			String jid = user;
+			String alias = jid.split("@")[0];
+			byte[] avatar = null;
+			String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";
+			String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS, RosterProvider.RosterConstants.AVATAR};
+			Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
+			Log.i(TAG, "users found length = "+cursor.getCount());
+			if(cursor.getCount()>0){
+				while(cursor.moveToNext()){
+					alias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
+					Log.i(TAG, "chat alias : "+alias);
+					avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
+					Log.i(TAG, "avatar : "+avatar);
+					
+				}
+			}
+			cursor.close();
+			Contact contact = new Contact(alias, jid);
+			contact.setAvatar(avatar);
+			username.setText(contact.getName());
+        	byte[] avt = contact.getAvatar();
+        	Bitmap bitmap;
+        	if(avatar!=null){
+				bitmap = BitmapFactory.decodeByteArray(avt , 0, avatar.length);
+			}else{
+				bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+			}
+        	useravatar.setImageBitmap(ImageHelper.getRoundedCornerBitmap(bitmap, 10));
+        	
+        	
+			
 			lastchat.setText(last_chat);
 			if(isNew){
 				lastchat.setTextColor(EmotApplication.getAppContext().getResources().getColor(R.color.green));

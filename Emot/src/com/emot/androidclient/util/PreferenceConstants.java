@@ -1,6 +1,7 @@
 package com.emot.androidclient.util;
 
 public class PreferenceConstants {
+	public final static String ROOMS = "rooms";
 	public final static String JID = "account_jabberID";
 	public final static String PASSWORD = "account_jabberPW";
 	public final static String CUSTOM_SERVER = "account_customserver";
