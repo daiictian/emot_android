@@ -5,6 +5,6 @@ interface IXMPPGroupChatService {
 	String sendGroupMessage(String user, String message);
 	boolean isAuthenticated();
 	void clearNotifications(String Jid);
-	void createGroup(String grpName, out List<Contact> members);
-	void joinGroup(String grpName, boolean isCreateGroup);
+	void createGroup(String grpName,inout List<Contact> members);
+	void joinGroup(String grpName, boolean isCreateGroup, long date);
 }

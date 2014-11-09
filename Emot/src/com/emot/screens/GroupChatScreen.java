@@ -65,6 +65,7 @@ public class GroupChatScreen extends ActionBarActivity {
 	private ServiceConnection mServiceConnection;
 	private XMPPGroupChatServiceAdapter mServiceAdapter;
 	private String lastSeen;
+	private long mDate;
 	private  String grpName = "grpname";
 	private boolean isCreateGrp;
 	private static final int DELAY_NEWMSG = 2000;
@@ -162,6 +163,8 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		mServiceConnection = new ServiceConnection() {
 
+			
+
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.i(TAG, "called onServiceConnected()");
 				mServiceAdapter = new XMPPGroupChatServiceAdapter(
@@ -174,7 +177,7 @@ public class GroupChatScreen extends ActionBarActivity {
 				mServiceAdapter.createGroup(grpName, grpchatmembers);
 				
 				}
-				mServiceAdapter.joinExistingGroup(grpName, isCreateGrp);
+				mServiceAdapter.joinExistingGroup(grpName, isCreateGrp, mDate);
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
@@ -393,6 +396,8 @@ public class GroupChatScreen extends ActionBarActivity {
 			mScreenName = screenName;
 			mJID = JID;
 		}
+		
+		
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -406,6 +411,7 @@ public class GroupChatScreen extends ActionBarActivity {
 
 			int _id = cursor.getInt(cursor
 					.getColumnIndex(ChatProvider.ChatConstants._ID));
+			mDate = dateMilliseconds;
 			String date = getDateString(dateMilliseconds);
 			String message = cursor.getString(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
@@ -450,6 +456,13 @@ public class GroupChatScreen extends ActionBarActivity {
 				"yy-MM-dd HH:mm:ss");
 		Date date = new Date(milliSeconds);
 		return dateFormater.format(date);
+	}
+	
+	private Date getDate(long milliSeconds) {
+		SimpleDateFormat dateFormater = new SimpleDateFormat(
+				"yy-MM-dd HH:mm:ss");
+		Date date = new Date(milliSeconds);
+		return date;
 	}
 
 	public class ChatItemWrapper {

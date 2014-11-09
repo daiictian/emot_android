@@ -199,22 +199,25 @@ public class XMPPService extends GenericService {
 			@Override
 			public void createGroup(String grpName,
 					List<Contact> members){
+				Log.i(TAG, "members   ----" +members);
 				mSmackable.initMUC(grpName);
 				mSmackable.joinUsers(members);
 				
 			}
 
 			@Override
-			public void joinGroup(String grpName, boolean isCreateGroup)
-					throws RemoteException {
+			public void joinGroup(String grpName, boolean isCreateGroup,
+					long date) throws RemoteException {
 				Log.i(TAG, "isCreateGroup is " +isCreateGroup);
 				if(!isCreateGroup){
 					Log.i(TAG, "joining group " +grpName);
-					mSmackable.joinGroup(grpName);
+					mSmackable.joinGroup(grpName, date);
 					
 				}
 				
 			}
+
+			
 
 			
 
