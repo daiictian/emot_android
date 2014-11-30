@@ -12,6 +12,7 @@
           emot:showAsAction="always" />
     <item android:id="@+id/action_settings"
           android:title="@string/profile"
-          android:icon="@drawable/icon_setting"
+          android:icon="@drawable/ic_setting"
+          
           emot:showAsAction="always" />
 </menu>
