@@ -18,14 +18,16 @@
             android:layout_above="@id/chatContentLeft"
             android:text="Member"
             android:textColor="@color/dark_grey"
-            android:textSize="8sp" />
+            android:textSize="15sp" />
 
         <com.emot.common.EmotTextView
             android:id="@+id/chatContentLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="someting rubissh for testing the layout bro"
-            android:textColor="@color/black" />
+            android:textColor="@color/white" 
+            android:textSize="15sp"
+            android:textStyle="bold"/>
 
         <TextView
             android:id="@+id/chatDateLeft"
@@ -52,7 +54,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right"
-        android:background="@drawable/chat_bg" >
+        android:background="@drawable/chat_bg_right" >
         
         
 		<TextView
@@ -72,7 +74,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/grpMemberName2"
             android:text="Some rubbish again brother."
-            android:textColor="@color/black" />
+            android:textColor="@color/dark_grey"
+            android:textStyle="bold"
+            android:textSize="15sp" />
         
         
 
