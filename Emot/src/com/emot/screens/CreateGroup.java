@@ -11,16 +11,22 @@ import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.screens.ContactScreen.ShowContacts;
 
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.SearchView;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor.AutoCloseOutputStream;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -34,6 +40,7 @@ public class CreateGroup extends ActionBarActivity {
 	private ShowContacts showContactsThread;
 	private Button createGroup;
 	private EditText grpName;
+	private SearchView participantSelector;
 	private static final String TAG = "CreateGroup";
 	final static private String[] CONTACT_PROJECTION = new String[] {
 		RosterConstants.ALIAS, RosterConstants.STATUS_MESSAGE,
@@ -46,13 +53,55 @@ public class CreateGroup extends ActionBarActivity {
 		mContactList = (ListView)findViewById(R.id.listviewContact);
 		createGroup = (Button)findViewById(R.id.createGroup);
 		grpName = (EditText)findViewById(R.id.grpname);
+		participantSelector = (SearchView)findViewById(R.id.search_view);
+		SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+		
+		participantSelector.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+		
 		contacts = new ArrayList<Contact>();
 		contactAdapter = new SelectContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		mContactList.setAdapter(contactAdapter);
 		setOnClickListeners();
-		refreshContacts();
+		
+		
 	}
 	
+	
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		refreshContacts();
+		participantSelector.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+			
+			@Override
+			public boolean onQueryTextSubmit(String query) {
+				Log.i(TAG, "Sstring change : "+query);
+            	contactAdapter.getFilter().filter(query);
+                return true; 
+			}
+			
+			@Override
+			public boolean onQueryTextChange(String arg0) {
+				Log.i(TAG, "Sstring submit : "+arg0);
+				contactAdapter.getFilter().filter(arg0);
+				return true;
+			}
+		});
+		
+	}
+
+
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		this.finish();
+	}
+
+
+
 	private void setOnClickListeners(){
 		
 		createGroup.setOnClickListener(new View.OnClickListener() {
@@ -61,6 +110,8 @@ public class CreateGroup extends ActionBarActivity {
 			ArrayList<Contact> selectedContacts = new ArrayList<Contact>();
 			@Override
 			public void onClick(View v) {
+				
+				
 				for(int i=0; i < contacts.size(); i++){
 					if(contacts.get(i).isSelected()){
 						Log.i(TAG, "selected contacts is " + contacts.get(i).getName());
@@ -68,20 +119,30 @@ public class CreateGroup extends ActionBarActivity {
 						
 					}
 				}
-				//if(selectedContacts.size() > 0){
+				
+				if(grpName.getText().toString() != null && grpName.getText().toString().length() != 0){
+				if(selectedContacts.size() > 0){
 					Intent i = new Intent(CreateGroup.this, GroupChatScreen.class);
 					
 					i.putParcelableArrayListExtra("groupmembers", selectedContacts);
 					i.putExtra("grpName", grpName.getText().toString());
 					i.putExtra("creategroup?", true);
 					startActivity(i);
+					selectedContacts.clear();
 					
-			//	}
+				}else{
+					Toast.makeText(CreateGroup.this, "Please select at least one group member", Toast.LENGTH_LONG).show();
+				}
+				}else{
+					Toast.makeText(CreateGroup.this, "Please enter group name", Toast.LENGTH_LONG).show();
+				}
 				
 			}
 		});
 		
 	}
+	
+	
 	
 	public void refreshContacts(){
 		Log.i(TAG, "Refreshing contacts !!!!");

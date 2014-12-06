@@ -60,11 +60,11 @@ public class XMPPGroupChatServiceAdapter {
 	}
 	
 	
-	public String sendMessage(String user, String message) {
+	public String sendMessage(String user, String message, String tag) {
 		String piD = "";
 		try {
 			Log.i(TAG, "Called sendMessage(): " + grpJabberID + ": " + message);
-			 piD =  xmppGrpServiceStub.sendGroupMessage(user, message);
+			 piD =  xmppGrpServiceStub.sendGroupMessage(user, message, tag);
 		} catch (RemoteException e) {
 			Log.e(TAG, "caught RemoteException: " + e.getMessage());
 		}

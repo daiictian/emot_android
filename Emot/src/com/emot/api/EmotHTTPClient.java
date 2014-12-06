@@ -128,7 +128,8 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 				Log.d(TAG, "Content encoding : " + contentEncoding);
 				System.out.println("Content encoding : " + contentEncoding);
 				br = new BufferedReader(new InputStreamReader(in));
-				while (br.ready() && (line = br.readLine()) != null) {
+				//Log.i(TAG, "Single Response String is " +br.readLine() + " ready value = "+br.ready());
+				while (/*br.ready() && */(line = br.readLine()) != null) {
 					Log.i(TAG, "One line read ... "+line);
 					sb.append(line);
 				}

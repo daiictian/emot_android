@@ -19,6 +19,8 @@ import android.os.Messenger;
 import android.os.Parcelable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -73,73 +75,16 @@ public class GroupChatScreen extends ActionBarActivity {
 	public final static String INTENT_GRPCHAT_NAME = "grpName";
 
 	private static final String[] PROJECTION_FROM = new String[] {
-			ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
-			ChatProvider.ChatConstants.DIRECTION,
-			ChatProvider.ChatConstants.PACKET_ID,
-			ChatProvider.ChatConstants.JID, ChatProvider.ChatConstants.MESSAGE,
-			ChatProvider.ChatConstants.DELIVERY_STATUS ,
-			ChatProvider.ChatConstants.MESSAGE_SENDER_IN_GROUP};
+		ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
+		ChatProvider.ChatConstants.DIRECTION,
+		ChatProvider.ChatConstants.PACKET_ID,
+		ChatProvider.ChatConstants.JID, ChatProvider.ChatConstants.MESSAGE,
+		ChatProvider.ChatConstants.DELIVERY_STATUS ,
+		ChatProvider.ChatConstants.MESSAGE_SENDER_IN_GROUP};
 
 	private static final int[] PROJECTION_TO = new int[] { R.id.chat_date,
-			R.id.chat_from, R.id.chat_message };
+		R.id.chat_from, R.id.chat_message };
 
-	//
-	// private class EmotHistoryTask extends AsyncTask<EmotDBHelper,
-	// ChatMessage, Void>{
-	//
-	//
-	//
-	// @Override
-	// protected void onPostExecute(Void result) {
-	//
-	// Log.i(TAG, "chats = "+chatList.size());
-	// //chatView.setSelection(chatList.size()-1);
-	// }
-	//
-	// @Override
-	// protected void onProgressUpdate(ChatMessage... values) {
-	// if(values!=null){
-	// chatList.add(values[0]);
-	// chatlistAdapter.notifyDataSetChanged();
-	// }
-	// super.onProgressUpdate(values);
-	// }
-	//
-	// @Override
-	// protected Void doInBackground(EmotDBHelper... params) {
-	// EmotDBHelper emotHistory = params[0];
-	// Cursor result = emotHistory.getEmotHistory(chatFriend);
-	// boolean valid = result.moveToFirst();
-	// String chat = "";
-	// String location = "";
-	// String datetime = "";
-	// boolean emotlocation = false;
-	// if(valid && result != null && result.getCount() > 0){
-	// for(int i = 0; i < result.getCount(); i++){
-	// chat =
-	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOTS));
-	// location =
-	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.EMOT_LOCATION));
-	// datetime =
-	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
-	// result.moveToNext();
-	// Log.i(TAG, "chat from DB is " +chat);
-	// ChatMessage newChat = null;
-	// if(location.equals("left")){
-	// newChat = new ChatMessage(chat,datetime, false);
-	// }else if(location.equals("right")){
-	// newChat = new ChatMessage(chat,datetime, true);
-	// }
-	// publishProgress(newChat);
-	// }
-	//
-	// }
-	// result.close();
-	// return null;
-	// }
-	//
-	// }
-	//
 
 	@Override
 	protected void onResume() {
@@ -153,6 +98,8 @@ public class GroupChatScreen extends ActionBarActivity {
 		unbindXMPPService();
 	}
 
+
+
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
@@ -163,7 +110,7 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		mServiceConnection = new ServiceConnection() {
 
-			
+
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.i(TAG, "called onServiceConnected()");
@@ -172,10 +119,10 @@ public class GroupChatScreen extends ActionBarActivity {
 
 				mServiceAdapter.clearNotifications(grpName);
 				if(isCreateGrp){
-					
-					
-				mServiceAdapter.createGroup(grpName, grpchatmembers);
-				
+
+
+					mServiceAdapter.createGroup(grpName, grpchatmembers);
+
 				}
 				mServiceAdapter.joinExistingGroup(grpName, isCreateGrp, mDate);
 			}
@@ -243,27 +190,16 @@ public class GroupChatScreen extends ActionBarActivity {
 		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
 		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);
 		userTitle.setText(grpName);
-
+		chatEntry.addTextChangedListener(groupMessageWatcher);
 		ab.setTitle(chatAlias);
 		ab.setSubtitle(lastSeen);
-		/*
-		 * if(incomingIntent != null){
-		 * 
-		 * userName = incomingIntent.getStringExtra("USERNAME");
-		 * userTitle.setText(userName); }
-		 */
-		// handler = new Handler();
-		// emotHistoryDB = EmotDBHelper.getInstance(ChatScreen.this);
-		// EmotHistoryTask eht = new EmotHistoryTask();
-		// eht.execute(new EmotDBHelper[]{emotHistoryDB});
-		// chatList.add("Howdy");
 
 		sendButton.setEnabled(true);
 
 		sendButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				messageID = sendMessage(chatEntry.getText().toString());
+				messageID = sendMessage(chatEntry.getText().toString(), occupantTag);
 			}
 		});
 
@@ -278,44 +214,71 @@ public class GroupChatScreen extends ActionBarActivity {
 			}
 		});
 		registerXMPPService();
-		// setChatWindowAdapter();
 
-		// new
-		// EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
-
-		// EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
-		// EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("INSERT INTO emots select * from emoticons");
-
-		// ContentValues cvs = new ContentValues();
-		// String imgHash = EmotApplication.randomId();
-		// Log.i(TAG, "Image hash  = "+ imgHash);
-		// cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
-		// cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
-		// cvs.put(DBContract.EmotsDBEntry.EMOT_IMG,
-		// ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.mad)));
-		// EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons",
-		// null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
-		//
-		// cvs = new ContentValues();
-		// imgHash = EmotApplication.randomId();
-		// Log.i(TAG, "Image hash  = "+ imgHash);
-		// cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
-		// cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
-		// cvs.put(DBContract.EmotsDBEntry.EMOT_IMG,
-		// ImageHelper.getByteArray(BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(),R.drawable.sad)));
-		// EmoticonDBHelper.getInstance(ChatScreen.this).getWritableDatabase().insertWithOnConflict("emoticons",
-		// null, cvs, SQLiteDatabase.CONFLICT_REPLACE);
 
 	}
 
-	private String sendMessage(String message) {
+	private TextWatcher groupMessageWatcher = new TextWatcher() {
+
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before, int count) {
+			if(s.length() > 0 && s.charAt(start) =='@'){
+				occupantTag = "";
+				isStartListeningForTag = true;
+				return;
+			}
+			if(s.length() > 0 && isStartListeningForTag && s.charAt(start) == ' ' ){
+				isStartListeningForTag = false;	
+			}
+			if(s.length() > 0 && isStartListeningForTag)
+				occupantTag(s.charAt(start));
+		}
+
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count,
+				int after) {
+
+
+		}
+
+		@Override
+		public void afterTextChanged(Editable s) {
+
+
+		}
+	};
+
+	private boolean isStartListeningForTag;
+
+	/**
+	 * @param message
+	 * check if group message intended to be sent has any occupant tagged
+	 */
+	private void isTagPresentInMessage(final String message){
+
+		//find all occurences of '@'
+
+
+	}
+
+	private String occupantTag = "";
+
+	private void occupantTag(final char s){
+		occupantTag = occupantTag.trim();
+		occupantTag =  occupantTag + s;
+
+		Log.i(TAG, "ocupant tag is " +occupantTag);
+
+	}
+
+	private String sendMessage(String message, String tag) {
 		chatEntry.setText(null);
-		
+
 		if (!mServiceAdapter.isServiceAuthenticated()) {
 			// Show single tick and try later
 			// showToastNotification(R.string.toast_stored_offline);
 		}
-		return mServiceAdapter.sendMessage(grpName, message);
+		return mServiceAdapter.sendMessage(grpName, message, occupantTag);
 	}
 
 	private void setAliasFromDB() {
@@ -396,8 +359,8 @@ public class GroupChatScreen extends ActionBarActivity {
 			mScreenName = screenName;
 			mJID = JID;
 		}
-		
-		
+
+
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -422,7 +385,7 @@ public class GroupChatScreen extends ActionBarActivity {
 				Log.i(TAG, "Comparing if sender is same as reciever");
 				from_me = true;	
 			}
-			
+
 			String jid = cursor.getString(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.JID));
 			int delivery_status = cursor
@@ -457,7 +420,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		Date date = new Date(milliSeconds);
 		return dateFormater.format(date);
 	}
-	
+
 	private Date getDate(long milliSeconds) {
 		SimpleDateFormat dateFormater = new SimpleDateFormat(
 				"yy-MM-dd HH:mm:ss");
@@ -475,7 +438,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		public View chatBoxRight;
 		public TextView mDateTimeRight;
 		public ImageView mChatTickRight;
-		
+
 		private TextView mGrpMember;
 
 		ChatItemWrapper(View base) {
