@@ -3,9 +3,6 @@ package com.emot.androidclient.service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -18,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
+import java.util.Locale;
 
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Chat;
@@ -45,7 +43,6 @@ import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.DNSUtil;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.dns.DNSJavaResolver;
-
 import org.jivesoftware.smackx.ChatState;
 import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.FormField;
@@ -57,10 +54,10 @@ import org.jivesoftware.smackx.entitycaps.EntityCapsManager;
 import org.jivesoftware.smackx.entitycaps.cache.SimpleDirectoryPersistentCache;
 import org.jivesoftware.smackx.entitycaps.provider.CapsExtensionProvider;
 import org.jivesoftware.smackx.forward.Forwarded;
-import org.jivesoftware.smackx.packet.ChatStateExtension;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.packet.ChatStateExtension;
 import org.jivesoftware.smackx.packet.DelayInfo;
 import org.jivesoftware.smackx.packet.DelayInformation;
 import org.jivesoftware.smackx.packet.DiscoverInfo;
@@ -98,6 +95,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.telephony.gsm.SmsMessage.MessageClass;
 import android.text.format.Time;
+import android.os.Handler;
 import android.util.Log;
 
 import com.emot.androidclient.data.ChatProvider;
@@ -114,8 +112,6 @@ import com.emot.common.ImageHelper;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.screens.UpdateProfileScreen;
-
-import de.duenndns.ssl.MemorizingTrustManager;
 
 public class SmackableImp implements Smackable {
 	final static private String TAG = SmackableImp.class.getSimpleName();
@@ -135,10 +131,30 @@ public class SmackableImp implements Smackable {
 	final static private String SEND_FAILED_SELECTION =
 		ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
 		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_FAILED;
+	
+	final static private String[] SEND_UNACKNOWLEDGED_PROJECTION = new String[] {
+		ChatConstants._ID, ChatConstants.JID,
+		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID };
+	final static private String SEND_UNACKNOWLEDGED_SELECTION =
+		ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
+		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_SENT_OR_READ;
 
 	static final DiscoverInfo.Identity EMOT_IDENTITY = new DiscoverInfo.Identity("client",
 					EmotApplication.XMPP_IDENTITY_NAME,
 					EmotApplication.XMPP_IDENTITY_TYPE);
+	
+	private final static int INTERVAL = 1000 * 30;
+	Handler mHandler = new Handler();
+	
+	Runnable mHandlerTask = new Runnable()
+	{
+	     @Override 
+	     public void run() {
+	    	  Log.i(TAG, "trying for unacknowledged message");
+	          sendNotacknowledgedMessages();
+	          mHandler.postDelayed(mHandlerTask, INTERVAL);
+	     }
+	};
 
 	static File capsCacheDir = null; ///< this is used to cache if we already initialized EntityCapsCache
 
@@ -502,6 +518,8 @@ public class SmackableImp implements Smackable {
 			}
 		} catch (java.io.IOException e) {
 			Log.e(TAG, "Could not init Entity Caps cache: " + e.getLocalizedMessage());
+		} catch(Exception e){
+			e.printStackTrace();
 		}
 
 		// reference PingManager, set ping flood protection to 10s
@@ -718,7 +736,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void tryToConnect(boolean create_account) throws EmotXMPPException {
-	
+		mHandlerTask.run();
 		try {
 			if (mXMPPConnection.isConnected()) {
 				try {
@@ -743,7 +761,9 @@ public class SmackableImp implements Smackable {
 				}
 				public void reconnectingIn(int seconds) { }
 				public void reconnectionFailed(Exception e) { }
-				public void reconnectionSuccessful() { }
+				public void reconnectionSuccessful() {
+					Log.i(TAG, "Reconnection success full");
+				}
 			};
 			mXMPPConnection.addConnectionListener(mConnectionListener);
 			Thread invListener = new Thread(new Runnable() {
@@ -786,14 +806,13 @@ public class SmackableImp implements Smackable {
 						Log.i(TAG, "rooms to join size " +roomstoJoin.length);
 						for(int i = 0; i < roomstoJoin.length; i++){
 							if(roomstoJoin[i] != null && !roomstoJoin[i].equals("")){
-							mGroupChat = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
-							Log.i(TAG, "joining room " + roomstoJoin[i]);
-							mGroupChat.join(mConfig.userName+"@conference.emot-net");
+								mGroupChat = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
+								Log.i(TAG, "joining room " + roomstoJoin[i]);
+								mGroupChat.join(mConfig.userName+"@conference.emot-net");
+							}
 						}
 					}
-					
-				}
-					
+					mHandlerTask.run();
 				}
 				//initMUC("myroom");
 				
@@ -1011,6 +1030,50 @@ public class SmackableImp implements Smackable {
 			mXMPPConnection.sendPacket(newMessage);		// must be after marking delivered, otherwise it may override the SendFailListener
 		}
 		cursor.close();
+	}
+	
+	public void sendNotacknowledgedMessages() {
+		try{
+			Log.i(TAG, " -- sendnotacknowledgedMessages -- ");
+			Cursor cursor = mContentResolver.query(ChatProvider.CONTENT_URI,
+					SEND_UNACKNOWLEDGED_PROJECTION, SEND_UNACKNOWLEDGED_SELECTION,
+					null, null);
+			final int      _ID_COL = cursor.getColumnIndexOrThrow(ChatConstants._ID);
+			final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
+			final int      MSG_COL = cursor.getColumnIndexOrThrow(ChatConstants.MESSAGE);
+			final int       TS_COL = cursor.getColumnIndexOrThrow(ChatConstants.DATE);
+			final int PACKETID_COL = cursor.getColumnIndexOrThrow(ChatConstants.PACKET_ID);
+			ContentValues mark_sent = new ContentValues();
+			mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+			while (cursor.moveToNext()) {
+				int _id = cursor.getInt(_ID_COL);
+				String toJID = cursor.getString(JID_COL);
+				String message = cursor.getString(MSG_COL);
+				String packetID = cursor.getString(PACKETID_COL);
+				long ts = cursor.getLong(TS_COL);
+				Log.d(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
+				final Message newMessage = new Message(toJID, Message.Type.chat);
+				newMessage.setBody(message);
+				DelayInformation delay = new DelayInformation(new Date(ts));
+				newMessage.addExtension(delay);
+				newMessage.addExtension(new DelayInfo(delay));
+				newMessage.addExtension(new DeliveryReceiptRequest());
+				if ((packetID != null) && (packetID.length() > 0)) {
+					newMessage.setPacketID(packetID);
+				} else {
+					packetID = newMessage.getPacketID();
+					mark_sent.put(ChatConstants.PACKET_ID, packetID);
+				}
+				Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY
+					+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
+				mContentResolver.update(rowuri, mark_sent,
+							null, null);
+				mXMPPConnection.sendPacket(newMessage);		// must be after marking delivered, otherwise it may override the SendFailListener
+			}
+			cursor.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	public static void sendOfflineMessage(ContentResolver cr, String toJID, String message) {
@@ -1404,7 +1467,7 @@ public class SmackableImp implements Smackable {
 							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
 								Log.i(TAG, "message failed !!!");
 								mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
-								//sendFailedMessages();
+								sendFailedMessages();
 							}
 							return; // we do not want to add errors as "incoming messages"
 						}
@@ -1508,6 +1571,12 @@ public class SmackableImp implements Smackable {
 
 	private void addChatMessageToDB(int direction, String JID,
 			String message, int delivery_status, long ts, String packetID, String chatType, String messageSenderinGroup) {
+
+		Cursor oldChat = mContentResolver.query(ChatProvider.CONTENT_URI, new String[]{ChatProvider.ChatConstants.PACKET_ID}, ChatProvider.ChatConstants.PACKET_ID+" = '"+packetID+"'", null, null);
+		if(oldChat.getCount()>0){
+			Log.i(TAG, "Packet ID already present");
+			return;
+		}
 		ContentValues values = new ContentValues();
 
 		values.put(ChatConstants.DIRECTION, direction);

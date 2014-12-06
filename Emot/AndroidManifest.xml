@@ -44,7 +44,6 @@
         <activity
             android:name=".CreateGroup"
             android:label="@string/app_name" >
-            
         </activity>
         <activity
             android:name=".LastChatScreen"
@@ -54,15 +53,13 @@
         <activity
             android:name=".GroupChatScreen"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
             android:theme="@style/CustomActionBarTheme" >
-           
         </activity>
         <activity
             android:name=".Registration"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
-            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -558,7 +558,7 @@ public class XMPPService extends GenericService {
 		mSmackable.registerCallback(new XMPPServiceCallback() {
 			public void newMessage(String from, String message, boolean silent_notification, boolean grpchat, String msgSenderInGrp) {
 				logInfo("notification: " + from);
-				notifyClient(from, mSmackable.getNameForJID(from), message, !mIsBoundTo.contains(from), silent_notification, false, grpchat,msgSenderInGrp );
+				notifyClient(from, mSmackable.getNameForJID(from), message, !mIsBoundTo.contains(from), silent_notification, false, grpchat, msgSenderInGrp );
 				//notifyClient(from, "testi@conference.emot-net", message, !mIsBoundTo.contains(from), silent_notification, false, grpchat);
 			}
 
