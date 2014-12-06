@@ -170,12 +170,12 @@ public class XMPPService extends GenericService {
 		mGroupServiceChatConnection = new IXMPPGroupChatService.Stub() {
 			
 			@Override
-			public String sendGroupMessage(String user, String message) throws RemoteException {
+			public String sendGroupMessage(String user, String message, String tag) throws RemoteException {
 				String pid = "";
 				if (mSmackable != null){
 				//	return mSmackable.sendGroupMessage(message);
 					
-				pid =  mSmackable.sendGroupMessage(message);
+				pid =  mSmackable.sendGroupMessage(message, tag);
 				}
 				return pid;
 				
@@ -199,7 +199,7 @@ public class XMPPService extends GenericService {
 			@Override
 			public void createGroup(String grpName,
 					List<Contact> members){
-				Log.i(TAG, "members   ----" +members);
+				Log.i(TAG, "members   ----" +members.get(0).getName());
 				mSmackable.initMUC(grpName);
 				mSmackable.joinUsers(members);
 				

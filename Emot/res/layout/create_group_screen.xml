@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/com.emot.screens"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -10,51 +11,44 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="5dp"
+        android:orientation="vertical"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
-        android:orientation="vertical" >
-        
-        <EditText 
+        android:paddingTop="5dp" >
+
+        <EditText
             android:id="@+id/grpname"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Please Enter group name"
-              />  
-            
-       
+            android:hint="@string/enterGroupName" />
 
-     
-        <AutoCompleteTextView 
-            android:id="@+id/countryselector"
+        <android.support.v7.widget.SearchView
+            android:id="@+id/search_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/selectContact" />
-        
-        <RelativeLayout 
-             android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-           
-        <ListView
-        android:id="@+id/listviewContact"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:dividerHeight="1dp"
-        android:divider="@color/grey">
-    </ListView>
+            app:iconifiedByDefault="false"
+            app:queryHint="@string/selectParticipant" />
 
-       <Button
-           android:id="@+id/createGroup"
-           style="@style/btnStyleOrange"
-           android:layout_width="match_parent"
-           android:layout_height="40dp"
-           android:layout_alignParentBottom="true"
-           
-           android:text="@string/createGroup" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
 
-       </RelativeLayout>
+            <ListView
+                android:id="@+id/listviewContact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@color/grey"
+                android:dividerHeight="1dp" >
+            </ListView>
+
+            <Button
+                android:id="@+id/createGroup"
+                style="@style/btnStyleOrange"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_alignParentBottom="true"
+                android:text="@string/createGroup" />
+        </RelativeLayout>
     </LinearLayout>
-
-    
 
 </LinearLayout>

@@ -12,14 +12,19 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 
 import org.jivesoftware.smack.AccountManager;
+import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
@@ -91,6 +96,8 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.telephony.gsm.SmsMessage.MessageClass;
+import android.text.format.Time;
 import android.util.Log;
 
 import com.emot.androidclient.data.ChatProvider;
@@ -1412,11 +1419,11 @@ public class SmackableImp implements Smackable {
 						int is_new = (cc == null) ? ChatConstants.DS_NEW : ChatConstants.DS_SENT_OR_READ;
 						if (msg.getType() == Message.Type.error)
 							is_new = ChatConstants.DS_FAILED;
-						if(msg.getType() == Message.Type.chat){
+						if(msg.getType() == Message.Type.chat && !msg.getBody().contains("you have been tagged")){
 						addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
 						if (direction == ChatConstants.INCOMING)
 							mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), false, getBareGJID(from));
-						}else if(msg.getType() == Message.Type.groupchat){
+						}else if(msg.getType() == Message.Type.groupchat || msg.getBody().contains("you have been tagged")){
 							addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, null);
 							if (direction == ChatConstants.INCOMING)
 								mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), true, getBareGJID(from));	
@@ -1425,7 +1432,7 @@ public class SmackableImp implements Smackable {
 
 					String chatMessage = msg.getBody();
 					
-
+					Log.i(TAG, "message received is "+msg.getBody() + "type is " + msg.getType());
 					// display error inline
 					if (msg.getType() == Message.Type.error) {
 						if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED))
@@ -1446,10 +1453,10 @@ public class SmackableImp implements Smackable {
 
 					//addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID());
 					if (direction == ChatConstants.INCOMING){
-						if(msg.getType() == Message.Type.chat){
+						if(msg.getType() == Message.Type.chat && !msg.getBody().contains("you have been tagged")){
 							addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
 						mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), false, getBareGJID(from));
-						}else if(msg.getType() == Message.Type.groupchat){
+						}else if(msg.getType() == Message.Type.groupchat ||  msg.getBody().contains("you have been tagged")){
 							
 								Log.i(TAG, "Message from group member " +getBareGJID(from));
 							addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, getBareGJID(from));
@@ -1749,10 +1756,10 @@ public class SmackableImp implements Smackable {
 		}
 	}
 
-	public String sendGroupMessage(String message) {
+	public String sendGroupMessage(String message, String tag) {
 		Message newMessage = new Message();
 		try {
-			Log.i(TAG, "Sending group message " +message);
+			Log.i(TAG, "Sending group message " +message + "tag is " +tag);
 			
 			newMessage.setBody(message);
 			
@@ -1761,6 +1768,19 @@ public class SmackableImp implements Smackable {
 				//addChatMessageToDB(ChatConstants.OUTGOING, mGroupChat.getRoom(), message, ChatConstants.DS_SENT_OR_READ,
 				//		System.currentTimeMillis(), newMessage.getPacketID(), GROUPCHATTYPE,  mConfig.userName);
 				//mXMPPConnection.sendPacket(newMessage);
+			Chat chat =	mGroupChat.createPrivateChat(tag+"@emot-net", new MessageListener() {
+					
+					@Override
+					public void processMessage(Chat arg0, Message arg1) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			Message m = new Message("you have been tagged by vishal", Message.Type.headline);
+			
+			
+			chat.sendMessage(m);
+			m.setFrom(mGroupChat.getRoom());
 				mGroupChat.sendMessage(newMessage.getBody());
 				
 			} else {
@@ -1795,20 +1815,43 @@ public class SmackableImp implements Smackable {
 		return date;
 	}
 	
+	ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+	private static boolean sStopService = false;
 	
-	
-	public void joinGroup(String grpName, long pdate) {
+	public void joinGroup(final String grpName, long pdate) {
+
+		final DiscussionHistory dh = new DiscussionHistory();
+		Date date = getDate(pdate);
+		dh.setSince(date);
+		final long timeout = 10000;
 		mGroupChat = new MultiUserChat(mXMPPConnection, grpName);
-		try {
-			DiscussionHistory dh = new DiscussionHistory();
-			Date date = getDate(pdate);
-			dh.setSince(date);
-			long timeout = 10000;
-			mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
-		} catch (XMPPException e) {
-			Log.i(TAG, "Error joining group " +grpName);
-			e.printStackTrace();
-		}
+		scheduledExecutorService.schedule(new Runnable() {
+
+			@Override
+			public void run() {
+				if(mXMPPConnection != null && !mXMPPConnection.isAuthenticated() && !sStopService){
+
+				}else if(sStopService){
+					
+					scheduledExecutorService.shutdown();
+				}else{
+					
+					try {
+						sStopService = true;
+						
+						mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+					} catch (XMPPException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
+			}
+		}, 1, TimeUnit.SECONDS);
 		
+		
+		
+
+
 	}
 }
