@@ -100,7 +100,7 @@ public class EmotTextView extends TextView {
 					//Set to some default if not found
 					if(emot_img == null){
 						Log.i(TAG, "Emoticon not found !!!");
-						emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.asin);
+						emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
 					}
 					Log.i(TAG, "Replacing with emoticon !!!");
 					replaceWithEmot(spannable, startFound, endFound, emot_img);
@@ -196,7 +196,7 @@ public class EmotTextView extends TextView {
 						//Set to some default if not found
 						if(emot_img == null){
 							Log.i(TAG, "Emoticon not found !!!");
-							emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.asin);
+							emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
 						}
 						Log.i(TAG, "Replacing with emoticon !!!");
 						replaceWithEmot(spannable, startFound, endFound, emot_img);

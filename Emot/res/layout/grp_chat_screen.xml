@@ -67,7 +67,7 @@
                 android:layout_marginRight="2dp"
                 android:layout_weight="20"
                 android:background="@drawable/border_with_left_open"
-                android:src="@drawable/dove_flying_3" />
+                android:src="@drawable/blank_user_image" />
         </LinearLayout>
     </LinearLayout>
 

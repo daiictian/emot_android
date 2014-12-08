@@ -26,6 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/country"
+            android:visibility="gone"
             android:textColor="@color/black"  />
 
      
@@ -33,7 +34,8 @@
             android:id="@+id/countryselector"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/country" />
+            android:hint="@string/country"
+            android:layout_marginTop="20dp" />
 
         <EditText
             android:id="@+id/enterNumber"
@@ -48,7 +50,8 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:text="@string/submit"
-            style="@style/btnStyleOrange" />
+            style="@style/btnStyleOrange"
+            android:layout_marginTop="40dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -57,7 +60,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:visibility="gone"
-        android:orientation="vertical" >
+        android:orientation="vertical"
+        android:layout_marginTop="50dp" >
 
         <EditText
             android:id="@+id/verificationCode"
@@ -72,7 +76,8 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:text="@string/send"
-            style="@style/btnStyleOrange" />
+            style="@style/btnStyleOrange"
+            android:layout_marginTop="20dp" />
     </LinearLayout>
 
 </LinearLayout>

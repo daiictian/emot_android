@@ -12,7 +12,7 @@
             android:padding="6dp"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
-            android:src="@drawable/asin" />
+            android:src="@drawable/blank_user_image" />
     <LinearLayout
         android:id="@+id/contactLayout"
         android:layout_width="wrap_content"

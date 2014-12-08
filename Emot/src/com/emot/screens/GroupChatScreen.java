@@ -82,8 +82,9 @@ public class GroupChatScreen extends ActionBarActivity {
 		ChatProvider.ChatConstants.DELIVERY_STATUS ,
 		ChatProvider.ChatConstants.MESSAGE_SENDER_IN_GROUP};
 
-	private static final int[] PROJECTION_TO = new int[] { R.id.chat_date,
-		R.id.chat_from, R.id.chat_message };
+	private static final int[] PROJECTION_TO = new int[] { 
+		//R.id.chat_date, R.id.chat_from, R.id.chat_message 
+	};
 
 
 	@Override

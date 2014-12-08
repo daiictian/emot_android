@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="6dp"
-            android:src="@drawable/asin" />
+            android:src="@drawable/blank_user_image" />
         
         
         <ImageView
