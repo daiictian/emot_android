@@ -90,8 +90,9 @@ public class ChatScreen extends ActionBarActivity {
 			ChatProvider.ChatConstants.JID, ChatProvider.ChatConstants.MESSAGE,
 			ChatProvider.ChatConstants.DELIVERY_STATUS };
 
-	private static final int[] PROJECTION_TO = new int[] { R.id.chat_date,
-			R.id.chat_from, R.id.chat_message };
+	private static final int[] PROJECTION_TO = new int[] { 
+		//R.id.chat_date, R.id.chat_from, R.id.chat_message 
+	};
 
 	//
 	// private class EmotHistoryTask extends AsyncTask<EmotDBHelper,

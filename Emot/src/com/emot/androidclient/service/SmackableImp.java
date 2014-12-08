@@ -137,24 +137,27 @@ public class SmackableImp implements Smackable {
 		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID };
 	final static private String SEND_UNACKNOWLEDGED_SELECTION =
 		ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
-		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_SENT_OR_READ;
+		"("+
+		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_FAILED +" OR "+
+		//ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_SENT_OR_READ +
+		")";
 
 	static final DiscoverInfo.Identity EMOT_IDENTITY = new DiscoverInfo.Identity("client",
 					EmotApplication.XMPP_IDENTITY_NAME,
 					EmotApplication.XMPP_IDENTITY_TYPE);
 	
 	private final static int INTERVAL = 1000 * 30;
-	Handler mHandler = new Handler();
 	
-	Runnable mHandlerTask = new Runnable()
-	{
-	     @Override 
-	     public void run() {
-	    	  Log.i(TAG, "trying for unacknowledged message");
-	          sendNotacknowledgedMessages();
-	          mHandler.postDelayed(mHandlerTask, INTERVAL);
-	     }
-	};
+//	private static Handler mHandler = new Handler();
+//	Runnable mHandlerTask = new Runnable()
+//	{
+//	     @Override 
+//	     public void run() {
+//	    	  Log.i(TAG, "trying for unacknowledged message");
+//	          sendNotacknowledgedMessages();
+//	          mHandler.postDelayed(mHandlerTask, INTERVAL);
+//	     }
+//	};
 
 	static File capsCacheDir = null; ///< this is used to cache if we already initialized EntityCapsCache
 
@@ -736,7 +739,6 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void tryToConnect(boolean create_account) throws EmotXMPPException {
-		mHandlerTask.run();
 		try {
 			if (mXMPPConnection.isConnected()) {
 				try {
@@ -812,7 +814,7 @@ public class SmackableImp implements Smackable {
 							}
 						}
 					}
-					mHandlerTask.run();
+					//mHandlerTask.run();
 				}
 				//initMUC("myroom");
 				
@@ -1051,7 +1053,7 @@ public class SmackableImp implements Smackable {
 				String message = cursor.getString(MSG_COL);
 				String packetID = cursor.getString(PACKETID_COL);
 				long ts = cursor.getLong(TS_COL);
-				Log.d(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
+				Log.i(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
 				final Message newMessage = new Message(toJID, Message.Type.chat);
 				newMessage.setBody(message);
 				DelayInformation delay = new DelayInformation(new Date(ts));
@@ -1467,7 +1469,7 @@ public class SmackableImp implements Smackable {
 							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
 								Log.i(TAG, "message failed !!!");
 								mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
-								sendFailedMessages();
+								//sendFailedMessages();
 							}
 							return; // we do not want to add errors as "incoming messages"
 						}
@@ -1571,12 +1573,20 @@ public class SmackableImp implements Smackable {
 
 	private void addChatMessageToDB(int direction, String JID,
 			String message, int delivery_status, long ts, String packetID, String chatType, String messageSenderinGroup) {
-
-		Cursor oldChat = mContentResolver.query(ChatProvider.CONTENT_URI, new String[]{ChatProvider.ChatConstants.PACKET_ID}, ChatProvider.ChatConstants.PACKET_ID+" = '"+packetID+"'", null, null);
+		if(direction == ChatConstants.INCOMING){
+			Cursor oldChat = mContentResolver.query(
+					ChatProvider.CONTENT_URI, 
+					new String[]{ChatProvider.ChatConstants.PACKET_ID}, 
+					ChatProvider.ChatConstants.PACKET_ID+" = '"+packetID+"' and "+ChatProvider.ChatConstants.MESSAGE+ " = '"+message+"'", 
+					null, 
+					null
+		);
 		if(oldChat.getCount()>0){
 			Log.i(TAG, "Packet ID already present");
 			return;
 		}
+		}
+		
 		ContentValues values = new ContentValues();
 
 		values.put(ChatConstants.DIRECTION, direction);

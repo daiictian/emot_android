@@ -103,7 +103,7 @@ public class EmotEditText extends EditText {
 		//spannable.setSpan(new ImageSpan(context, R.drawable.blank_user_image),0, 0,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 	    boolean hasChanges = false;
 	    Map<Pattern, Integer> emoticons = new HashMap<Pattern, Integer>();
-	    emoticons.put(Pattern.compile(Pattern.quote(":)")), R.drawable.asin);
+	    emoticons.put(Pattern.compile(Pattern.quote(":)")), R.drawable.blank_user_image);
 	    for (Entry<Pattern, Integer> entry : emoticons.entrySet()) {
 	        Matcher matcher = entry.getKey().matcher(spannable);
 	        while (matcher.find()) {

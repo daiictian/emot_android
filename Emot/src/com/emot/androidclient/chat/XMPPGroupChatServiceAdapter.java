@@ -12,7 +12,7 @@ import com.emot.emotobjects.Contact;
 
 public class XMPPGroupChatServiceAdapter {
 
-	private static final String TAG = "yaxim.XMPPCSAdapter";
+	private static final String TAG = XMPPGroupChatServiceAdapter.class.getName();
 	private IXMPPGroupChatService xmppGrpServiceStub;
 	private String grpJabberID;
 	private boolean createGroup;
