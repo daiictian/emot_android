@@ -23,6 +23,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -100,13 +101,21 @@ public class GroupChatScreen extends ActionBarActivity {
 	}
 
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.create_group, menu);
+		return true;
+	}
 
+	
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
 		Uri chatURI = Uri.parse(grpName);
 		mServiceIntent.setData(chatURI);
 		mServiceIntent.putExtra("isforgrpchat", true);
+		mServiceIntent.putExtra("sinceDate", mDate);
 		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
@@ -155,6 +164,8 @@ public class GroupChatScreen extends ActionBarActivity {
 			Log.i(TAG, "back pressed");
 			this.finish();
 			return true;
+		case R.id.leave_group:
+			Log.i(TAG, "leaving the group");
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -348,6 +359,8 @@ public class GroupChatScreen extends ActionBarActivity {
 				selection, null, null);
 		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM,
 				PROJECTION_TO, grpName, grpName);
+		
+
 		chatView.setAdapter(adapter);
 	}
 
@@ -372,7 +385,7 @@ public class GroupChatScreen extends ActionBarActivity {
 
 			long dateMilliseconds = cursor.getLong(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.DATE));
-
+			
 			int _id = cursor.getInt(cursor
 					.getColumnIndex(ChatProvider.ChatConstants._ID));
 			mDate = dateMilliseconds;
