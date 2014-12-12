@@ -382,7 +382,7 @@ public class GroupChatScreen extends ActionBarActivity {
 			boolean from_me =false;
 			String msgSender = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE_SENDER_IN_GROUP));
 			Log.i(TAG, "Message Sender in Group is " +msgSender);
-			if(msgSender.equals(EmotApplication.getConfig().userName + "@conference.emot-net")){
+			if(msgSender.equals(EmotConfiguration.getConfig().userName + "@conference.emot-net")){
 				Log.i(TAG, "Comparing if sender is same as reciever");
 				from_me = true;	
 			}

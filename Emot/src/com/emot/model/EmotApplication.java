@@ -61,7 +61,6 @@ public class EmotApplication extends Application {
 	private static Context context;
 	private static SharedPreferences prefs;
 	public MemorizingTrustManager mMTM;
-	private EmotConfiguration mConfig;
 	private static List<String> roomJIDs = new ArrayList<String>();
 	public static final String XMPP_IDENTITY_NAME = "emot";
 	public static final String XMPP_IDENTITY_TYPE = "phone";
@@ -70,12 +69,8 @@ public class EmotApplication extends Application {
 		super.onCreate();
 
 		EmotApplication.context = getApplicationContext();
-		prefs = PreferenceManager.getDefaultSharedPreferences(context
-				.getApplicationContext());
+		prefs = getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		mMTM = new MemorizingTrustManager(this);
-		mConfig = new EmotConfiguration(PreferenceManager
-				.getDefaultSharedPreferences(this));
-
 	}
 	
 	public static void addRooms(final String room){
@@ -84,10 +79,6 @@ public class EmotApplication extends Application {
 	
 	public static List<String> getRooms(){
 		return roomJIDs;
-	}
-	
-	public static EmotConfiguration getConfig() {
-		return ((EmotApplication)getAppContext()).mConfig;
 	}
 	
 	public static EmotApplication getApp(Context ctx) {

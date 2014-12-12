@@ -8,14 +8,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
-import java.util.Locale;
 
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Chat;
@@ -88,14 +84,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.telephony.gsm.SmsMessage.MessageClass;
-import android.text.format.Time;
-import android.os.Handler;
 import android.util.Log;
 
 import com.emot.androidclient.data.ChatProvider;
@@ -233,7 +227,7 @@ public class SmackableImp implements Smackable {
 		XmppStreamHandler.addExtensionProviders();
 	}
 
-	private final EmotConfiguration mConfig;
+	private EmotConfiguration mConfig;
 	private ConnectionConfiguration mXMPPConfig;
 	private XmppStreamHandler.ExtXMPPConnection mXMPPConnection;
 	private XmppStreamHandler mStreamHandler;
@@ -938,15 +932,26 @@ public class SmackableImp implements Smackable {
 		Uri uri = mContentResolver.insert(RosterProvider.CONTENT_URI, values);
 		debugLog("handleIncomingSubscribe: faked " + uri);
 	}
+	
+	
 
 	public void setStatusFromConfig() {
 		try{
+			mConfig.loadPrefs();
+			//SharedPreferences prefs = EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
+			
+			//Updating mconfig before updating status
 			CarbonManager.getInstanceFor(mXMPPConnection).sendCarbonsEnabled(mConfig.messageCarbons);
 
 			Presence presence = new Presence(Presence.Type.available);
 			Mode mode = Mode.valueOf(mConfig.statusMode);
 			presence.setMode(mode);
-			Log.i(TAG, "Setting status as "+mConfig.statusMessage);
+			Log.i(TAG, 
+					" Setting status as "+mConfig.statusMessage + 
+					" config instance "+mConfig + 
+					//" pref val = "+prefs.getString(PreferenceConstants.STATUS_MESSAGE, "") +
+					" pref old value = "+EmotApplication.getPrefs().getString(PreferenceConstants.STATUS_MESSAGE, "")
+			);
 			presence.setStatus(mConfig.statusMessage);
 			presence.setPriority(mConfig.priority);
 			mXMPPConnection.sendPacket(presence);
@@ -1220,10 +1225,11 @@ public class SmackableImp implements Smackable {
 			}
 
 			public void presenceChanged(Presence presence) {
-				Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): " + presence);
+				Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): "+presence +" status"+ presence.getStatus());
 
 				String jabberID = getBareJID(presence.getFrom());
 				RosterEntry rosterEntry = mRoster.getEntry(jabberID);
+				Log.i(TAG, "Roster status = "+rosterEntry.getStatus() );
 				if (rosterEntry != null) {
 					updateRosterEntryInDB(rosterEntry);
 					mServiceCallBack.rosterChanged();

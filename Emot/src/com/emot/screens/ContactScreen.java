@@ -220,7 +220,7 @@ public class ContactScreen extends ActionBarActivity{
 
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
-		mConfig = EmotApplication.getConfig();
+		mConfig = EmotConfiguration.getConfig();
 		xmppServiceIntent = new Intent(this, XMPPService.class);
 		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 

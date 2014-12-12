@@ -110,7 +110,7 @@ public class LastChatScreen extends ActionBarActivity {
 				ChatProvider.ChatConstants.DELIVERY_STATUS 
 		};
 		int[] projection_to = new int[] { R.id.textLastChatUser, R.id.textLastChatItem };
-		String selection = ChatProvider.ChatConstants.JID +" != '"+EmotApplication.getConfig().jabberID+"'" + ") GROUP BY ("+ ChatProvider.ChatConstants.JID;
+		String selection = ChatProvider.ChatConstants.JID +" != '"+EmotConfiguration.getConfig().jabberID+"'" + ") GROUP BY ("+ ChatProvider.ChatConstants.JID;
 		String[] groupby = new String[]{ChatProvider.ChatConstants.JID};
 		Cursor cursor = getContentResolver().query(ChatProvider.CONTENT_URI, projection, selection, null, null);
 		Log.i(TAG, "cursor count "+cursor.getCount());
@@ -201,7 +201,7 @@ public class LastChatScreen extends ActionBarActivity {
 	
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
-		mConfig = EmotApplication.getConfig();
+		mConfig = EmotConfiguration.getConfig();
 		xmppServiceIntent = new Intent(this, XMPPService.class);
 		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 

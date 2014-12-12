@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.util.LogConstants;
+import com.emot.constants.ApplicationConstants;
 import com.emot.model.EmotApplication;
 import com.emot.screens.ChatScreen;
 import com.emot.screens.GroupChatScreen;
@@ -52,7 +53,7 @@ public abstract class GenericService extends Service {
 		
 		Log.i(TAG, "called onCreate()");
 		super.onCreate();
-		mConfig = EmotApplication.getConfig();
+		mConfig = EmotConfiguration.getConfig();
 		mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		mWakeLock = ((PowerManager)getSystemService(Context.POWER_SERVICE))
 				.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, APP_NAME);
@@ -132,7 +133,8 @@ public abstract class GenericService extends Service {
 	}
 	
 	private void setNotification(String fromJid, String fromUserId, String message, boolean is_error, boolean grpchat, String msgSenderinGrp) {
-		
+		message = replaceTag(message);
+		Log.i(TAG, "New message = "+message);
 		int mNotificationCounter = 0;
 		if (notificationCount.containsKey(fromJid)) {
 			mNotificationCounter = notificationCount.get(fromJid);
@@ -199,6 +201,21 @@ public abstract class GenericService extends Service {
 
 			mNotification.setLatestEventInfo(this, title, message, pendingIntent);	
 		}
+	}
+	
+	private String replaceTag(String message){
+		String new_message = "";
+		int sindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_START);
+		while(sindx >= 0){
+			new_message = new_message + message.substring(0, sindx);
+			new_message = new_message + "☐";
+			int eindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_END) + ApplicationConstants.EMOT_TAGGER_END.length();
+			message = message.substring(eindx, message.length());
+			
+			sindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_START);
+		}
+		new_message = new_message + message;
+		return new_message;
 	}
 
 	private void setLEDNotification() {

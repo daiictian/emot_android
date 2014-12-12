@@ -3,6 +3,7 @@ package com.emot.androidclient.data;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.util.Log;
 import com.emot.androidclient.exceptions.EmotXMPPAdressMalformedException;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.XMPPHelper;
+import com.emot.model.EmotApplication;
 import com.emot.screens.R;
 
 public class EmotConfiguration implements OnSharedPreferenceChangeListener {
@@ -68,23 +70,25 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 
     public boolean reconnect_required = false;
     public boolean presence_required = false;
-
-	private final SharedPreferences prefs;
-
-	public EmotConfiguration(SharedPreferences _prefs) {
-		prefs = _prefs;
-		prefs.registerOnSharedPreferenceChangeListener(this);
-		loadPrefs(prefs);
+	
+	private static EmotConfiguration config_instance;
+	
+	public static EmotConfiguration getConfig(){
+		if(config_instance==null){
+			config_instance = new EmotConfiguration();
+			config_instance.loadPrefs();
+		}
+		return config_instance;
 	}
-
+	
 	@Override
 	protected void finalize() {
-		prefs.unregisterOnSharedPreferenceChangeListener(this);
+		EmotApplication.getPrefs().unregisterOnSharedPreferenceChangeListener(this);
 	}
 
 	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
 		Log.i(TAG, "onSharedPreferenceChanged(): " + key);
-		loadPrefs(prefs);
+		loadPrefs();
 		if (RECONNECT_PREFS.contains(key))
 			reconnect_required = true;
 		if (PRESENCE_PREFS.contains(key))
@@ -116,7 +120,12 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 		return jabPriority;
 	}
 
-	private void loadPrefs(SharedPreferences prefs) {
+	public void loadPrefs() {
+		//Small hack to load preferences for service
+		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
+		
+		SharedPreferences prefs = EmotApplication.getPrefs();
+		Log.i(TAG, "load prefs called!!! " + prefs.getString(PreferenceConstants.STATUS_MESSAGE, ""));
 		this.jid_configured = false;
 
 		this.isLEDNotify = prefs.getBoolean(PreferenceConstants.LEDNOTIFY,
@@ -167,6 +176,8 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 		} catch (EmotXMPPAdressMalformedException e) {
 			Log.e(TAG, "Exception in getPreferences(): " + e);
 		}
+		Log.i(TAG, "status message = "+statusMessage + " config obj "+config_instance);
+		
 	}
 
 
