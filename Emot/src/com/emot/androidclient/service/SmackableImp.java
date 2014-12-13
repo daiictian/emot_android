@@ -17,6 +17,7 @@ import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
@@ -24,6 +25,7 @@ import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterGroup;
 import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPException;
@@ -268,8 +270,8 @@ public class SmackableImp implements Smackable {
 	public SmackableImp(EmotConfiguration config,
 			ContentResolver contentResolver,
 			Service service) {
-		this.mConfig = config;
-		this.mContentResolver = contentResolver;
+		this.mConfig = config; 
+		this.mContentResolver = contentResolver;SASLAuthentication.supportSASLMechanism("DIGEST-MD5", 0);
 		this.mService = service;
 		this.mAlarmManager = (AlarmManager)mService.getSystemService(Context.ALARM_SERVICE);
 	}
@@ -793,6 +795,7 @@ public class SmackableImp implements Smackable {
 					AccountManager am = new AccountManager(mXMPPConnection);
 					am.createAccount(mConfig.userName, mConfig.password);
 				}
+				
 				Log.i(TAG, "user = "+mConfig.userName + " password = "+mConfig.password + " resource = "+mConfig.ressource);
 				mXMPPConnection.login(mConfig.userName, mConfig.password, mConfig.ressource);
 				//				scheduledExecutorService.schedule(new Runnable() {
@@ -1558,7 +1561,7 @@ public class SmackableImp implements Smackable {
 						Log.i(TAG, "message received is "+msg.getBody() + "type is " + msg.getType());
 						// display error inline
 						if (msg.getType() == Message.Type.error) {
-							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED))
+							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
 								mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
 								//sendFailedMessages();
 							}
@@ -2001,5 +2004,11 @@ public class SmackableImp implements Smackable {
 
 
 
+	}
+
+	@Override
+	public void leaveGroup(String grpName) {
+		mGroupChat.leave();
+		
 	}
 }

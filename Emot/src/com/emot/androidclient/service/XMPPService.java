@@ -218,6 +218,13 @@ public class XMPPService extends GenericService {
 				
 			}
 
+			@Override
+			public void leaveGroup(String grpName) throws RemoteException {
+				Log.i(TAG, "leaving group " +grpName);
+				mSmackable.leaveGroup(grpName);
+				
+			}
+
 			
 
 			
