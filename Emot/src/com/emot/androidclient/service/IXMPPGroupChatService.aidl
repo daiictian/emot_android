@@ -7,4 +7,5 @@ interface IXMPPGroupChatService {
 	void clearNotifications(String Jid);
 	void createGroup(String grpName,inout List<Contact> members);
 	void joinGroup(String grpName, boolean isCreateGroup, long date);
+	void leaveGroup(String grpName);
 }

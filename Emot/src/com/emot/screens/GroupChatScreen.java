@@ -7,11 +7,14 @@ import java.util.List;
 
 import org.jivesoftware.smack.Chat;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,10 +26,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -50,6 +55,7 @@ import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
+import com.emot.screens.R.color;
 
 public class GroupChatScreen extends ActionBarActivity {
 
@@ -88,8 +94,18 @@ public class GroupChatScreen extends ActionBarActivity {
 
 
 	@Override
+	protected void onStop() {
+		mCursor.close();
+		super.onStop();
+	}
+
+	@Override
 	protected void onResume() {
 		super.onResume();
+		if(mCursor == null){
+			
+		}
+		localCache();
 		bindXMPPService();
 	}
 
@@ -100,13 +116,21 @@ public class GroupChatScreen extends ActionBarActivity {
 	}
 
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.group_chat, menu);
+		return true;
+	}
 
+	
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
 		Uri chatURI = Uri.parse(grpName);
 		mServiceIntent.setData(chatURI);
 		mServiceIntent.putExtra("isforgrpchat", true);
+		mServiceIntent.putExtra("sinceDate", mDate);
 		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
@@ -155,10 +179,26 @@ public class GroupChatScreen extends ActionBarActivity {
 			Log.i(TAG, "back pressed");
 			this.finish();
 			return true;
+		case R.id.leave_group:
+			Log.i(TAG, "leaving the group");
+			mServiceAdapter.leaveGroup(grpName);
+		case R.id.action_copy_text:
+			myClip = ClipData.newPlainText("text", messageToCopy.toString());
+			myClipboard.setPrimaryClip(myClip);
+			
 		default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
+
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		super.onBackPressed();
+	}
+	ClipboardManager myClipboard;
+	ClipData myClip;
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -167,6 +207,8 @@ public class GroupChatScreen extends ActionBarActivity {
 		ab.setHomeButtonEnabled(true);
 		ab.setDisplayHomeAsUpEnabled(true);
 		Intent incomingIntent = getIntent();
+		 myClipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+		
 		grpName = incomingIntent
 				.getStringExtra("grpName");
 		isCreateGrp = incomingIntent.getBooleanExtra("creategroup?", false);
@@ -214,10 +256,25 @@ public class GroupChatScreen extends ActionBarActivity {
 				emotSuggestion.setVisibility(View.VISIBLE);
 			}
 		});
+		chatView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				mCursor.moveToPosition(position);
+				String message = mCursor.getString(mCursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
+				messageToCopy.append("\n" +message);
+				
+			//	Toast.makeText(GroupChatScreen.this, "List item selected:" +message , Toast.LENGTH_LONG).show();
+				view.setSelected(true);view.setBackgroundColor(color.darkgreen);
+				return false;
+			}
+		});
 		registerXMPPService();
 
 
 	}
+	private StringBuilder messageToCopy = new StringBuilder();
 
 	private TextWatcher groupMessageWatcher = new TextWatcher() {
 
@@ -341,16 +398,23 @@ public class GroupChatScreen extends ActionBarActivity {
 		values.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
 		getContentResolver().update(rowuri, values, null, null);
 	}
-
+	Cursor mCursor;
+private void localCache(){
+	mCursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
+			ChatConstants.JID + "='" + grpName + "'", null, null);
+}
 	private void setChatWindowAdapter() {
 		String selection = ChatConstants.JID + "='" + grpName + "'";
 		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
 				selection, null, null);
 		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM,
 				PROJECTION_TO, grpName, grpName);
+		
+
 		chatView.setAdapter(adapter);
 	}
 
+	private List<String> mList = new ArrayList<String>();
 	class ChatScreenAdapter extends SimpleCursorAdapter {
 		String mScreenName, mJID;
 
@@ -372,13 +436,14 @@ public class GroupChatScreen extends ActionBarActivity {
 
 			long dateMilliseconds = cursor.getLong(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.DATE));
-
+			
 			int _id = cursor.getInt(cursor
 					.getColumnIndex(ChatProvider.ChatConstants._ID));
 			mDate = dateMilliseconds;
 			String date = getDateString(dateMilliseconds);
 			String message = cursor.getString(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
+			mList.add(message);
 			boolean from_me =false;
 			String msgSender = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE_SENDER_IN_GROUP));
 			Log.i(TAG, "Message Sender in Group is " +msgSender);

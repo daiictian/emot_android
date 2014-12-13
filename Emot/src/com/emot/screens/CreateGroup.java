@@ -121,7 +121,7 @@ public class CreateGroup extends ActionBarActivity {
 				}
 				
 				if(grpName.getText().toString() != null && grpName.getText().toString().length() != 0){
-				if(selectedContacts.size() > 0){
+				//if(selectedContacts.size() > 0){
 					Intent i = new Intent(CreateGroup.this, GroupChatScreen.class);
 					
 					i.putParcelableArrayListExtra("groupmembers", selectedContacts);
@@ -130,9 +130,9 @@ public class CreateGroup extends ActionBarActivity {
 					startActivity(i);
 					selectedContacts.clear();
 					
-				}else{
-					Toast.makeText(CreateGroup.this, "Please select at least one group member", Toast.LENGTH_LONG).show();
-				}
+				//}else{
+				//	Toast.makeText(CreateGroup.this, "Please select at least one group member", Toast.LENGTH_LONG).show();
+				//}
 				}else{
 					Toast.makeText(CreateGroup.this, "Please enter group name", Toast.LENGTH_LONG).show();
 				}

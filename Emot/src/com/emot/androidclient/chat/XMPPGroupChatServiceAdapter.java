@@ -48,6 +48,17 @@ public class XMPPGroupChatServiceAdapter {
 		t.start();
 	}
 	
+	public void leaveGroup(final String grpName){
+		try {
+			Log.i(TAG, "leaving group " +grpName);
+			xmppGrpServiceStub.leaveGroup(grpName);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public void joinExistingGroup(final String grpName, final boolean isCreateGrp, final long date){
 		
 		try {

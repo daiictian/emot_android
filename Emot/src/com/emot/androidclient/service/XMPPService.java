@@ -59,7 +59,8 @@ public class XMPPService extends GenericService {
 	@Override
 	public IBinder onBind(Intent intent) {
 		userStartedWatching();
-
+		Long date = intent.getLongExtra("sinceDate", -1);
+		Log.i(TAG, "date is " +date);
 		String chatPartner = intent.getDataString();
 		boolean isforgrpchat = intent.getBooleanExtra("isforgrpchat", false);
 		if ((chatPartner != null) && !isforgrpchat) {
@@ -214,6 +215,13 @@ public class XMPPService extends GenericService {
 					mSmackable.joinGroup(grpName, date);
 					
 				}
+				
+			}
+
+			@Override
+			public void leaveGroup(String grpName) throws RemoteException {
+				Log.i(TAG, "leaving group " +grpName);
+				mSmackable.leaveGroup(grpName);
 				
 			}
 
