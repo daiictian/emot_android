@@ -195,6 +195,7 @@ public class Registration extends ActionBarActivity {
 					EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
 					registrationHTTPClient.execute(new Void[]{});
 				}else{
+					pd.cancel();
 					Toast.makeText(Registration.this, "Mobile Number is invalid", Toast.LENGTH_LONG).show();
 				}
 			}
@@ -254,10 +255,13 @@ public class Registration extends ActionBarActivity {
 								registerXMPPService();
 								bindXMPPService();
 								
+							}else{
+								throw new Exception("Registration failed");
 							}
-						} catch (JSONException e) {
-
+						} catch (Exception e) {
 							e.printStackTrace();
+							pd.cancel();
+							Toast.makeText(Registration.this, "Something went wrong. Please try again later.", Toast.LENGTH_LONG).show();
 						}
 					}
 
