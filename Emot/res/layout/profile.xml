@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_alignParentTop="true"
-            android:background="@color/light_bg"
+            android:background="@color/halka_white"
             android:ems="10"
             android:hint="What&apos;s up !"
             android:inputType="textMultiLine"

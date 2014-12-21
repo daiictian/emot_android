@@ -15,6 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
@@ -123,6 +124,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.i(TAG, "called onServiceConnected()");
 				mServiceAdapter = new XMPPRosterServiceAdapter(IXMPPRosterService.Stub.asInterface(service));
+				
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
@@ -219,52 +221,66 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		};
 
 		switch (requestCode) {
-		case CAMERA_REQUEST:
-
-			Bundle extras = data.getExtras();
-
-			if (extras != null) {
-				Bitmap yourImage = extras.getParcelable("data");
-				Uri selectedImageUri = data.getData();
-                String selectedImagePath = getPath(selectedImageUri);
-				// convert bitmap to byte
-				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
-				byte imageInByte[] = stream.toByteArray();
-				Log.e("output before conversion", imageInByte.toString());
-				
-				Editor c = EmotApplication.getPrefs().edit();
-				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
-				c.commit();
-				EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
-				mServiceAdapter.setAvatar();
-				imageAvatar.setImageBitmap(yourImage);
-			}
-			break;
-		case PICK_FROM_GALLERY:
-			Bundle extras2 = data.getExtras();
-
-			if (extras2 != null) {
-//				Uri selectedImageUri = data.getData();
-//              String selectedImagePath = getPath(selectedImageUri);
-//              chatService.updateAvatar(selectedImagePath, avatarHandler);
-				
-				Bitmap yourImage = extras2.getParcelable("data");
-				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
-				byte imageInByte[] = stream.toByteArray();
-				Log.e("output before conversion", imageInByte.toString());
-				
-				Editor c = EmotApplication.getPrefs().edit();
-				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
-				c.commit();
-				EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
-				mServiceAdapter.setAvatar();
-				imageAvatar.setImageBitmap(yourImage);
-			}
-
-			break;
+			case CAMERA_REQUEST:
+	
+				Bundle extras = data.getExtras();
+	
+				if (extras != null) {
+					Bitmap yourImage = extras.getParcelable("data");
+					Uri selectedImageUri = data.getData();
+	                String selectedImagePath = getPath(selectedImageUri);
+					// convert bitmap to byte
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					byte imageInByte[] = stream.toByteArray();
+					Log.i("output before conversion", imageInByte.toString());
+					
+					Editor c = EmotApplication.getPrefs().edit();
+					c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
+					c.commit();
+					EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
+					Log.i(TAG, "11 mservice adapter value = "+mServiceAdapter);
+					imageAvatar.setImageBitmap(yourImage);
+					updateAvatar();
+				}
+				break;
+			case PICK_FROM_GALLERY:
+				Bundle extras2 = data.getExtras();
+	
+				if (extras2 != null) {
+	//				Uri selectedImageUri = data.getData();
+	//              String selectedImagePath = getPath(selectedImageUri);
+	//              chatService.updateAvatar(selectedImagePath, avatarHandler);
+					
+					Bitmap yourImage = extras2.getParcelable("data");
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					byte imageInByte[] = stream.toByteArray();
+					Log.i("output before conversion", imageInByte.toString());
+					
+					Editor c = EmotApplication.getPrefs().edit();
+					c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
+					c.commit();
+					EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
+					Log.i(TAG, "mservice adapter value = "+mServiceAdapter);
+					imageAvatar.setImageBitmap(yourImage);
+					updateAvatar();
+				}
+				break;
 		}
+	}
+	
+	private void updateAvatar(){
+		Runnable mMyRunnable = new Runnable()
+		{
+		    @Override
+		    public void run()
+		    {
+		    	Log.i(TAG, "updating avatar through task...");
+		        mServiceAdapter.setAvatar();
+		    }
+		 };
+		 new Handler().postDelayed(mMyRunnable, 2000);
 	}
 	
 	public String getPath(Uri uri) {

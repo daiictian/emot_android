@@ -42,7 +42,8 @@
     <string name="leave_group">Leave Group</string>
     <string name="emots">Emots</string>
     <string name="enterMobileNumber">Please enter your mobile number</string>
-    <string name="enterVerificationCode">Please enter your verification code</string>
+    <string name="enterVerificationCode">Code</string>
+    <string name="ask_verification_code">Please enter the verification code texted to your mobile number.</string>
     <string name="enterGroupName">Please enter group name</string>
     <string name="edit">edit</string>
     <string name="save">SAVE</string>
