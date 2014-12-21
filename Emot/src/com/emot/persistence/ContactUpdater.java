@@ -82,7 +82,7 @@ public class ContactUpdater {
 				URL cUrl;
 				try{
 					cUrl = new URL(WebServiceConstants.HTTP + "://"+ 
-							WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
+							WebServiceConstants.SERVER_IP
 							+WebServiceConstants.PATH_API+WebServiceConstants.OP_GETCONTACT);
 					Log.i(TAG, "URL "+cUrl);
 				}catch(MalformedURLException e){
@@ -125,7 +125,16 @@ public class ContactUpdater {
 			while (phones.moveToNext())
 			{
 				String name=phones.getString(phones.getColumnIndex(FROM_COLUMN[0]));
-				String mobile = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).replaceAll("[^\\d.]", "");
+				String ph = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+				if(ph.charAt(0)=='0'){
+					ph = ph.substring(1, ph.length());
+					ph = EmotApplication.getValue(PreferenceConstants.COUNTRY_PHONE_CODE, "") + ph;
+				}else if(ph.charAt(0)=='+'){
+					//Country code already present. Do nothing
+				}else{
+					ph = EmotApplication.getValue(PreferenceConstants.COUNTRY_PHONE_CODE, "") + ph;
+				}
+				String mobile = ph.replaceAll("[^\\d.]", "");
 				//Log.i(TAG, "name = " + name + ". Phone = " + mobile); 
 				cntcts.put(mobile,  name);
 			}

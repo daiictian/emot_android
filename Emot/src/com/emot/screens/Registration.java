@@ -91,6 +91,7 @@ public class Registration extends ActionBarActivity {
 			Locale obj = new Locale("", countryCode);
 			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
 			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
+			Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
 		}
 	}
 	
@@ -123,11 +124,11 @@ public class Registration extends ActionBarActivity {
 
 
 
-	private boolean isNumberValid(final String pNumber){
+	private boolean isNumberValid(final String pNumber, String code){
 		boolean isValid = false;
 		//PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 		try {
-			PhoneNumber numberProto = phoneUtil.parse(pNumber, "IN");
+			PhoneNumber numberProto = phoneUtil.parse(pNumber, code);
 			isValid = phoneUtil.isValidNumber(numberProto); 
 		} catch (NumberParseException e) {
 			System.err.println("NumberParseException was thrown: " + e.toString());
@@ -142,10 +143,10 @@ public class Registration extends ActionBarActivity {
 			@Override
 			public void onClick(View v) {
 				pd.show();
-				mMobileNumber = mEnterMobile.getText().toString();
-				if(isNumberValid(mMobileNumber)){
+				mMobileNumber = mEnterMobile.getText().toString().replaceAll("[^\\d.]", "");
+				if(isNumberValid(mEnterMobile.getText().toString(), EmotApplication.getValue(PreferenceConstants.COUNTRY_CODE, ""))){
 					String url = WebServiceConstants.HTTP + "://"+ 
-							WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
+							WebServiceConstants.SERVER_IP
 							+WebServiceConstants.PATH_API+WebServiceConstants.OP_SETCODE
 							+WebServiceConstants.GET_QUERY+WebServiceConstants.DEVICE_TYPE+
 							"="+mMobileNumber;
@@ -207,7 +208,7 @@ public class Registration extends ActionBarActivity {
 				pd.show();
 				String vCode = mEnterVerificationCode.getText().toString();	
 				String url = WebServiceConstants.HTTP + "://"+ 
-						WebServiceConstants.SERVER_IP+":"+WebServiceConstants.SERVER_PORT
+						WebServiceConstants.SERVER_IP
 						+WebServiceConstants.PATH_API+WebServiceConstants.OP_REGISTER;
 
 				URL wsURL = null;
@@ -276,9 +277,12 @@ public class Registration extends ActionBarActivity {
 				Log.i(TAG,"ssssssssssssss" + mCountrySelector.getText().toString() );
 				Log.i(TAG,"ssssssssssssss" +mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())) );
 				Log.i(TAG, "ssss " +String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())) ));
-				mEnterMobile.setText("+"+String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString()))) +"-");
+				String countryCode = String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())));
+				mEnterMobile.setText("+"+countryCode+"-");
 				
-				
+				EmotApplication.setValue(PreferenceConstants.COUNTRY_PHONE_CODE, countryCode);
+				EmotApplication.setValue(PreferenceConstants.COUNTRY_CODE, mCountryCode.get(mCountrySelector.getText().toString()));
+				Log.i(TAG, "ph code = "+mCountryCode.get(mCountrySelector.getText().toString()) + " c code="+countryCode);
 			}
 		});
 	}

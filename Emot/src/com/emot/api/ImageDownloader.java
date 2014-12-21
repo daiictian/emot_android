@@ -29,7 +29,7 @@ public class ImageDownloader extends AsyncTask<Void, Void, Bitmap> {
 
 	@Override
 	protected Bitmap doInBackground(Void... param) {
-		return downloadBitmap(WebServiceConstants.HTTP + "://" + WebServiceConstants.SERVER_IP + ":" + WebServiceConstants.SERVER_PORT +this.imgUrl);
+		return downloadBitmap(WebServiceConstants.HTTP + "://" + WebServiceConstants.SERVER_IP  +this.imgUrl);
 	}
 
 	@Override

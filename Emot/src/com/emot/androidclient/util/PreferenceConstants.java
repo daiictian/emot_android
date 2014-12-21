@@ -29,4 +29,6 @@ public class PreferenceConstants {
 	public final static String USER_AVATAR = "account_avatar";
 	public final static String USER_APPID = "account_appid";
 	public static final String AVATAR_UPDATED = "avatar_updated";
+	public static final String COUNTRY_CODE = "country_code";
+	public static final String COUNTRY_PHONE_CODE = "country_phone_code";
 }
