@@ -1926,6 +1926,7 @@ public class SmackableImp implements Smackable {
 
 	public void setAvatar() {
 		try{
+			mConfig.loadPrefs();
 			if(!EmotApplication.getPrefs().getBoolean(PreferenceConstants.AVATAR_UPDATED, false)){
 				Bitmap bmp = UpdateProfileScreen.getAvatar();
 				//new UpdateAvatarTask(bmp).execute();
