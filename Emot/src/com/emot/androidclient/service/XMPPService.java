@@ -225,6 +225,18 @@ public class XMPPService extends GenericService {
 				
 			}
 
+			@Override
+			public String getGroupSubject() throws RemoteException {
+				// TODO Auto-generated method stub
+				return mSmackable.getGroupSubject();
+			}
+
+			@Override
+			public List<String> getGroupMembers() throws RemoteException {
+				// TODO Auto-generated method stub
+				return mSmackable.getGroupMembers();
+			}
+
 			
 
 			

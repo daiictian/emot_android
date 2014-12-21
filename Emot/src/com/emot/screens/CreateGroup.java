@@ -125,7 +125,7 @@ public class CreateGroup extends ActionBarActivity {
 					Intent i = new Intent(CreateGroup.this, GroupChatScreen.class);
 					
 					i.putParcelableArrayListExtra("groupmembers", selectedContacts);
-					i.putExtra("grpName", grpName.getText().toString());
+					i.putExtra(GroupChatScreen.INTENT_GRPCHAT_SUBJECT, grpName.getText().toString());
 					i.putExtra("creategroup?", true);
 					startActivity(i);
 					selectedContacts.clear();

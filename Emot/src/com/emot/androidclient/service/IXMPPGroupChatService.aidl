@@ -8,4 +8,6 @@ interface IXMPPGroupChatService {
 	void createGroup(String grpName,inout List<Contact> members);
 	void joinGroup(String grpName, boolean isCreateGroup, long date);
 	void leaveGroup(String grpName);
+	String getGroupSubject();
+	List<String> getGroupMembers();
 }

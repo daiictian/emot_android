@@ -70,6 +70,32 @@ public class XMPPGroupChatServiceAdapter {
 		
 	}
 	
+	public String getGroupSubject(){
+		String subject = "";
+		
+		try {
+			subject = xmppGrpServiceStub.getGroupSubject();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return subject;
+	}
+	
+	public List<String> getGroupMembers(){
+		List<String> members = new ArrayList<String>();
+		
+		try {
+			members = xmppGrpServiceStub.getGroupMembers();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return members;
+		
+	}
+	
 	
 	public String sendMessage(String user, String message, String tag) {
 		String piD = "";

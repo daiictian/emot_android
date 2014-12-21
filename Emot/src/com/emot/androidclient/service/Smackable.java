@@ -39,6 +39,8 @@ public interface Smackable {
 	void setAvatar();
 	void joinUsers(List<Contact> members);
 	void joinGroup(String grpName, long date);
+	String getGroupSubject();
+	List<String> getGroupMembers();
 	void leaveGroup(String grpName);
 	String getNameForJID(String jid);
 }

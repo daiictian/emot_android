@@ -46,6 +46,13 @@
             android:name=".CreateGroup"
             android:label="@string/app_name" >
         </activity>
+        
+         <activity
+            android:name=".GroupInfo"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/CustomActionBarTheme" >
+        </activity>
         <activity
             android:name=".LastChatScreen"
             android:label="@string/app_name"
