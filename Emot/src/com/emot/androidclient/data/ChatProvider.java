@@ -212,6 +212,7 @@ public class ChatProvider extends ContentProvider {
 					+ ChatConstants.DATE + " INTEGER,"
 					+ ChatConstants.DIRECTION + " INTEGER,"
 					+ ChatConstants.JID + " TEXT,"
+					+ ChatConstants.GRP_SUBJECT + " TEXT,"
 					+ ChatConstants.MESSAGE + " TEXT,"
 					+ ChatConstants.DELIVERY_STATUS + " INTEGER,"
 					+ ChatConstants.PACKET_ID + " TEXT,"
@@ -248,6 +249,7 @@ public class ChatProvider extends ContentProvider {
 		public static final String DATE = "date";
 		public static final String DIRECTION = "from_me";
 		public static final String JID = "jid";
+		public static final String GRP_SUBJECT = "grpSubject";
 		public static final String MESSAGE = "message";
 		public static final String DELIVERY_STATUS = "read"; // SQLite can not rename columns, reuse old name
 		public static final String PACKET_ID = "pid";

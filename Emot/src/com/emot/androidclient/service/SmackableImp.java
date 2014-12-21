@@ -13,13 +13,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.emot.androidclient.util.EmotUtils;
 import org.jivesoftware.smack.AccountManager;
-import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
@@ -52,9 +50,11 @@ import org.jivesoftware.smackx.entitycaps.EntityCapsManager;
 import org.jivesoftware.smackx.entitycaps.cache.SimpleDirectoryPersistentCache;
 import org.jivesoftware.smackx.entitycaps.provider.CapsExtensionProvider;
 import org.jivesoftware.smackx.forward.Forwarded;
+import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.packet.ChatStateExtension;
 import org.jivesoftware.smackx.packet.DelayInfo;
 import org.jivesoftware.smackx.packet.DelayInformation;
@@ -86,10 +86,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -101,6 +102,7 @@ import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.data.RosterProvider.RosterConstants;
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.StatusMode;
@@ -237,6 +239,7 @@ public class SmackableImp implements Smackable {
 	private Object mConnectingThreadMutex = new Object();
 
 	private MultiUserChat mGroupChat;
+	private MultiUserChat mGroupChat2;
 	private ConnectionState mRequestedState = ConnectionState.OFFLINE;
 	private ConnectionState mState = ConnectionState.OFFLINE;
 	private String mLastError;
@@ -316,10 +319,30 @@ public class SmackableImp implements Smackable {
 		Log.i(TAG, "Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 		initServiceDiscovery();
 	}
+	
+	private boolean haveNetworkConnection() {
+	    boolean haveConnectedWifi = false;
+	    boolean haveConnectedMobile = false;
 
+	    ConnectivityManager cm = (ConnectivityManager) mService.getSystemService(Context.CONNECTIVITY_SERVICE);
+	    NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+	    for (NetworkInfo ni : netInfo) {
+	        if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+	            if (ni.isConnected())
+	                haveConnectedWifi = true;
+	        if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+	            if (ni.isConnected())
+	                haveConnectedMobile = true;
+	    }
+	    boolean a = haveConnectedWifi || haveConnectedMobile;
+	    Log.i(TAG,"have network connection " +a);
+	    return haveConnectedWifi || haveConnectedMobile;
+	}
 	// blocking, run from a thread!
 	public boolean doConnect(boolean create_account) throws EmotXMPPException {
+		
 		mRequestedState = ConnectionState.ONLINE;
+		if(haveNetworkConnection()){
 		updateConnectionState(ConnectionState.CONNECTING);
 		if (mXMPPConnection == null || mConfig.reconnect_required)
 			initXMPPConnection();
@@ -327,6 +350,7 @@ public class SmackableImp implements Smackable {
 		// actually, authenticated must be true now, or an exception must have
 		// been thrown.
 		if (isAuthenticated()) {
+			stopService = true;
 			registerMessageListener();
 			registerPresenceListener();
 			registerPongListener();
@@ -336,9 +360,15 @@ public class SmackableImp implements Smackable {
 			// connected, even when no roster entries will come in
 			updateConnectionState(ConnectionState.ONLINE);
 			setAvatar();
-		} else throw new EmotXMPPException("SMACK connected, but authentication failed");
+		}else throw new EmotXMPPException("SMACK connected, but authentication failed");
+		}else{
+			
+			requestConnectionState(ConnectionState.RECONNECT_NETWORK);
+		}
+		
 		return true;
 	}
+		
 
 	// BLOCKING, call on a new Thread!
 	private void updateConnectingThread(Thread new_thread) {
@@ -362,7 +392,7 @@ public class SmackableImp implements Smackable {
 		}
 	}
 
-
+	static boolean stopService = false;
 
 	/** Non-blocking, synchronized function to connect/disconnect XMPP.
 	 * This code is called from outside and returns immediately. The actual work
@@ -397,6 +427,7 @@ public class SmackableImp implements Smackable {
 					public void run() {
 						updateConnectingThread(this);
 						try {
+							Log.i(TAG, "Connnnnnnnnnecting");
 							doConnect(create_account);
 						} catch (IllegalArgumentException e) {
 							// this might happen when DNS resolution in ConnectionConfiguration fails
@@ -413,6 +444,33 @@ public class SmackableImp implements Smackable {
 			case CONNECTING:
 			case DISCONNECTING:
 				// ignore all other cases
+				break;
+			case DISCONNECTED:
+				//updateConnectionState(ConnectionState.CONNECTING);
+			//	registerPongTimeout(2*PACKET_TIMEOUT + 3000, "connection");
+				//sendServerPing();
+
+				new Thread() {
+					@Override
+					public void run() {
+						
+						try {
+							
+							updateConnectingThread(this);
+							Log.i(TAG, "Connnnnnnnnnecting");
+							doConnect(create_account);
+							
+						} catch (IllegalArgumentException e) {
+							// this might happen when DNS resolution in ConnectionConfiguration fails
+							onDisconnected(e);
+						} catch (EmotXMPPException e) {
+							onDisconnected(e);
+						} finally {
+							mAlarmManager.cancel(mPongTimeoutAlarmPendIntent);
+							finishConnectingThread();
+						}
+					}
+				}.start();
 				break;
 			}
 			break;
@@ -432,6 +490,34 @@ public class SmackableImp implements Smackable {
 						onDisconnected("forced disconnect completed");
 						finishConnectingThread();
 						//updateConnectionState(ConnectionState.OFFLINE);
+					}
+				}.start();
+			}
+			
+			if(mState == ConnectionState.CONNECTING || mState == ConnectionState.DISCONNECTED){
+				
+			//	registerPongTimeout(2*PACKET_TIMEOUT + 3000, "connection");
+				
+				//sendServerPing();
+				new Thread() {
+					@Override
+					public void run() {
+						try {
+						
+						updateConnectingThread(this);
+						
+							Log.i(TAG, "Connnnnnnnnnecting");
+							doConnect(create_account);
+						
+						} catch (IllegalArgumentException e) {
+							// this might happen when DNS resolution in ConnectionConfiguration fails
+							onDisconnected(e);
+						} catch (EmotXMPPException e) {
+							onDisconnected(e);
+						} finally {
+							mAlarmManager.cancel(mPongTimeoutAlarmPendIntent);
+							finishConnectingThread();
+						}
 					}
 				}.start();
 			}
@@ -474,9 +560,41 @@ public class SmackableImp implements Smackable {
 		case RECONNECT_DELAYED:
 			switch (mState) {
 			case DISCONNECTED:
+				
 			case RECONNECT_NETWORK:
+				//registerPongTimeout(2*PACKET_TIMEOUT + 3000, "connection");
+			//	sendServerPing();
+
+				//	updateConnectionState(ConnectionState.CONNECTING);
+				
+				//				 register ping (connection) timeout handler: 2*PACKET_TIMEOUT(30s) + 3s
+//								registerPongTimeout(2*PACKET_TIMEOUT + 3000, "connection");
+				
+								new Thread() {
+									@Override
+									public void run() {
+										try {
+											
+										updateConnectingThread(this);
+										
+											Log.i(TAG, "Connnnnnnnnnecting");
+											doConnect(create_account);
+											
+										} catch (IllegalArgumentException e) {
+											// this might happen when DNS resolution in ConnectionConfiguration fails
+											onDisconnected(e);
+										} catch (EmotXMPPException e) {
+											onDisconnected(e);
+										} finally {
+											mAlarmManager.cancel(mPongTimeoutAlarmPendIntent);
+											finishConnectingThread();
+										}
+									}
+								}.start();
+				break;
 			case RECONNECT_DELAYED:
 				updateConnectionState(new_state);
+
 				break;
 			default:
 				throw new IllegalArgumentException("Can not go from " + mState + " to " + new_state);
@@ -614,11 +732,15 @@ public class SmackableImp implements Smackable {
 
 	public void initMUC(final String pGroupName){
 		Form form = null;
-		mGroupChat = new MultiUserChat(mXMPPConnection, pGroupName+"@conference.emot-net");
+		String roomID = EmotUtils.generateRoomID();
+		mGroupChat = new MultiUserChat(mXMPPConnection, roomID+"@conference.emot-net");
 
 		try {
 			//mGroupChat.create(pGroupName);
+			
 			mGroupChat.create(pGroupName);
+			mGroupChat.changeSubject(pGroupName);
+			EmotApplication.setValue(roomID+"@conference.emot-net", pGroupName);
 			Log.i(TAG, "creating multi user chat2 " +mGroupChat);
 			form = mGroupChat.getConfigurationForm();
 			Form submitForm = form.createAnswerForm(); 
@@ -640,7 +762,10 @@ public class SmackableImp implements Smackable {
 				//mGroupChat.sendConfigurationForm(submitForm);
 				FormField field = new FormField("muc#roomconfig_persistentroom");
 				field.addValue("1");
+				FormField field2 = new FormField("muc#roomconfig_membersonly");
+				field2.addValue("1");
 				submitForm.addField(field);
+				submitForm.addField(field2);
 				mGroupChat.sendConfigurationForm(submitForm);
 
 			} catch (XMPPException e) {
@@ -669,17 +794,20 @@ public class SmackableImp implements Smackable {
 				// MultiUserChat.decline(mXmppConnection, room, inviter,
 				// "Don't bother me right now");
 				try {
-					Log.e("abc","Invitation Received for room " +room);
-
-					mGroupChat = new MultiUserChat(connection, room);
-
-					mGroupChat.join(mConfig.userName+"@conference.emot-net");
+					Log.i("abc","Invitation Received for room " +room);
+					
+					mGroupChat2 = new MultiUserChat(connection, room);
+					
+					mGroupChat2.join(mConfig.userName+"@conference.emot-net");
+					Log.i(TAG, "Room subject for recieved room is " + mGroupChat2.getSubject());
+					
 					String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
 					Log.i(TAG, "rooms being saved into shared preferences " +rooms);
 					if(rooms == null){
 						rooms = "";
 					}
-					EmotApplication.setValue(PreferenceConstants.ROOMS, (rooms + "," + mGroupChat.getRoom()).trim());
+					
+					EmotApplication.setValue(PreferenceConstants.ROOMS, (rooms + "," + mGroupChat2.getRoom()).trim());
 					Log.e("abc","join room successfully");
 					// muc.sendMessage("I joined this room!! Bravo!!");
 				} catch (XMPPException e) {
@@ -798,6 +926,7 @@ public class SmackableImp implements Smackable {
 				
 				Log.i(TAG, "user = "+mConfig.userName + " password = "+mConfig.password + " resource = "+mConfig.ressource);
 				mXMPPConnection.login(mConfig.userName, mConfig.password, mConfig.ressource);
+			}
 				//				scheduledExecutorService.schedule(new Runnable() {
 				//
 				//							@Override
@@ -822,51 +951,64 @@ public class SmackableImp implements Smackable {
 				//
 				//							}
 				//						}, 5, TimeUnit.SECONDS);
-				if(mXMPPConnection.isAuthenticated()){
-					Log.i(TAG, "Login successful");
-					setChatRoomInvitationListener();
-					String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
-					if(rooms != null){
-						final String roomstoJoin[] = rooms.split(",");
-						//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
-						Log.i(TAG, "rooms to join " + roomstoJoin);
-						//						List<String> roomstoJoin2 = EmotApplication.getRooms();
-						Log.i(TAG, "rooms to join size " +roomstoJoin.length);
-						sStopService = false;
-						int count = 0;
-						for(int i = 0; i < roomstoJoin.length; i++){
-							count++;
-							if(roomstoJoin[i] != null && !roomstoJoin[i].equals("")){
-								mGroupChat = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
-								Log.i(TAG, "joining room " +roomstoJoin[i]);
-								final DiscussionHistory dh = new DiscussionHistory();
-								long since = EmotApplication.getLongValue("historySince", -1);
-								SimpleDateFormat dateFormater = new SimpleDateFormat(
-										"yy-MM-dd HH:mm:ss");
-								Date date = new Date(since);
-								dh.setSince(date);
-								final long timeout = 10000;
-								try {
-									
-									if(!mGroupChat.isJoined()){
-									//mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
-										mGroupChat.join(mConfig.userName + "@conference.emot-net");
-									Log.i(TAG, "joining room " + mGroupChat.getRoom() + "count " +count);
-									}
-								} catch (XMPPException e) {
-									sStopService = false;
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
+			scheduledExecutorService.schedule(new Runnable() {
+				
+						 
+						
+							
+							@Override
+							public void run() {
+								if(mXMPPConnection.isAuthenticated()){
+									Log.i(TAG, "Login successful");
+									setChatRoomInvitationListener();
+									String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
+									if(rooms != null){
+										final String roomstoJoin[] = rooms.split(",");
+										//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
+										Log.i(TAG, "rooms to join " + roomstoJoin);
+										//						List<String> roomstoJoin2 = EmotApplication.getRooms();
+										Log.i(TAG, "rooms to join size " +roomstoJoin.length);
+										sStopService = false;
+								int count = 0;
+								for(int i = 0; i < roomstoJoin.length; i++){
+									count++;
+									if(roomstoJoin[i] != null && !roomstoJoin[i].equals("")){
+										mGroupChat2 = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
+										Log.i(TAG, "joining room " +roomstoJoin[i]);
+										final DiscussionHistory dh = new DiscussionHistory();
+										long since = EmotApplication.getLongValue("historySince", -1);
+										SimpleDateFormat dateFormater = new SimpleDateFormat(
+												"yy-MM-dd HH:mm:ss");
+										Date date = new Date(since);
+										dh.setSince(date);
+										final long timeout = 4000;
+										try {
+											
+											if(!mGroupChat2.isJoined()){
+											//mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+												mGroupChat2.join(mConfig.userName + "@conference.emot-net","",dh, timeout);
+											Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
+											}else{
+												Log.i(TAG, "joining room done" );
+											}
+										} catch (XMPPException e) {
+											sStopService = false;
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
 
+									}
+								}
+								
 							}
 						}
+						
 					}
 					//mHandlerTask.run();
-				}
+				}, 10, TimeUnit.SECONDS);
 				//initMUC("myroom");
 
-			}
+			
 			Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 			Log.d(TAG, "SM: can resume = " + mStreamHandler.isResumePossible() + " needbind=" + need_bind);
 			if (need_bind) {
@@ -1162,12 +1304,12 @@ public class SmackableImp implements Smackable {
 		newMessage.setBody(message);
 		newMessage.addExtension(new DeliveryReceiptRequest());
 		if (isAuthenticated()) {
-			addChatMessageToDB(ChatConstants.OUTGOING, toJID, message, ChatConstants.DS_SENT_OR_READ,
+			addChatMessageToDB(ChatConstants.OUTGOING, toJID, "",message, ChatConstants.DS_SENT_OR_READ,
 					System.currentTimeMillis(), newMessage.getPacketID(), CHATTYPE, null );
 			mXMPPConnection.sendPacket(newMessage);
 		} else {
 			// send offline -> store to DB
-			addChatMessageToDB(ChatConstants.OUTGOING, toJID, message, ChatConstants.DS_NEW,
+			addChatMessageToDB(ChatConstants.OUTGOING, toJID,"", message, ChatConstants.DS_NEW,
 					System.currentTimeMillis(), newMessage.getPacketID(),CHATTYPE, null);
 		}
 	}
@@ -1453,7 +1595,7 @@ public class SmackableImp implements Smackable {
 			mXMPPConnection.removePacketListener(mPacketListener);
 
 		PacketTypeFilter filter = new PacketTypeFilter(Message.class);
-
+		
 		mPacketListener = new PacketListener() {
 			public void processPacket(Packet packet) {
 				Log.i(TAG, "packet is " +packet.toXML());
@@ -1462,9 +1604,18 @@ public class SmackableImp implements Smackable {
 
 					if (packet instanceof Message) {
 						Message msg = (Message) packet;
+						
 						String from = msg.getFrom();
 						String fromJID = getBareJID(msg.getFrom());
-
+						if(msg.getSubject() != null){
+							EmotApplication.setValue(fromJID, msg.getSubject());
+						}
+						String grpSubject = EmotApplication.getValue(fromJID, "default");
+						Log.i(TAG, "fromJID is " +fromJID);
+						Log.i(TAG, "grpSubject is " +grpSubject);
+						Log.i(TAG, "message properties " + msg.getPropertyNames());
+						Log.i(TAG, "message extensions " + msg.getExtensions());
+						Log.i(TAG, "room nickname " +msg.getProperty("roomName"));
 						PacketExtension extension = msg.getExtension("http://jabber.org/protocol/chatstates");
 						Log.i(TAG, "Extension  = "+extension +" composing  = "+ msg.getProperty("composing") + " propetries = "+msg.getPropertyNames().size());
 
@@ -1545,12 +1696,12 @@ public class SmackableImp implements Smackable {
 							if (msg.getType() == Message.Type.error)
 								is_new = ChatConstants.DS_FAILED;
 							if(msg.getType() == Message.Type.chat && !msg.getBody().contains("you have been tagged")){
-								addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
+								addChatMessageToDB(direction, fromJID, "",chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
 								if (direction == ChatConstants.INCOMING)
-									mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), false, getBareGJID(from));
+									mServiceCallBack.newMessage(fromJID,chatMessage, (cc != null), false, getBareGJID(from));
 							}else if(msg.getType() == Message.Type.groupchat || msg.getBody().contains("you have been tagged")){
 								EmotApplication.setLongValue("historySince", ts);
-								addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, null);
+								addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, null);
 								if (direction == ChatConstants.INCOMING)
 									mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), true, getBareGJID(from));	
 							}
@@ -1582,13 +1733,13 @@ public class SmackableImp implements Smackable {
 						//addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID());
 						if (direction == ChatConstants.INCOMING){
 							if(msg.getType() == Message.Type.chat && !msg.getBody().contains("you have been tagged")){
-								addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
+								addChatMessageToDB(direction, fromJID, "",chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
 								mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), false, getBareGJID(from));
 							}else if(msg.getType() == Message.Type.groupchat ||  msg.getBody().contains("you have been tagged")){
 
 								Log.i(TAG, "Message from group member " +getBareGJID(from));
 								EmotApplication.setLongValue("historySince", ts);
-								addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, getBareGJID(from));
+								addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, getBareGJID(from));
 
 								mServiceCallBack.newMessage(getBareJID(fromJID), chatMessage, (cc != null), true, getBareGJID(from));
 
@@ -1635,7 +1786,7 @@ public class SmackableImp implements Smackable {
 		mXMPPConnection.addPacketListener(mPresenceListener, new PacketTypeFilter(Presence.class));
 	}
 
-	private void addChatMessageToDB(int direction, String JID,
+	private void addChatMessageToDB(int direction, String JID, String grpSubject,
 			String message, int delivery_status, long ts, String packetID, String chatType, String messageSenderinGroup) {
 		if(direction == ChatConstants.INCOMING){
 			Cursor oldChat = mContentResolver.query(
@@ -1656,6 +1807,7 @@ public class SmackableImp implements Smackable {
 		values.put(ChatConstants.DIRECTION, direction);
 		values.put(ChatConstants.JID, JID);
 		values.put(ChatConstants.MESSAGE, message);
+		values.put(ChatConstants.GRP_SUBJECT, grpSubject);
 		values.put(ChatConstants.DELIVERY_STATUS, delivery_status);
 		values.put(ChatConstants.DATE, ts);
 		values.put(ChatConstants.PACKET_ID, packetID);
@@ -1925,11 +2077,16 @@ public class SmackableImp implements Smackable {
 				//			chat.sendMessage(m);
 				//m.setFrom(mGroupChat.getRoom());
 				EmotApplication.setLongValue("historySince", System.currentTimeMillis());
+				
+				//mGroupChat.sendMessage(newMessage.getBody());
+				Log.i(TAG, "sending grp name " + mGroupChat.getRoom());
+				newMessage.setProperty("roomName", mGroupChat.getRoom());
 				mGroupChat.sendMessage(newMessage.getBody());
+				//mGroupChat.sendMessage(newMessage.);
 
 			} else {
 				// send offline -> store to DB
-				addChatMessageToDB(ChatConstants.OUTGOING, mGroupChat.getRoom(), message, ChatConstants.DS_NEW,
+				addChatMessageToDB(ChatConstants.OUTGOING, mGroupChat.getRoom(), mGroupChat.getSubject(),message, ChatConstants.DS_NEW,
 						System.currentTimeMillis(), newMessage.getPacketID(),GROUPCHATTYPE, mConfig.userName);
 			}
 		} catch (XMPPException e) {
@@ -1960,10 +2117,11 @@ public class SmackableImp implements Smackable {
 	}
 
 	ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+	ScheduledExecutorService scheduledConnectionService = Executors.newScheduledThreadPool(1);
 	private static boolean sStopService = false;
-
+	
 	public void joinGroup(final String grpName, long pdate) {
-
+		
 		final DiscussionHistory dh = new DiscussionHistory();
 		Date date = getDate(pdate);
 		dh.setSince(date);
@@ -1971,6 +2129,9 @@ public class SmackableImp implements Smackable {
 		mGroupChat = new MultiUserChat(mXMPPConnection, grpName);
 		try {
 			mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+			RoomInfo info = MultiUserChat.getRoomInfo(mXMPPConnection, grpName);
+			Log.i(TAG, "Occupants in the group are " +mGroupChat.getMembers().iterator().next().getJid());
+			Log.i(TAG, "Group subject is " +info.getSubject());
 		} catch (XMPPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2010,5 +2171,29 @@ public class SmackableImp implements Smackable {
 	public void leaveGroup(String grpName) {
 		mGroupChat.leave();
 		
+	}
+
+	@Override
+	public String getGroupSubject() {
+		// TODO Auto-generated method stub
+		return EmotApplication.getValue(mGroupChat.getRoom(), "default");
+	}
+
+	@Override
+	public List<String> getGroupMembers() {
+		List<String> members = new ArrayList<String>();
+		
+		try {
+			Iterator<Affiliate> i =	mGroupChat.getMembers().iterator();
+			while(i.hasNext()){
+				members.add(i.next().getJid());
+			}
+		} catch (XMPPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Log.i(TAG, "members found to be returned are " +members);
+		members.add(mConfig.userName+"@emot-net");
+		return members;
 	}
 }

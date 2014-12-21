@@ -3,9 +3,12 @@ package com.emot.screens;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smackx.pubsub.GetItemsRequest;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -14,6 +17,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +29,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -75,10 +80,12 @@ public class GroupChatScreen extends ActionBarActivity {
 	private String lastSeen;
 	private long mDate;
 	private  String grpName = "grpname";
+	private  String grpSubject ;
 	private boolean isCreateGrp;
 	private static final int DELAY_NEWMSG = 2000;
 	public final static String INTENT_GRPCHAT_MEMBERS = "groupmembers";
 	public final static String INTENT_GRPCHAT_NAME = "grpName";
+	public final static String INTENT_GRPCHAT_SUBJECT = "grpSubject";
 
 	private static final String[] PROJECTION_FROM = new String[] {
 		ChatProvider.ChatConstants._ID, ChatProvider.ChatConstants.DATE,
@@ -95,7 +102,7 @@ public class GroupChatScreen extends ActionBarActivity {
 
 	@Override
 	protected void onStop() {
-		mCursor.close();
+
 		super.onStop();
 	}
 
@@ -103,9 +110,9 @@ public class GroupChatScreen extends ActionBarActivity {
 	protected void onResume() {
 		super.onResume();
 		if(mCursor == null){
-			
+
 		}
-		localCache();
+		
 		bindXMPPService();
 	}
 
@@ -123,11 +130,12 @@ public class GroupChatScreen extends ActionBarActivity {
 		return true;
 	}
 
-	
+	private String currentGrpSubject;
+	private List<String> currentGrpMembers;
 	private void registerXMPPService() {
 		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
-		Uri chatURI = Uri.parse(grpName);
+		Uri chatURI = Uri.parse(grpSubject);
 		mServiceIntent.setData(chatURI);
 		mServiceIntent.putExtra("isforgrpchat", true);
 		mServiceIntent.putExtra("sinceDate", mDate);
@@ -146,10 +154,13 @@ public class GroupChatScreen extends ActionBarActivity {
 				if(isCreateGrp){
 
 
-					mServiceAdapter.createGroup(grpName, grpchatmembers);
+					mServiceAdapter.createGroup(grpSubject, grpchatmembers);
 
 				}
 				mServiceAdapter.joinExistingGroup(grpName, isCreateGrp, mDate);
+				currentGrpSubject = mServiceAdapter.getGroupSubject();
+				currentGrpMembers = mServiceAdapter.getGroupMembers();
+				
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
@@ -185,7 +196,12 @@ public class GroupChatScreen extends ActionBarActivity {
 		case R.id.action_copy_text:
 			myClip = ClipData.newPlainText("text", messageToCopy.toString());
 			myClipboard.setPrimaryClip(myClip);
-			
+		case R.id.group_info:
+			Intent intent = new Intent(GroupChatScreen.this, GroupInfo.class);
+			intent.putExtra("currentSubject", currentGrpSubject);
+			intent.putStringArrayListExtra("currentMembers", (ArrayList<String>) currentGrpMembers);
+			startActivity(intent);
+
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -198,7 +214,17 @@ public class GroupChatScreen extends ActionBarActivity {
 	}
 	ClipboardManager myClipboard;
 	ClipData myClip;
-	
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) 
+	{
+		if ((keyCode == KeyEvent.KEYCODE_BACK)) 
+		{
+			this.finish();
+			return false; //I have tried here true also
+		}
+		return super.onKeyDown(keyCode, event);
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -207,17 +233,18 @@ public class GroupChatScreen extends ActionBarActivity {
 		ab.setHomeButtonEnabled(true);
 		ab.setDisplayHomeAsUpEnabled(true);
 		Intent incomingIntent = getIntent();
-		 myClipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
-		
+		myClipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+
 		grpName = incomingIntent
 				.getStringExtra("grpName");
+		grpSubject = incomingIntent.getStringExtra(INTENT_GRPCHAT_SUBJECT);
 		isCreateGrp = incomingIntent.getBooleanExtra("creategroup?", false);
 		grpchatmembers =  incomingIntent.getParcelableArrayListExtra("groupmembers");
 		Log.i(TAG, "group chat members are " +grpchatmembers);
 		setAliasFromDB();
 
 		Log.i(TAG, "groupName is " + grpName);
-		if (grpName == null) {
+		if (grpSubject == null) {
 			Toast.makeText(EmotApplication.getAppContext(),
 					"Incorrect username", Toast.LENGTH_LONG).show();
 			finish();
@@ -232,8 +259,9 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
 		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);
-		userTitle.setText(grpName);
-		chatEntry.addTextChangedListener(groupMessageWatcher);
+		Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
+		userTitle.setText(grpSubject);
+		//chatEntry.addTextChangedListener(groupMessageWatcher);
 		ab.setTitle(chatAlias);
 		ab.setSubtitle(lastSeen);
 
@@ -261,19 +289,38 @@ public class GroupChatScreen extends ActionBarActivity {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				mCursor.moveToPosition(position);
-				String message = mCursor.getString(mCursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
-				messageToCopy.append("\n" +message);
-				
-			//	Toast.makeText(GroupChatScreen.this, "List item selected:" +message , Toast.LENGTH_LONG).show();
-				view.setSelected(true);view.setBackgroundColor(color.darkgreen);
+				Cursor cursor = (Cursor)parent.getItemAtPosition(position);
+
+				currentlySelectedView = view;
+				Log.i(TAG, "Current view is " +parent.getChildAt(position));
+				String message = "";
+
+				if(!selectedRow.contains(position)){
+					selectedRow.add(position);
+					message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
+					Toast.makeText(EmotApplication.getAppContext(),
+							"messge selected " + message, Toast.LENGTH_LONG).show();
+					messageToCopy.append("\n" +message);
+					currentlySelectedView.setSelected(true);
+					currentlySelectedView.setBackgroundColor(color.darkgreen);
+
+				}else{
+					Log.i(TAG, "Deselecting");
+					currentlySelectedView.setBackgroundColor(0x00000000);
+					selectedRow.remove(position);
+				}
+
 				return false;
 			}
 		});
+
+
 		registerXMPPService();
 
 
 	}
+	private Set<Integer> selectedRow = new HashSet<Integer>();
+	private View currentlySelectedView;
 	private StringBuilder messageToCopy = new StringBuilder();
 
 	private TextWatcher groupMessageWatcher = new TextWatcher() {
@@ -340,10 +387,10 @@ public class GroupChatScreen extends ActionBarActivity {
 	}
 
 	private void setAliasFromDB() {
-		chatAlias = grpName.split("@")[0];
+		chatAlias = grpSubject.split("@")[0];
 		lastSeen = "";
 		String selection = RosterProvider.RosterConstants.JID + "='"
-				+ grpName + "'";
+				+ grpSubject + "'";
 		;
 		String[] projection = new String[] {
 				RosterProvider.RosterConstants.ALIAS,
@@ -399,17 +446,14 @@ public class GroupChatScreen extends ActionBarActivity {
 		getContentResolver().update(rowuri, values, null, null);
 	}
 	Cursor mCursor;
-private void localCache(){
-	mCursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
-			ChatConstants.JID + "='" + grpName + "'", null, null);
-}
+
 	private void setChatWindowAdapter() {
 		String selection = ChatConstants.JID + "='" + grpName + "'";
 		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
 				selection, null, null);
 		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM,
 				PROJECTION_TO, grpName, grpName);
-		
+
 
 		chatView.setAdapter(adapter);
 	}
@@ -436,7 +480,7 @@ private void localCache(){
 
 			long dateMilliseconds = cursor.getLong(cursor
 					.getColumnIndex(ChatProvider.ChatConstants.DATE));
-			
+
 			int _id = cursor.getInt(cursor
 					.getColumnIndex(ChatProvider.ChatConstants._ID));
 			mDate = dateMilliseconds;

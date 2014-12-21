@@ -23,6 +23,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.emot.androidclient.IXMPPRosterCallback.Stub;
@@ -105,13 +106,15 @@ public class LastChatScreen extends ActionBarActivity {
 		String[] projection = new String[] {
 				ChatProvider.ChatConstants._ID,
 				ChatProvider.ChatConstants.JID,
+				ChatProvider.ChatConstants.GRP_SUBJECT,
 				ChatProvider.ChatConstants.CHAT_TYPE,
 				"MAX("+ChatProvider.ChatConstants.DATE+")",
 				ChatProvider.ChatConstants.MESSAGE, 
 				ChatProvider.ChatConstants.DELIVERY_STATUS 
 		};
 		int[] projection_to = new int[] { R.id.textLastChatUser, R.id.textLastChatItem };
-		String selection = ChatProvider.ChatConstants.JID +" != '"+EmotConfiguration.getConfig().jabberID+"'" + ") GROUP BY ("+ ChatProvider.ChatConstants.JID;
+		String selection =  ChatProvider.ChatConstants.JID + " != '"+EmotConfiguration.getConfig().jabberID+"'" + ") GROUP BY ("+ ChatProvider.ChatConstants.JID;
+		Log.i(TAG, "selection is " + selection);
 		String[] groupby = new String[]{ChatProvider.ChatConstants.JID};
 		Cursor cursor = getContentResolver().query(ChatProvider.CONTENT_URI, projection, selection, null, null);
 		Log.i(TAG, "cursor count "+cursor.getCount());
@@ -123,6 +126,7 @@ public class LastChatScreen extends ActionBarActivity {
 				Cursor cur = (Cursor) adapter.getItem(position);
 	            cur.moveToPosition(position);
 	            String jid = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.JID));
+	            String grpSubject = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.GRP_SUBJECT));
 	            String type = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
 	            Log.i(TAG, "jid of room or freind is " + jid);
 	            if(type.equals("chat")){
@@ -132,6 +136,8 @@ public class LastChatScreen extends ActionBarActivity {
 	            }else if(type.equals("groupchat")){
 	            	Intent chatIntent = new Intent(LastChatScreen.this, GroupChatScreen.class);
 					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_NAME, jid);
+					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_SUBJECT, grpSubject);
+					Log.i(TAG, "starting grpchat screen with grpSubject " +grpSubject);
 					startActivity(chatIntent);	
 	            }
 				//cur.close();
@@ -163,6 +169,8 @@ public class LastChatScreen extends ActionBarActivity {
 			String type = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
 			if(type!=null && type.equals("groupchat")){
 				EmotApplication.addRooms(user);
+				user = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.GRP_SUBJECT));
+				
 			}
 			String message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 			String status = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
