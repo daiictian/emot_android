@@ -89,6 +89,7 @@ public class ContactUpdater {
 					e.printStackTrace();
 					return;
 				}
+				Log.i(TAG, "Looking for numbers : "+numbers.toString());
 				ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
 				params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceConstants.USER_APPID, "")));
 				params.add(new BasicNameValuePair("number_list", numbers.toString()));
@@ -135,7 +136,6 @@ public class ContactUpdater {
 					ph = EmotApplication.getValue(PreferenceConstants.COUNTRY_PHONE_CODE, "") + ph;
 				}
 				String mobile = ph.replaceAll("[^\\d.]", "");
-				//Log.i(TAG, "name = " + name + ". Phone = " + mobile); 
 				cntcts.put(mobile,  name);
 			}
 			return cntcts;

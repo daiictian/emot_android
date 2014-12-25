@@ -42,7 +42,6 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:hint="@string/enterMobileNumber"
-            android:text="9342464980"
             android:inputType="numberDecimal" />
 
         <Button
@@ -76,8 +75,7 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:hint="@string/enterVerificationCode"
-            android:inputType="numberDecimal"
-            android:text="1234" />
+            android:inputType="numberDecimal" />
 
         <Button
             android:id="@+id/sendVerificationCode"

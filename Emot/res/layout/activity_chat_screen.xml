@@ -3,8 +3,8 @@
     android:id="@+id/LinearLayout1"
     android:layout_width="fill_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/halka_white" >
+    android:background="@color/halka_white"
+    android:orientation="vertical" >
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -31,8 +31,7 @@
         android:layout_height="match_parent"
         android:background="@color/white"
         android:orientation="vertical"
-        android:weightSum="10"
-        >
+        android:weightSum="10" >
 
         <ListView
             android:id="@+id/chatView"
@@ -42,6 +41,11 @@
             android:divider="@null"
             android:stackFromBottom="true"
             android:transcriptMode="alwaysScroll" />
+        
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1dip"
+            android:background="@color/grey" />
 
         <LinearLayout
             android:id="@+id/viewEmotSuggestion"
@@ -55,33 +59,65 @@
                 android:background="@color/dark_grey"
                 android:visibility="gone" />
 
-            <HorizontalScrollView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/grey"
-                android:padding="2dp" >
+                android:orientation="horizontal" >
 
-                <LinearLayout
-                    android:id="@+id/viewEmotSuggestionLayout"
+                <Button
+                    android:id="@+id/buttonRecentEmots"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:orientation="horizontal" >
-                </LinearLayout>
-            </HorizontalScrollView>
+                    android:background="@drawable/ic_action_time"/>
+
+                <HorizontalScrollView
+                    android:id="@+id/scrollEmotSuggestionLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/grey"
+                    android:padding="2dp"
+                    android:visibility="visible" >
+
+                    <LinearLayout
+                        android:id="@+id/viewEmotSuggestionLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_vertical"
+                        android:orientation="horizontal" >
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <HorizontalScrollView
+                    android:id="@+id/scrollEmotRecentLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/grey"
+                    android:padding="2dp"
+                    android:visibility="gone" >
+
+                    <LinearLayout
+                        android:id="@+id/viewEmotRecentLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_vertical"
+                        android:orientation="horizontal" >
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+            </LinearLayout>
         </LinearLayout>
 
         <View
             android:layout_width="fill_parent"
             android:layout_height="1dip"
-            android:background="@color/dark_grey" />
+            android:background="@color/grey" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="horizontal"
             android:background="@color/white"
+            android:orientation="horizontal"
             android:weightSum="100" >
 
             <com.emot.common.EmotEditText

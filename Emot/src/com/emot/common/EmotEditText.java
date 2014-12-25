@@ -7,6 +7,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -132,6 +133,10 @@ public class EmotEditText extends EditText {
 		this.emotSuggestionLayout = view;
 	}
 	
+	public void refillSuggestedEmots(){
+		emotSuggestionLayout.removeAllViews();
+	}
+	
 	public void clearSuggestion(){
 		emotSuggestionLayout.removeAllViews();
 		suggestedEmots.clear();
@@ -181,7 +186,12 @@ public class EmotEditText extends EditText {
 
 		@Override
 		protected Void doInBackground(Void... params) {
-			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH} , DBContract.EmotsDBEntry.TAGS+" match '"+text+"';", null, null, null, null, null);
+			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
+					DBContract.EmotsDBEntry.TABLE_NAME, 
+					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
+					DBContract.EmotsDBEntry.TAGS+" match '"+text+"';", 
+					null, null, null, null, null
+			);
 			while (cr.moveToNext())
 			{
 				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
@@ -209,7 +219,15 @@ public class EmotEditText extends EditText {
 				public void onClick(View v) {
 					Log.i(TAG, "Image clicked !!!");
 					EmotEditText.this.addEmot(emot);
-					//Log.i(TAG, "cache = "+v.getDrawingCache());
+					ContentValues values = new ContentValues();
+					int time = (int) (System.currentTimeMillis());
+					values.put(DBContract.EmotsDBEntry.LAST_USED, time);
+					EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
+							DBContract.EmotsDBEntry.TABLE_NAME, 
+							values, 
+							DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
+							null
+					);
 				}
 			});
 			if(!suggestedEmots.containsKey(emot.getEmotHash())){

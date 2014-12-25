@@ -174,7 +174,7 @@ public class Registration extends ActionBarActivity {
 								String status = resultJson.getString("status");
 								if(status.equals("true")){
 									Log.i("Registration", "status us true");
-									Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
+									//Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
 								}else{
 									Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
 									Log.i(TAG, "registration status is " +status);
