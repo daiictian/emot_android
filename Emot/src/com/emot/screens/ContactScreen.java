@@ -20,8 +20,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -51,6 +53,7 @@ public class ContactScreen extends ActionBarActivity{
 	private Stub rosterCallback;
 	private EmotConfiguration mConfig;
 	private ContactArrayAdapter contactAdapter;
+	private Button inviteButton;
 	
 	final static private String[] CONTACT_PROJECTION = new String[] {
 		RosterConstants.ALIAS, RosterConstants.STATUS_MESSAGE,
@@ -67,6 +70,7 @@ public class ContactScreen extends ActionBarActivity{
 		getSupportActionBar().setTitle("Contacts");
 		
 		listviewContact = (ListView)findViewById(R.id.listview_contact);
+		inviteButton = (Button)findViewById(R.id.buttonInvite);
 		contacts = new ArrayList<Contact>();
 		contactAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		listviewContact.setAdapter(contactAdapter);
@@ -89,6 +93,15 @@ public class ContactScreen extends ActionBarActivity{
 
 				//startChatActivity(mobile+"@"+WebServiceConstants.CHAT_DOMAIN, "alias", null);
 
+			}
+		});
+		inviteButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, EmotApplication.getAppContext().getResources().getString(R.string.invite_text));
+                startActivity(Intent.createChooser(shareIntent, "Share"));
 			}
 		});
 		registerXMPPService();

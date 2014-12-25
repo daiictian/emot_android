@@ -34,6 +34,7 @@ public final class DBContract {
 		public static final String EMOT_IMG = "emot_img";
 		public static final String TAGS = "tags";
 		public static final String EMOT_HASH = "emot_hash";
+		public static final String LAST_USED = "last_used";
 	}
 
 }

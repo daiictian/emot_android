@@ -10,12 +10,14 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v4.view.ViewPager.LayoutParams;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
@@ -27,10 +29,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,7 +50,10 @@ import com.emot.androidclient.service.XMPPService;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
+import com.emot.model.Emot;
 import com.emot.model.EmotApplication;
+import com.emot.persistence.DBContract;
+import com.emot.persistence.EmoticonDBHelper;
 
 public class ChatScreen extends ActionBarActivity {
 
@@ -55,6 +62,10 @@ public class ChatScreen extends ActionBarActivity {
 	private TextView userTitle;
 	private View emotSuggestion;
 	private LinearLayout emotSuggestionLayout;
+	private LinearLayout emotRecentLayout;
+	private View scrollEmotSuggestionLayout;
+	private View scrollEmotRecentLayout;
+	private Button toggleLastEmot;
 	private static String TAG = "ChatScreen";
 	private ListView chatView;
 	private String chatFriend;
@@ -241,6 +252,71 @@ public class ChatScreen extends ActionBarActivity {
 		userTitle = (TextView) findViewById(R.id.username);
 		emotSuggestion = findViewById(R.id.viewEmotSuggestion);
 		emotSuggestionLayout = (LinearLayout) findViewById(R.id.viewEmotSuggestionLayout);
+		emotRecentLayout = (LinearLayout) findViewById(R.id.viewEmotRecentLayout);
+		toggleLastEmot = (Button)findViewById(R.id.buttonRecentEmots);
+		scrollEmotSuggestionLayout = findViewById(R.id.scrollEmotSuggestionLayout);
+		scrollEmotRecentLayout = findViewById(R.id.scrollEmotRecentLayout);
+		toggleLastEmot.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(scrollEmotRecentLayout.getVisibility()==View.VISIBLE){
+					Log.i(TAG, "opening suggestion layout");
+					scrollEmotRecentLayout.setVisibility(View.GONE);
+					scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
+				}else{
+					Log.i(TAG, "opening recent layout");
+					if(emotRecentLayout.getChildCount()<=0){
+						Log.i(TAG, "get count less than zero");
+						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
+								DBContract.EmotsDBEntry.TABLE_NAME, 
+								new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
+								null, 
+								null, 
+								null, 
+								null, 
+								DBContract.EmotsDBEntry.LAST_USED + " desc", 
+								"20"
+						);
+						while (cr.moveToNext())
+						{
+							String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
+							byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
+							Log.i(TAG, "Recent Emot hash is "+hash);
+							final Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
+							ImageView view = new ImageView(EmotApplication.getAppContext());
+							view.setId(0);
+							RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+							view.setLayoutParams(params);
+							view.setImageBitmap(emot.getEmotImg());
+							view.setDrawingCacheEnabled(true);
+							view.setOnClickListener(new OnClickListener() {
+
+								@Override
+								public void onClick(View v) {
+									Log.i(TAG, "Image clicked !!!");
+									chatEntry.addEmot(emot);
+									ContentValues values = new ContentValues();
+									int time = (int) (System.currentTimeMillis());
+									values.put(DBContract.EmotsDBEntry.LAST_USED, time);
+									EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
+											DBContract.EmotsDBEntry.TABLE_NAME, 
+											values, 
+											DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
+											null
+									);
+								}
+							});
+							emotRecentLayout.addView(view);
+						}
+						cr.close();
+					}
+						
+					scrollEmotRecentLayout.setVisibility(View.VISIBLE);
+					scrollEmotSuggestionLayout.setVisibility(View.GONE);
+				}
+				
+			}
+		});
 
 		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
 		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);

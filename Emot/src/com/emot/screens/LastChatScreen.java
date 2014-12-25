@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -16,14 +17,15 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.emot.androidclient.IXMPPRosterCallback.Stub;
@@ -97,6 +99,7 @@ public class LastChatScreen extends ActionBarActivity {
 	    }
 	}
 	
+
 	private void intializeUI(){
 		listLastChat = (ListView)findViewById(R.id.listLastChat);
 	}
@@ -114,10 +117,10 @@ public class LastChatScreen extends ActionBarActivity {
 		};
 		int[] projection_to = new int[] { R.id.textLastChatUser, R.id.textLastChatItem };
 		String selection =  ChatProvider.ChatConstants.JID + " != '"+EmotConfiguration.getConfig().jabberID+"'" + ") GROUP BY ("+ ChatProvider.ChatConstants.JID;
-		Log.i(TAG, "selection is " + selection);
+		//Log.i(TAG, "selection is " + selection);
 		String[] groupby = new String[]{ChatProvider.ChatConstants.JID};
 		Cursor cursor = getContentResolver().query(ChatProvider.CONTENT_URI, projection, selection, null, null);
-		Log.i(TAG, "cursor count "+cursor.getCount());
+		//Log.i(TAG, "cursor count "+cursor.getCount());
 		final ListAdapter adapter = new LastChatAdapter(cursor, projection, projection_to);
 		listLastChat.setAdapter(adapter);
 		listLastChat.setOnItemClickListener(new OnItemClickListener() {
@@ -128,7 +131,7 @@ public class LastChatScreen extends ActionBarActivity {
 	            String jid = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.JID));
 	            String grpSubject = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.GRP_SUBJECT));
 	            String type = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
-	            Log.i(TAG, "jid of room or freind is " + jid);
+	            //Log.i(TAG, "jid of room or freind is " + jid);
 	            if(type.equals("chat")){
 		            Intent chatIntent = new Intent(LastChatScreen.this, ChatScreen.class);
 					chatIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, jid);
@@ -137,11 +140,38 @@ public class LastChatScreen extends ActionBarActivity {
 	            	Intent chatIntent = new Intent(LastChatScreen.this, GroupChatScreen.class);
 					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_NAME, jid);
 					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_SUBJECT, grpSubject);
-					Log.i(TAG, "starting grpchat screen with grpSubject " +grpSubject);
+					//Log.i(TAG, "starting grpchat screen with grpSubject " +grpSubject);
 					startActivity(chatIntent);	
 	            }
 				//cur.close();
 			}});
+		listLastChat.setOnTouchListener(new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				int action = MotionEventCompat.getActionMasked(event);
+				switch(action) {
+					case (MotionEvent.ACTION_DOWN) :
+			            Log.i(TAG,"Action was DOWN");
+			            return false;
+			        case (MotionEvent.ACTION_MOVE) :
+			            Log.i(TAG,"Action was MOVE");
+			            return false;
+			        case (MotionEvent.ACTION_UP) :
+			            Log.i(TAG,"Action was UP");
+			            return false;
+			        case (MotionEvent.ACTION_CANCEL) :
+			            Log.i(TAG,"Action was CANCEL");
+			            return false;
+			        case (MotionEvent.ACTION_OUTSIDE) :
+			            Log.i(TAG,"Movement occurred outside bounds " +
+			                    "of current screen element");
+			            return false;      
+			        default : 
+			            return false;
+				}
+			}
+		});
 		Log.i(TAG, "Adapter set !!");
 	}
 	
@@ -280,13 +310,13 @@ public class LastChatScreen extends ActionBarActivity {
 			String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";
 			String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS, RosterProvider.RosterConstants.AVATAR};
 			Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
-			Log.i(TAG, "users found length = "+cursor.getCount());
+			//Log.i(TAG, "users found length = "+cursor.getCount());
 			if(cursor.getCount()>0){
 				while(cursor.moveToNext()){
 					alias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
-					Log.i(TAG, "chat alias : "+alias);
+					//Log.i(TAG, "chat alias : "+alias);
 					avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
-					Log.i(TAG, "avatar : "+avatar);
+					//Log.i(TAG, "avatar : "+avatar);
 					
 				}
 			}
@@ -324,13 +354,13 @@ public class LastChatScreen extends ActionBarActivity {
 				String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";
 				String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS, RosterProvider.RosterConstants.AVATAR};
 				Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
-				Log.i(TAG, "users found length = "+cursor.getCount());
+				//Log.i(TAG, "users found length = "+cursor.getCount());
 				if(cursor.getCount()>0){
 					while(cursor.moveToNext()){
 						alias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
-						Log.i(TAG, "chat alias : "+alias);
+						//Log.i(TAG, "chat alias : "+alias);
 						avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
-						Log.i(TAG, "avatar : "+avatar);
+						//Log.i(TAG, "avatar : "+avatar);
 						
 					}
 				}
@@ -357,7 +387,7 @@ public class LastChatScreen extends ActionBarActivity {
 	
 	public void updateContacts(){
 		//Update Contacts
-		Log.i(TAG, "Updating contacts !!!!");
+		//Log.i(TAG, "Updating contacts !!!!");
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 			@Override

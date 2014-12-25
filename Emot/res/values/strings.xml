@@ -43,8 +43,8 @@
     <string name="group_info">Group Info</string>
     <string name="emots">Emots</string>
     <string name="enterMobileNumber">Please enter your mobile number</string>
-    <string name="enterVerificationCode">Code</string>
-    <string name="ask_verification_code">Please enter the verification code texted to your mobile number.</string>
+    <string name="enterVerificationCode">Number</string>
+    <string name="ask_verification_code">Please enter last ten digits of the number you received missed call from</string>
     <string name="enterGroupName">Please enter group name</string>
     <string name="edit">edit</string>
     <string name="save">SAVE</string>
@@ -57,6 +57,8 @@
     <string name="search">Search</string>
     <string name="selectParticipant">Select Participant</string>
     <string name="submit">SUBMIT</string>
+    <string name="invite">INVITE FRIENDS</string>
+    <string name="invite_text">Hi there! I am using emot. Lets you chat through emoticons. To experience the awesomeness download the app from here.</string>
     <string name="createGroup">CREATE GROUP</string>
     <string name="send">SEND</string>
     <string name="next">NEXT</string>
