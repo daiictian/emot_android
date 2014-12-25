@@ -41,7 +41,7 @@ public class XMPPService extends GenericService {
 	private Intent mAlarmIntent = new Intent(RECONNECT_ALARM);
 	private PendingIntent mPAlarmIntent;
 	private BroadcastReceiver mAlarmReceiver = new ReconnectAlarmReceiver();
-
+	private BroadcastReceiver mMissedCall;;
 	private ServiceNotification mServiceNotification = null;
 
 	private Smackable mSmackable;
@@ -54,12 +54,14 @@ public class XMPPService extends GenericService {
 	private HashSet<String> mIsBoundTo = new HashSet<String>();
 	private Handler mMainHandler = new Handler();
 	private RemoteCallbackList<IXMPPChatCallback> chatCallbacks = new RemoteCallbackList<IXMPPChatCallback>();
-
+	private String grpSubject;
+	
 	
 	@Override
 	public IBinder onBind(Intent intent) {
 		userStartedWatching();
 		Long date = intent.getLongExtra("sinceDate", -1);
+		grpSubject = intent.getStringExtra("groupSubject");
 		Log.i(TAG, "date is " +date);
 		String chatPartner = intent.getDataString();
 		boolean isforgrpchat = intent.getBooleanExtra("isforgrpchat", false);
@@ -94,7 +96,60 @@ public class XMPPService extends GenericService {
 
 		return true;
 	}
+	
+	private boolean haveNetworkConnection() {
+	    boolean haveConnectedWifi = false;
+	    boolean haveConnectedMobile = false;
 
+	    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	    NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+	    for (NetworkInfo ni : netInfo) {
+	        if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+	            if (ni.isConnected())
+	                haveConnectedWifi = true;
+	        if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+	            if (ni.isConnected())
+	                haveConnectedMobile = true;
+	    }
+	    boolean a = haveConnectedWifi || haveConnectedMobile;
+	    Log.i(TAG,"have network connection " +a);
+	    return haveConnectedWifi || haveConnectedMobile;
+	}
+	private BroadcastReceiver mConnectivityChangedReceiver = new BroadcastReceiver() {      
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "Hey, net?");
+           
+            	if(haveNetworkConnection()){
+            		new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+						try {
+							if(mSmackable != null){
+							mSmackable.doConnect(false);
+							}
+						} catch (EmotXMPPException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+							
+						}
+					}).start();
+				
+            	}else{
+            		Log.i(TAG, "Not having WiFi or Mobile connection");
+            	}
+			
+        }};
+        
+        private BroadcastReceiver mMissedCallReceiver = new BroadcastReceiver() {
+			
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				Log.i(TAG,"Missed Call received");
+				
+			}
+		};
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -102,7 +157,8 @@ public class XMPPService extends GenericService {
 		createServiceRosterStub();
 		createServiceChatStub();
 		createGroupServiceChatStub();
-
+		registerReceiver(mConnectivityChangedReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+		registerReceiver(mMissedCallReceiver, new IntentFilter("android.intent.action.PHONE_STATE"));
 		mPAlarmIntent = PendingIntent.getBroadcast(this, 0, mAlarmIntent,
 					PendingIntent.FLAG_UPDATE_CURRENT);
 		registerReceiver(mAlarmReceiver, new IntentFilter(RECONNECT_ALARM));
@@ -131,7 +187,9 @@ public class XMPPService extends GenericService {
 		    manualDisconnect();
 		    mSmackable.unRegisterCallback();
 		}
+		unregisterReceiver(mConnectivityChangedReceiver);
 		unregisterReceiver(mAlarmReceiver);
+		unregisterReceiver(mMissedCallReceiver);
 	}
 
 	@Override
@@ -171,14 +229,17 @@ public class XMPPService extends GenericService {
 		mGroupServiceChatConnection = new IXMPPGroupChatService.Stub() {
 			
 			@Override
-			public String sendGroupMessage(String user, String message, String tag) throws RemoteException {
-				String pid = "";
+			public void sendGroupMessage(String user, String message, String tag) throws RemoteException {
+				
 				if (mSmackable != null){
 				//	return mSmackable.sendGroupMessage(message);
-					
-				pid =  mSmackable.sendGroupMessage(message, tag);
+				Log.i(TAG, "mSmackable.sendGroupMessage")	;
+				mSmackable.sendGroupMessage(message, user);
+				}else{
+					SmackableImp.sendOfflineMessage(getContentResolver(),
+							user, message);
 				}
-				return pid;
+				
 				
 				
 			}
@@ -408,7 +469,9 @@ public class XMPPService extends GenericService {
 		}
 		return sb.toString();
 	}
-
+	public String getGroupSubject(){
+		return grpSubject;
+	}
 	public String getStatusTitle(ConnectionState cs) {
 		if (cs != ConnectionState.ONLINE)
 			return mReconnectInfo;

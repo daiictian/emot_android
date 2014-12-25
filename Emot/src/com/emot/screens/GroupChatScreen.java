@@ -10,11 +10,14 @@ import java.util.Set;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smackx.pubsub.GetItemsRequest;
 
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -105,6 +108,14 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		super.onStop();
 	}
+	
+
+	@Override
+	protected void onDestroy() {
+		unregisterReceiver(mGrpIDCreatedReceiver);
+		super.onDestroy();
+	}
+
 
 	@Override
 	protected void onResume() {
@@ -139,6 +150,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		mServiceIntent.setData(chatURI);
 		mServiceIntent.putExtra("isforgrpchat", true);
 		mServiceIntent.putExtra("sinceDate", mDate);
+		mServiceIntent.putExtra("groupSubject", grpSubject);
 		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
@@ -225,25 +237,32 @@ public class GroupChatScreen extends ActionBarActivity {
 		}
 		return super.onKeyDown(keyCode, event);
 	}
-
+	private EmotConfiguration mConfig;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//Small hack to load preferences for service
+		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		ActionBar ab = getSupportActionBar();
 		ab.setHomeButtonEnabled(true);
 		ab.setDisplayHomeAsUpEnabled(true);
 		Intent incomingIntent = getIntent();
 		myClipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
-
+		registerReceiver(mGrpIDCreatedReceiver, new IntentFilter("GroupIDGenerated"));
 		grpName = incomingIntent
 				.getStringExtra("grpName");
 		grpSubject = incomingIntent.getStringExtra(INTENT_GRPCHAT_SUBJECT);
 		isCreateGrp = incomingIntent.getBooleanExtra("creategroup?", false);
 		grpchatmembers =  incomingIntent.getParcelableArrayListExtra("groupmembers");
 		Log.i(TAG, "group chat members are " +grpchatmembers);
+		Log.i(TAG, "groupName is " + grpName);
+		if(!isCreateGrp){
+		grpSubject = EmotApplication.getValue(grpName, "default");
+		Log.i(TAG, "grpSubject is " +grpSubject);
+		}
 		setAliasFromDB();
 
-		Log.i(TAG, "groupName is " + grpName);
+		
 		if (grpSubject == null) {
 			Toast.makeText(EmotApplication.getAppContext(),
 					"Incorrect username", Toast.LENGTH_LONG).show();
@@ -270,13 +289,14 @@ public class GroupChatScreen extends ActionBarActivity {
 		sendButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				messageID = sendMessage(chatEntry.getText().toString(), occupantTag);
+				sendMessage(chatEntry.getText().toString(), occupantTag);
 			}
 		});
 
 		// chatView.setAdapter(chatlistAdapter);
+		if(grpName != null && !grpName.trim().equals("")){
 		setChatWindowAdapter();
-
+		}
 		chatEntry.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -376,14 +396,14 @@ public class GroupChatScreen extends ActionBarActivity {
 
 	}
 
-	private String sendMessage(String message, String tag) {
+	private void sendMessage(String message, String tag) {
 		chatEntry.setText(null);
 
 		if (!mServiceAdapter.isServiceAuthenticated()) {
 			// Show single tick and try later
 			// showToastNotification(R.string.toast_stored_offline);
-		}
-		return mServiceAdapter.sendMessage(grpName, message, occupantTag);
+		}           
+		 mServiceAdapter.sendMessage(grpName, message, occupantTag);
 	}
 
 	private void setAliasFromDB() {
@@ -446,7 +466,18 @@ public class GroupChatScreen extends ActionBarActivity {
 		getContentResolver().update(rowuri, values, null, null);
 	}
 	Cursor mCursor;
+	
+	private BroadcastReceiver mGrpIDCreatedReceiver = new BroadcastReceiver(){
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Log.i(TAG, "grpID received is  " +intent.getStringExtra("groupID"));
+			grpName = intent.getStringExtra("groupID");
+			setChatWindowAdapter() ;
+			
+		}
+		
+	};
 	private void setChatWindowAdapter() {
 		String selection = ChatConstants.JID + "='" + grpName + "'";
 		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
@@ -511,7 +542,7 @@ public class GroupChatScreen extends ActionBarActivity {
 				wrapper = (ChatItemWrapper) row.getTag();
 			}
 
-			if (delivery_status == ChatConstants.DS_NEW) {
+			if (!from_me && delivery_status == ChatConstants.DS_NEW) {
 				markAsReadDelayed(_id, DELAY_NEWMSG);
 			}
 

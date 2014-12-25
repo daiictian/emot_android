@@ -29,7 +29,7 @@ public interface Smackable {
 	void sendMessage(String user, String message);
 	void sendChatState(String user, String state);
 	
-	String sendGroupMessage(String message, String tag);
+	void sendGroupMessage(String message, String tag);
 	void createGroup(String grpName);
 	void sendServerPing();
 	void setUserWatching(boolean user_watching);
