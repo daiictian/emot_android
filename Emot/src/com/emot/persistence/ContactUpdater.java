@@ -78,7 +78,7 @@ public class ContactUpdater {
 		@Override
 		protected void onPostExecute(JSONArray numbers) {
 			if(numbers!=null && numbers.length()>0){
-				Log.i(TAG, "Calling API ...");
+				Log.i(TAG, "Calling API ... "+numbers.toString());
 				URL cUrl;
 				try{
 					cUrl = new URL(WebServiceConstants.HTTP + "://"+ 

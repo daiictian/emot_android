@@ -97,16 +97,16 @@ public class XMPPGroupChatServiceAdapter {
 	}
 	
 	
-	public String sendMessage(String user, String message, String tag) {
-		String piD = "";
+	public void sendMessage(String user, String message, String tag) {
+		
 		try {
-			Log.i(TAG, "Called sendMessage(): " + grpJabberID + ": " + message);
-			 piD =  xmppGrpServiceStub.sendGroupMessage(user, message, tag);
+			Log.i(TAG, "Called sendMessage(): " + user + ": " + message);
+			 xmppGrpServiceStub.sendGroupMessage(user, message, tag);
 		} catch (RemoteException e) {
 			Log.e(TAG, "caught RemoteException: " + e.getMessage());
 		}
 		
-		return piD;
+		
 	}
 	
 	public boolean isServiceAuthenticated() {

@@ -482,6 +482,7 @@ public class ChatScreen extends ActionBarActivity {
 
 	private void setChatWindowAdapter() {
 		String selection = ChatConstants.JID + "='" + chatFriend + "'";
+		//String selection = ChatConstants.JID + "='" + "kkii" + "'";
 		Cursor cursor = managedQuery(ChatProvider.CONTENT_URI, PROJECTION_FROM,
 				selection, null, null);
 		ListAdapter adapter = new ChatScreenAdapter(cursor, PROJECTION_FROM,
