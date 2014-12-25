@@ -12,6 +12,7 @@ import org.jivesoftware.smackx.pubsub.GetItemsRequest;
 
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
+
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -205,27 +206,58 @@ public class GroupChatScreen extends ActionBarActivity {
 		case R.id.leave_group:
 			Log.i(TAG, "leaving the group");
 			mServiceAdapter.leaveGroup(grpName);
+			return true;
 		case R.id.action_copy_text:
-			myClip = ClipData.newPlainText("text", messageToCopy.toString());
-			myClipboard.setPrimaryClip(myClip);
+			putText(messageToCopy.toString());
+			//myClip = ClipData.newPlainText("text", messageToCopy.toString());
+			//myClipboard.setPrimaryClip(myClip);
+			return true;
 		case R.id.group_info:
 			Intent intent = new Intent(GroupChatScreen.this, GroupInfo.class);
 			intent.putExtra("currentSubject", currentGrpSubject);
 			intent.putStringArrayListExtra("currentMembers", (ArrayList<String>) currentGrpMembers);
 			startActivity(intent);
+			return true;
 
 		default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
+	
+	@SuppressWarnings("deprecation")
+	private void putText(final String text){
+	    int sdk = android.os.Build.VERSION.SDK_INT;
+	    if(sdk < android.os.Build.VERSION_CODES. HONEYCOMB) {
+	        android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+	        clipboard.setText(text);
+	    } else {
+	        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE); 
+	        android.content.ClipData clip = ClipData.newPlainText("simple text",text);
+	        clipboard.setPrimaryClip(clip);
+	    }
+	}
+
+//	@SuppressWarnings("deprecation")
+//	private String getText(){
+//	    String text = null;
+//	    int sdk = android.os.Build.VERSION.SDK_INT;
+//	    if(sdk < android.os.Build.VERSION_CODES. HONEYCOMB ) {
+//	        android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+//	        text =  clipboard.getText().toString();
+//	    } else {
+//	        android.content.ClipboardManager clipboard = (android.content.ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE); 
+//	        text =  clipboard.getText().toString();
+//	    }
+//	    return text;
+//	}
 
 	@Override
 	public void onBackPressed() {
 		// TODO Auto-generated method stub
 		super.onBackPressed();
 	}
-	ClipboardManager myClipboard;
-	ClipData myClip;
+	
+	
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) 
@@ -244,10 +276,11 @@ public class GroupChatScreen extends ActionBarActivity {
 		//Small hack to load preferences for service
 		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		ActionBar ab = getSupportActionBar();
+		
 		ab.setHomeButtonEnabled(true);
 		ab.setDisplayHomeAsUpEnabled(true);
 		Intent incomingIntent = getIntent();
-		myClipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+		
 		registerReceiver(mGrpIDCreatedReceiver, new IntentFilter("GroupIDGenerated"));
 		grpName = incomingIntent
 				.getStringExtra("grpName");
