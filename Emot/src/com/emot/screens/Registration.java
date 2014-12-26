@@ -84,17 +84,6 @@ public class Registration extends ActionBarActivity {
 	private XMPPRosterServiceAdapter serviceAdapter;
 	private Stub rosterCallback;
 	private EmotConfiguration mConfig;
-	
-	static{
-		String[] locales = Locale.getISOCountries();
-		for (String countryCode : locales) {
-			Locale obj = new Locale("", countryCode);
-			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
-			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
-			Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
-		}
-	}
-	
 
 	@Override
 	protected void onDestroy() {
@@ -110,6 +99,13 @@ public class Registration extends ActionBarActivity {
 		if(EmotApplication.getValue(PreferenceConstants.USER_APPID, null)!=null){
 			startActivity(new Intent(this, LastChatScreen.class));
 			finish();
+		}
+		String[] locales = Locale.getISOCountries();
+		for (String countryCode : locales) {
+			Locale obj = new Locale("", countryCode);
+			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
+			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
+			Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
 		}
 		setContentView(R.layout.layout_register_screen);
 		createUICallback();

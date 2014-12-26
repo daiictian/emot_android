@@ -20,6 +20,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,7 +38,15 @@ public class EmotEditText extends EditText {
 
 	private static final String TAG = EmotEditText.class.getSimpleName();
 	private UpdateEmotSuggestions updateEmotTask;
-	private LinearLayout emotSuggestionLayout; 
+
+	//Suggestion views
+	
+	private LinearLayout emotSuggestionLayout;
+	private LinearLayout emotRecentLayout;
+	private View scrollEmotSuggestionLayout;
+	private View scrollEmotRecentLayout;
+	private Button toggleLastEmot;
+	
 	private HashMap<String, Boolean> suggestedEmots = new HashMap<String, Boolean>();
 	Stack<Integer> lastEmotIndex = new Stack<Integer>();
 
@@ -129,8 +139,74 @@ public class EmotEditText extends EditText {
 	    }
 	}
 	
-	public void setEmotSuggestionLayout(LinearLayout view){
-		this.emotSuggestionLayout = view;
+	public void setEmotSuggestBox(View view){
+		emotSuggestionLayout = (LinearLayout) view.findViewById(R.id.viewEmotSuggestionLayout);
+		emotRecentLayout = (LinearLayout) view.findViewById(R.id.viewEmotRecentLayout);
+		toggleLastEmot = (Button)view.findViewById(R.id.buttonRecentEmots);
+		scrollEmotSuggestionLayout = view.findViewById(R.id.scrollEmotSuggestionLayout);
+		scrollEmotRecentLayout = view.findViewById(R.id.scrollEmotRecentLayout);
+		
+		toggleLastEmot.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(scrollEmotRecentLayout.getVisibility()==View.VISIBLE){
+					Log.i(TAG, "opening suggestion layout");
+					scrollEmotRecentLayout.setVisibility(View.GONE);
+					scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
+				}else{
+					Log.i(TAG, "opening recent layout");
+					if(emotRecentLayout.getChildCount()<=0){
+						Log.i(TAG, "get count less than zero");
+						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
+								DBContract.EmotsDBEntry.TABLE_NAME, 
+								new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
+								null, 
+								null, 
+								null, 
+								null, 
+								DBContract.EmotsDBEntry.LAST_USED + " desc", 
+								"20"
+						);
+						while (cr.moveToNext())
+						{
+							String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
+							byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
+							Log.i(TAG, "Recent Emot hash is "+hash);
+							final Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
+							ImageView view = new ImageView(EmotApplication.getAppContext());
+							view.setId(0);
+							RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+							view.setLayoutParams(params);
+							view.setImageBitmap(emot.getEmotImg());
+							view.setDrawingCacheEnabled(true);
+							view.setOnClickListener(new OnClickListener() {
+
+								@Override
+								public void onClick(View v) {
+									Log.i(TAG, "Image clicked !!!");
+									EmotEditText.this.addEmot(emot);
+									ContentValues values = new ContentValues();
+									int time = (int) (System.currentTimeMillis());
+									values.put(DBContract.EmotsDBEntry.LAST_USED, time);
+									EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
+											DBContract.EmotsDBEntry.TABLE_NAME, 
+											values, 
+											DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
+											null
+									);
+								}
+							});
+							emotRecentLayout.addView(view);
+						}
+						cr.close();
+					}
+						
+					scrollEmotRecentLayout.setVisibility(View.VISIBLE);
+					scrollEmotSuggestionLayout.setVisibility(View.GONE);
+				}
+				
+			}
+		});
 	}
 	
 	public void refillSuggestedEmots(){

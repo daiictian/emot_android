@@ -10,6 +10,7 @@ import java.util.Set;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smackx.pubsub.GetItemsRequest;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 
@@ -73,7 +74,6 @@ public class GroupChatScreen extends ActionBarActivity {
 	private EmotEditText chatEntry;
 	private TextView userTitle;
 	private View emotSuggestion;
-	private LinearLayout emotSuggestionLayout;
 	private static String TAG = "GroupChatScreen";
 	private ListView chatView;
 	private List<Contact> grpchatmembers;
@@ -224,6 +224,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		}
 	}
 	
+	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	private void putText(final String text){
 	    int sdk = android.os.Build.VERSION.SDK_INT;
@@ -307,10 +308,9 @@ public class GroupChatScreen extends ActionBarActivity {
 		sendButton = (ImageView) findViewById(R.id.dove_send);
 		userTitle = (TextView) findViewById(R.id.username);
 		emotSuggestion = findViewById(R.id.viewEmotSuggestion);
-		emotSuggestionLayout = (LinearLayout) findViewById(R.id.viewEmotSuggestionLayout);
 
 		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
-		chatEntry.setEmotSuggestionLayout(emotSuggestionLayout);
+		chatEntry.setEmotSuggestBox(emotSuggestion);
 		Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
 		userTitle.setText(grpSubject);
 		//chatEntry.addTextChangedListener(groupMessageWatcher);

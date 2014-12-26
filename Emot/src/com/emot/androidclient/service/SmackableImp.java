@@ -110,6 +110,7 @@ import com.emot.androidclient.util.LogConstants;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.ImageHelper;
+import com.emot.constants.WebServiceConstants;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.screens.UpdateProfileScreen;
@@ -393,7 +394,7 @@ public class SmackableImp implements Smackable {
 	 */
 	@Override
 	public synchronized void requestConnectionState(ConnectionState new_state, final boolean create_account) {
-		Log.d(TAG, "requestConnState: " + mState + " -> " + new_state + (create_account ? " create_account!" : ""));
+		Log.i(TAG, "requestConnState: " + mState + " -> " + new_state + (create_account ? " create_account!" : ""));
 		mRequestedState = new_state;
 		if (new_state == mState)
 			return;
