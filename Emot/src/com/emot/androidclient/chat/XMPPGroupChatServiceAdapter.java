@@ -26,6 +26,7 @@ public class XMPPGroupChatServiceAdapter {
 	
 	public void createGroup(final String grpName, final List<Contact> members){
 		Log.i(TAG, "Called createGroup(): " + grpJabberID + ": " + grpName);
+		 
 		Log.i(TAG, "Members are " +members);
 		
 			Thread t = new Thread(new Runnable() {
@@ -34,17 +35,19 @@ public class XMPPGroupChatServiceAdapter {
 				public void run() {
 					try {
 						Log.i(TAG, "members before sending to service " +members);
-					xmppGrpServiceStub.createGroup(grpName, members);
+					 xmppGrpServiceStub.createGroup(grpName, members);
 					Log.i(TAG, "members after sending to service " +members);// TODO Auto-generated method stub
 					} catch (RemoteException e) {
 						Log.i(TAG, "Remote Exception occured " +e.getMessage());
 						e.printStackTrace();
+						
 					}
 				}
 			});
 			
 		
 		t.start();
+		
 	}
 	
 	public void leaveGroup(final String grpName){

@@ -158,8 +158,7 @@ public class GroupChatScreen extends ActionBarActivity {
 
 				}
 				mServiceAdapter.joinExistingGroup(grpName, isCreateGrp, mDate);
-				currentGrpSubject = mServiceAdapter.getGroupSubject();
-				currentGrpMembers = mServiceAdapter.getGroupMembers();
+				
 				
 			}
 
@@ -201,8 +200,10 @@ public class GroupChatScreen extends ActionBarActivity {
 			return true;
 		case R.id.group_info:
 			Intent intent = new Intent(GroupChatScreen.this, GroupInfo.class);
-			intent.putExtra("currentSubject", currentGrpSubject);
-			intent.putStringArrayListExtra("currentMembers", (ArrayList<String>) currentGrpMembers);
+			
+			
+			intent.putExtra("currentSubject", mServiceAdapter.getGroupSubject());
+			intent.putStringArrayListExtra("currentMembers", (ArrayList<String>) mServiceAdapter.getGroupMembers());
 			startActivity(intent);
 			return true;
 

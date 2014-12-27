@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.chat.IXMPPChatCallback;
@@ -25,6 +26,7 @@ import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.emotobjects.Contact;
+import com.emot.model.EmotApplication;
 import com.emot.screens.ContactScreen;
 import com.emot.screens.R;
 
@@ -259,11 +261,18 @@ public class XMPPService extends GenericService {
 			}
 
 			@Override
-			public void createGroup(String grpName,
+			public boolean createGroup(String grpName,
 					List<Contact> members){
+				if(mSmackable != null && mSmackable.isAuthenticated()){
 				Log.i(TAG, "members   ----" +members.get(0).getName());
 				mSmackable.initMUC(grpName);
 				mSmackable.joinUsers(members);
+				return true;
+				}else{
+					Log.i(TAG, "not connected to network");
+					Toast.makeText(EmotApplication.getAppContext(), "Not connected to network", Toast.LENGTH_LONG).show();
+					return false;
+				}
 				
 			}
 

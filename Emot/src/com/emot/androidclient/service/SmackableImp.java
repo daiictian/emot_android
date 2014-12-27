@@ -2128,7 +2128,7 @@ public class SmackableImp implements Smackable {
 				}
 					
 				}
-			}).start();
+			});
 
 	}
 
@@ -2141,11 +2141,12 @@ public class SmackableImp implements Smackable {
 	@Override
 	public String getGroupSubject() {
 		// TODO Auto-generated method stub
-		return EmotApplication.getValue(mGroupChat.getRoom(), "default");
+		return "SSS";//EmotApplication.getValue(mGroupChat.getRoom(), "default");
 	}
 
 	@Override
 	public List<String> getGroupMembers() {
+		Log.i(TAG, "Called getGroupMembers()");
 		List<String> members = new ArrayList<String>();
 		
 		try {
