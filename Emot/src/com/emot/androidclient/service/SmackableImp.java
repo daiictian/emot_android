@@ -330,7 +330,7 @@ public class SmackableImp implements Smackable {
 	
 	
 	// blocking, run from a thread!
-	public boolean doConnect(boolean create_account) throws EmotXMPPException {
+	public  boolean doConnect(boolean create_account) throws EmotXMPPException {
 		
 		
 		
@@ -342,11 +342,13 @@ public class SmackableImp implements Smackable {
 		// actually, authenticated must be true now, or an exception must have
 		// been thrown.
 		if (isAuthenticated()) {
-			stopService = true;
+			
 			registerMessageListener();
 			registerPresenceListener();
 			registerPongListener();
+			joinGroups();
 			sendOfflineMessages();
+			
 			sendUserWatching();
 			// we need to "ping" the service to let it know we are actually
 			// connected, even when no roster entries will come in
@@ -357,7 +359,71 @@ public class SmackableImp implements Smackable {
 		
 		return true;
 	}
+	
+	private void joinGroups(){
+		sStopService = false;
+		scheduledExecutorService = Executors.newScheduledThreadPool(1);
+		scheduledExecutorService.schedule(new Runnable() {
+			
+			 
+			
+			
+			@Override
+			public void run() {
+				
+				if(sStopService ){
+					scheduledExecutorService.shutdownNow();
+				}else{
+				
+					Log.i(TAG, "Login successful");
+					setChatRoomInvitationListener();
+					String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
+					if(rooms != null){
+						final String roomstoJoin[] = rooms.split(",");
+						//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
+						Log.i(TAG, "rooms to join " + roomstoJoin);
+						//						List<String> roomstoJoin2 = EmotApplication.getRooms();
+						Log.i(TAG, "rooms to join size " +roomstoJoin.length);
+						//sStopService = false;
+				int count = 0;
+				for(int i = 0; i < roomstoJoin.length; i++){
+					count++;
+					if(roomstoJoin[i] != null && !roomstoJoin[i].equals("")){
+						mGroupChat2 = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
+						Log.i(TAG, "joining room " +roomstoJoin[i]);
+						final DiscussionHistory dh = new DiscussionHistory();
+						long since = EmotApplication.getLongValue("historySince", -1);
+						SimpleDateFormat dateFormater = new SimpleDateFormat(
+								"yy-MM-dd HH:mm:ss");
+						Date date = new Date(since);
+						dh.setSince(date);
+						final long timeout = 4000;
+						try {
+							
+							if(!mGroupChat2.isJoined()){
+							//mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+								mGroupChat2.join(mConfig.userName + "@conference.emot-net","",dh, timeout);
+							Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
+							}else{
+								Log.i(TAG, "joining room done" );
+							}
+						} catch (XMPPException e) {
+							//sStopService = false;
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+					}
+				}
+				
+			}
 		
+				}
+	}
+	//mHandlerTask.run();
+}, 10, TimeUnit.SECONDS);
+
+	}
 
 	// BLOCKING, call on a new Thread!
 	private void updateConnectingThread(Thread new_thread) {
@@ -417,7 +483,7 @@ public class SmackableImp implements Smackable {
 					public void run() {
 						updateConnectingThread(this);
 						try {
-							Log.i(TAG, "Connnnnnnnnnecting");
+							Log.w(TAG, "Connnnnnnnnnecting");
 							doConnect(create_account);
 						} catch (IllegalArgumentException e) {
 							// this might happen when DNS resolution in ConnectionConfiguration fails
@@ -450,6 +516,7 @@ public class SmackableImp implements Smackable {
 				new Thread() {
 					public void run() {
 						updateConnectingThread(this);
+						mXMPPConnection.shutdown();
 						mStreamHandler.quickShutdown();
 						onDisconnected("forced disconnect completed");
 						finishConnectingThread();
@@ -656,11 +723,22 @@ public class SmackableImp implements Smackable {
 
 	private void onDisconnected(String reason) {
 		unregisterPongListener();
+		
 		mLastError = reason;
 		updateConnectionState(ConnectionState.DISCONNECTED);
+		
+//		new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				mXMPPConnection.disconnect();
+//				
+//			}
+//		}).start();
 	}
 	private void onDisconnected(Throwable reason) {
 		Log.e(TAG, "onDisconnected: " + reason);
+		sStopService = true;
 		reason.printStackTrace();
 		// iterate through to the deepest exception
 		while (reason.getCause() != null)
@@ -831,6 +909,7 @@ public class SmackableImp implements Smackable {
 				public void connectionClosed() {
 					// TODO: fix reconnect when we got kicked by the server or SM failed!
 					//onDisconnected(null);
+					sStopService = true;
 					updateConnectionState(ConnectionState.OFFLINE);
 				}
 				public void reconnectingIn(int seconds) { }
@@ -897,62 +976,7 @@ public class SmackableImp implements Smackable {
 				//
 				//							}
 				//						}, 5, TimeUnit.SECONDS);
-			scheduledExecutorService.schedule(new Runnable() {
-				
-						 
-						
-							
-							@Override
-							public void run() {
-								if(mXMPPConnection.isAuthenticated()){
-									Log.i(TAG, "Login successful");
-									setChatRoomInvitationListener();
-									String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
-									if(rooms != null){
-										final String roomstoJoin[] = rooms.split(",");
-										//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
-										Log.i(TAG, "rooms to join " + roomstoJoin);
-										//						List<String> roomstoJoin2 = EmotApplication.getRooms();
-										Log.i(TAG, "rooms to join size " +roomstoJoin.length);
-										sStopService = false;
-								int count = 0;
-								for(int i = 0; i < roomstoJoin.length; i++){
-									count++;
-									if(roomstoJoin[i] != null && !roomstoJoin[i].equals("")){
-										mGroupChat2 = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
-										Log.i(TAG, "joining room " +roomstoJoin[i]);
-										final DiscussionHistory dh = new DiscussionHistory();
-										long since = EmotApplication.getLongValue("historySince", -1);
-										SimpleDateFormat dateFormater = new SimpleDateFormat(
-												"yy-MM-dd HH:mm:ss");
-										Date date = new Date(since);
-										dh.setSince(date);
-										final long timeout = 4000;
-										try {
-											
-											if(!mGroupChat2.isJoined()){
-											//mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
-												mGroupChat2.join(mConfig.userName + "@conference.emot-net","",dh, timeout);
-											Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
-											}else{
-												Log.i(TAG, "joining room done" );
-											}
-										} catch (XMPPException e) {
-											sStopService = false;
-											// TODO Auto-generated catch block
-											e.printStackTrace();
-										}
-
-									}
-								}
-								
-							}
-						}
-						
-					}
-					//mHandlerTask.run();
-				}, 10, TimeUnit.SECONDS);
-				//initMUC("myroom");
+							//initMUC("myroom");
 
 			
 			Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
@@ -2061,7 +2085,7 @@ public class SmackableImp implements Smackable {
 		return date;
 	}
 
-	ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+	ScheduledExecutorService scheduledExecutorService; 
 	ScheduledExecutorService scheduledConnectionService = Executors.newScheduledThreadPool(1);
 	private static boolean sStopService = false;
 	
@@ -2086,8 +2110,8 @@ public class SmackableImp implements Smackable {
 					Log.i(TAG, "Group subject is " +info.getSubject());
 						}else{
 							try {
-								doConnect(false);
-							} catch (EmotXMPPException e) {
+								//doConnect(false);
+							} catch (Exception e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
@@ -2099,35 +2123,6 @@ public class SmackableImp implements Smackable {
 					
 				}
 			}).start();
-		
-		//		scheduledExecutorService.schedule(new Runnable() {
-		//
-		//			@Override
-		//			public void run() {
-		//				if(mXMPPConnection != null && !mXMPPConnection.isAuthenticated() && !sStopService){
-		//
-		//				}else if(sStopService){
-		//					
-		//					scheduledExecutorService.shutdown();
-		//				}else{
-		//					
-		//					try {
-		//						sStopService = true;
-		//						
-		//						mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
-		//					} catch (XMPPException e) {
-		//						sStopService = false;
-		//						// TODO Auto-generated catch block
-		//						e.printStackTrace();
-		//					}
-		//				}
-		//
-		//			}
-		//		}, 5, TimeUnit.SECONDS);
-
-
-
-
 
 	}
 

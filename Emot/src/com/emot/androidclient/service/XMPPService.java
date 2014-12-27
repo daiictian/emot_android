@@ -126,9 +126,10 @@ public class XMPPService extends GenericService {
 						public void run() {
 						try {
 							if(mSmackable != null){
-							mSmackable.doConnect(false);
+								Log.i(TAG, "while network switch");
+							mSmackable.requestConnectionState(ConnectionState.ONLINE);
 							}
-						} catch (EmotXMPPException e) {
+						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
