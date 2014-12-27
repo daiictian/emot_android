@@ -139,12 +139,17 @@ public class SmackableImp implements Smackable {
 	final static private String[] SEND_UNACKNOWLEDGED_PROJECTION = new String[] {
 		ChatConstants._ID, ChatConstants.JID,
 		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID };
+	
 	final static private String SEND_UNACKNOWLEDGED_SELECTION =
 		ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
 		"("+
-		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_FAILED +" OR "+
-		//ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_SENT_OR_READ +
+		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_FAILED +
+		" OR "+ ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_SENT_OR_READ +
 		")";
+	
+	
+//	final static private String SEND_UNACKNOWLEDGED_SELECTION =
+//			ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING;
 
 	static final DiscoverInfo.Identity EMOT_IDENTITY = new DiscoverInfo.Identity("client",
 			EmotApplication.XMPP_IDENTITY_NAME,
@@ -348,7 +353,7 @@ public class SmackableImp implements Smackable {
 			registerPongListener();
 			joinGroups();
 			sendOfflineMessages();
-			
+			sendFailedMessages();
 			sendUserWatching();
 			// we need to "ping" the service to let it know we are actually
 			// connected, even when no roster entries will come in
@@ -1168,6 +1173,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void sendFailedMessages() {
+		Log.i(TAG, "-- Sending offline messages --");
 		Cursor cursor = mContentResolver.query(ChatProvider.CONTENT_URI,
 				SEND_FAILED_PROJECTION, SEND_FAILED_SELECTION,
 				null, null);
@@ -1206,12 +1212,17 @@ public class SmackableImp implements Smackable {
 		cursor.close();
 	}
 
-	public void sendNotacknowledgedMessages() {
+	public void sendNotacknowledgedMessages(String jid) {
 		try{
-			Log.i(TAG, " -- sendnotacknowledgedMessages -- ");
-			Cursor cursor = mContentResolver.query(ChatProvider.CONTENT_URI,
-					SEND_UNACKNOWLEDGED_PROJECTION, SEND_UNACKNOWLEDGED_SELECTION,
-					null, null);
+			Log.i(TAG, " -- sending notacknowledgedMessages to "+jid+" -- ");
+			Cursor cursor = mContentResolver.query(
+					ChatProvider.CONTENT_URI,
+					SEND_UNACKNOWLEDGED_PROJECTION, 
+					SEND_UNACKNOWLEDGED_SELECTION + " AND "+ChatProvider.ChatConstants.JID +"='"+jid+"'",
+					null, 
+					ChatProvider.ChatConstants.DATE + " ASC limit 50"
+			);
+			Log.i(TAG, "msges found= "+cursor.getCount());
 			final int      _ID_COL = cursor.getColumnIndexOrThrow(ChatConstants._ID);
 			final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
 			final int      MSG_COL = cursor.getColumnIndexOrThrow(ChatConstants.MESSAGE);
@@ -1401,6 +1412,7 @@ public class SmackableImp implements Smackable {
 					updateRosterEntryInDB(rosterEntry);
 					mServiceCallBack.rosterChanged();
 				}
+				sendNotacknowledgedMessages(jabberID);
 			}
 		};
 		mRoster.addRosterListener(mRosterListener);
