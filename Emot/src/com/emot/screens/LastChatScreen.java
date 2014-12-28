@@ -392,12 +392,12 @@ public class LastChatScreen extends ActionBarActivity {
 
 			@Override
 			public void onTaskComplete(String result) {
-				
+				Log.i(TAG, "Contacts updated succesfully ..");
 			}
 
 			@Override
 			public void onTaskError(String error) {
-				
+				Log.i(TAG, "Contacts update failed .. "+error);
 			}
 		}, serviceAdapter);
 	}

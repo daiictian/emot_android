@@ -44,8 +44,8 @@
 
         <View
             android:layout_width="fill_parent"
-            android:layout_height="1dip"
-            android:background="@color/grey" />
+            android:layout_height="0.5dip"
+            android:background="@color/light_line" />
 
         <LinearLayout
             android:id="@+id/viewSuggestBox"
@@ -57,16 +57,15 @@
 
         <View
             android:layout_width="fill_parent"
-            android:layout_height="1dip"
-            android:background="@color/grey" />
+            android:layout_height="0.5dip"
+            android:background="@color/light_line" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="30dp"
             android:layout_weight="1"
-            android:background="@color/white"
-            android:orientation="horizontal"
-            android:weightSum="100" >
+            android:background="@color/light_box"
+            android:orientation="horizontal" >
 
             <com.emot.common.EmotEditText
                 android:id="@+id/editTextStatus"
@@ -75,25 +74,14 @@
                 android:layout_marginBottom="2dp"
                 android:layout_marginLeft="2dp"
                 android:layout_weight="90"
+                android:lines="3"
                 android:background="@drawable/border"
                 android:inputType="textVisiblePassword" />
-
-            <!--
-            <ImageView
-                android:id="@+id/dove_send"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="2dp"
-                android:layout_marginRight="2dp"
-                android:layout_weight="20"
-                android:background="@drawable/border_with_left_open"
-                android:src="@drawable/dove_flying_3" />
-            -->
 
             <ImageView
                 android:id="@+id/dove_send"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="10"
                 android:src="@drawable/ic_send" />
         </LinearLayout>

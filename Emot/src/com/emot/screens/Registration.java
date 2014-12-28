@@ -103,7 +103,7 @@ public class Registration extends ActionBarActivity {
 			Locale obj = new Locale("", countryCode);
 			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
 			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
-			Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
+			//Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
 		}
 		setContentView(R.layout.layout_register_screen);
 		createUICallback();
