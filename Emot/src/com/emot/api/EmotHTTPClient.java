@@ -158,6 +158,7 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 		if(result!=null){
 			taskCompletedRunnable.onTaskComplete(result);
 		}else{
+			taskCompletedRunnable.onTaskComplete("Something went wrong while processing your request. Please try again later.");
 			Log.e(TAG, "Server not responding. Received null result");
 		}
 	}

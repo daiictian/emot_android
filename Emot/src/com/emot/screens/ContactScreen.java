@@ -113,18 +113,6 @@ public class ContactScreen extends ActionBarActivity{
 		showContactsThread.execute();
 	}
 
-	public void updateContacts(){
-		//Update Contacts
-		Log.i(TAG, "Updating contacts !!!!");
-		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
-
-			@Override
-			public void onTaskComplete(String result) {
-				
-			}
-		}, serviceAdapter);
-	}
-
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub

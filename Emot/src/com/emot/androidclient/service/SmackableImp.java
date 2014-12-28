@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 
-import com.emot.androidclient.util.EmotUtils;
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -92,8 +91,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -110,12 +107,9 @@ import com.emot.androidclient.util.LogConstants;
 import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.ImageHelper;
-import com.emot.constants.WebServiceConstants;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
 import com.emot.screens.UpdateProfileScreen;
-
-import de.duenndns.ssl.MemorizingTrustManager;
 
 public class SmackableImp implements Smackable {
 	final static private String TAG = SmackableImp.class.getSimpleName();
@@ -309,17 +303,17 @@ public class SmackableImp implements Smackable {
 			this.mXMPPConfig.setSecurityMode(ConnectionConfiguration.SecurityMode.required);
 
 		// register MemorizingTrustManager for HTTPS
-//				try {
-//					SSLContext sc = SSLContext.getInstance("TLS");
-//					MemorizingTrustManager mtm = EmotApplication.getApp(mService).mMTM;
-//					sc.init(null, new X509TrustManager[] { mtm },
-//							new java.security.SecureRandom());
-//					this.mXMPPConfig.setCustomSSLContext(sc);
-//					this.mXMPPConfig.setHostnameVerifier(mtm.wrapHostnameVerifier(
-//								new org.apache.http.conn.ssl.StrictHostnameVerifier()));
-//				} catch (java.security.GeneralSecurityException e) {
-//					debugLog("initialize MemorizingTrustManager: " + e);
-//				}
+//		try {
+//			SSLContext sc = SSLContext.getInstance("TLS");
+//			MemorizingTrustManager mtm = EmotApplication.getApp(mService).mMTM;
+//			sc.init(null, new X509TrustManager[] { mtm },
+//					new java.security.SecureRandom());
+//			this.mXMPPConfig.setCustomSSLContext(sc);
+//			this.mXMPPConfig.setHostnameVerifier(mtm.wrapHostnameVerifier(
+//						new org.apache.http.conn.ssl.StrictHostnameVerifier()));
+//		} catch (java.security.GeneralSecurityException e) {
+//			debugLog("initialize MemorizingTrustManager: " + e);
+//		}
 
 		this.mXMPPConnection = new XmppStreamHandler.ExtXMPPConnection(mXMPPConfig);
 		this.mStreamHandler = new XmppStreamHandler(mXMPPConnection, mConfig.smackdebug);

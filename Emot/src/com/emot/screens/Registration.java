@@ -18,13 +18,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences.Editor;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -40,8 +38,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.emot.androidclient.IXMPPRosterCallback.Stub;
 import com.emot.androidclient.IXMPPRosterCallback;
+import com.emot.androidclient.IXMPPRosterCallback.Stub;
 import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.service.IXMPPRosterService;
@@ -186,6 +184,12 @@ public class Registration extends ActionBarActivity {
 							}
 
 						}
+
+						@Override
+						public void onTaskError(String error) {
+							pd.cancel();
+							Toast.makeText(Registration.this, error, Toast.LENGTH_LONG).show();
+						}
 					};
 
 					EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
@@ -220,6 +224,7 @@ public class Registration extends ActionBarActivity {
 				mRN = RN();
 
 				String s = "1|"+"android|" +vCode+ "|" + mMobileNumber+ "|" + "register|"+ mRN +"|"+ ApplicationConstants.VERIFICATION_SALT;
+				Log.i(TAG, "string = "+s);
 				String ht = hText(s);
 				reqContent.add(new BasicNameValuePair(WebServiceConstants.WSRegisterParamConstants.REQUEST, "register"));
 				reqContent.add(new BasicNameValuePair(WebServiceConstants.WSRegisterParamConstants.MOBILE, mMobileNumber));
@@ -259,6 +264,13 @@ public class Registration extends ActionBarActivity {
 							pd.cancel();
 							Toast.makeText(Registration.this, "Something went wrong. Please try again later.", Toast.LENGTH_LONG).show();
 						}
+					}
+
+					@Override
+					public void onTaskError(String error) {
+						pd.cancel();
+						Log.i(TAG, "Error "+error);
+						Toast.makeText(Registration.this, error, Toast.LENGTH_LONG).show();
 					}
 
 				};
@@ -413,6 +425,11 @@ public class Registration extends ActionBarActivity {
 						pd.cancel();
 						startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
 						finish();
+					}
+
+					@Override
+					public void onTaskError(String error) {
+						pd.cancel();
 					}
 				}, serviceAdapter);
 			}

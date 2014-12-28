@@ -112,6 +112,11 @@ public class ContactUpdater {
 						}
 						Log.i(TAG, "Db ran ... ");
 					}
+
+					@Override
+					public void onTaskError(String error) {
+						Log.i(TAG, "Error while getting numbers"+error);
+					}
 				});
 				contactCall.execute();
 			}else{

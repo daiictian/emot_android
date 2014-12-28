@@ -218,6 +218,11 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				}
 				imageAvatar.setImageBitmap(UpdateProfileScreen.getAvatar());
 			}
+
+			@Override
+			public void onTaskError(String error) {
+				Toast.makeText(EmotApplication.getAppContext(), error, Toast.LENGTH_LONG).show();
+			}
 		};
 
 		switch (requestCode) {

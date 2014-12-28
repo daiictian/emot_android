@@ -394,6 +394,11 @@ public class LastChatScreen extends ActionBarActivity {
 			public void onTaskComplete(String result) {
 				
 			}
+
+			@Override
+			public void onTaskError(String error) {
+				
+			}
 		}, serviceAdapter);
 	}
 }

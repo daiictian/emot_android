@@ -3,7 +3,6 @@ package com.emot.androidclient.chat;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.service.IXMPPChatService;
 
 public class XMPPChatServiceAdapter {

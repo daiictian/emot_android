@@ -6,7 +6,6 @@ import java.util.List;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.androidclient.service.IXMPPGroupChatService;
 import com.emot.emotobjects.Contact;
 

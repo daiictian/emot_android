@@ -39,28 +39,13 @@ import org.jivesoftware.smackx.search.UserSearch;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.preference.PreferenceManager;
 import android.util.Log;
-
-import com.emot.androidclient.data.EmotConfiguration;
-import com.emot.androidclient.data.RosterProvider;
-import com.emot.androidclient.data.RosterProvider.RosterConstants;
-import com.emot.common.ImageHelper;
-import com.emot.common.TaskCompletedRunnable;
-import com.emot.emotobjects.Contact;
-import com.emot.screens.R;
-
-import de.duenndns.ssl.MemorizingTrustManager;
 
 public class EmotApplication extends Application {
 
 	private static final String TAG = EmotApplication.class.getSimpleName();
 	private static Context context;
 	private static SharedPreferences prefs;
-	public MemorizingTrustManager mMTM;
 	private static List<String> roomJIDs = new ArrayList<String>();
 	public static final String XMPP_IDENTITY_NAME = "emot";
 	public static final String XMPP_IDENTITY_TYPE = "phone";
@@ -70,7 +55,6 @@ public class EmotApplication extends Application {
 
 		EmotApplication.context = getApplicationContext();
 		prefs = getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
-		mMTM = new MemorizingTrustManager(this);
 	}
 	
 	public static void addRooms(final String room){

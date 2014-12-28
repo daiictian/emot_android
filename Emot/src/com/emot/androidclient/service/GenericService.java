@@ -21,7 +21,6 @@ import android.widget.Toast;
 import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.constants.ApplicationConstants;
-import com.emot.model.EmotApplication;
 import com.emot.screens.ChatScreen;
 import com.emot.screens.GroupChatScreen;
 import com.emot.screens.R;

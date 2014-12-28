@@ -1,36 +1,29 @@
 package com.emot.screens;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import com.emot.adapters.ContactArrayAdapter;
-import com.emot.adapters.SelectContactArrayAdapter;
-import com.emot.androidclient.data.RosterProvider;
-import com.emot.androidclient.data.RosterProvider.RosterConstants;
-import com.emot.emotobjects.Contact;
-import com.emot.model.EmotApplication;
-import com.emot.screens.ContactScreen.ShowContacts;
-
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.SearchView;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor.AutoCloseOutputStream;
-import android.os.Parcelable;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.emot.adapters.SelectContactArrayAdapter;
+import com.emot.androidclient.data.RosterProvider;
+import com.emot.androidclient.data.RosterProvider.RosterConstants;
+import com.emot.emotobjects.Contact;
+import com.emot.model.EmotApplication;
 
 public class CreateGroup extends ActionBarActivity {
 	
