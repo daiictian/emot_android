@@ -109,27 +109,47 @@ public class ContactScreen extends ActionBarActivity{
 	
 	public void refreshContacts(){
 		Log.i(TAG, "Refreshing contacts !!!!");
-		showContactsThread = new ShowContacts();
-		showContactsThread.execute();
+		//showContactsThread = new ShowContacts();
+		//showContactsThread.execute();
+		
+		
+		try{
+			Log.i(TAG, "Starting Query ...");
+			Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
+			Log.i(TAG, "contacts found  = "+cr.getCount());
+			while (cr.moveToNext()) {
+			    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
+			    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
+			    contact.setAvatar(cr.getBlob(cr.getColumnIndex(RosterConstants.AVATAR)));
+			    contacts.add(contact);
+			}
+			cr.close();
+			contactAdapter.notifyDataSetChanged();
+			Log.i(TAG, "time 2");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
 		super.onPause();
-		unbindXMPPService();
+		//unbindXMPPService();
 	}
 
 	@Override
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
-		bindXMPPService();
+		//bindXMPPService();
 	}
 
 	@Override
 	protected void onStop() {
-		showContactsThread.cancel(true);
+		if(showContactsThread!=null){
+			showContactsThread.cancel(true);
+		}
 		super.onStop();
 	}
 	
@@ -185,8 +205,8 @@ public class ContactScreen extends ActionBarActivity{
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			try{
+				Log.i(TAG, "Starting Query ...");
 				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
-				
 				Log.i(TAG, "contacts found  = "+cr.getCount());
 				while (cr.moveToNext()) {
 				    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));

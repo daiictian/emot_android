@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <item name="blue" type="color">#FF33B5E5</item>
     <item name="purple" type="color">#FFAA66CC</item>
     <item name="green" type="color">#FF99CC00</item>
@@ -18,9 +19,13 @@
     <item name="light_bg" type="color">#F5F6FA</item>
     <item name="light_yellow" type="color">#FEFFED</item>
     <item name="bagni" type="color">#7677B5</item>
-     <item name="halka_white" type="color">#e5ecee</item>
-      <item name="halka_gulabi" type="color">#f2e0f1</item>
-        <item name="halka_hara" type="color">#b3f181</item>
-        <item name="gadha_purple" type="color">#e19bf3</item>
-        <item name="halka_peela" type="color">#f4ecbf</item>
+    <item name="halka_white" type="color">#e5ecee</item>
+    <item name="halka_gulabi" type="color">#f2e0f1</item>
+    <item name="halka_hara" type="color">#b3f181</item>
+    <item name="gadha_purple" type="color">#e19bf3</item>
+    <item name="halka_peela" type="color">#f4ecbf</item>
+    <item name="dark_grey2" type="color">#6C6C7E</item>
+	<item name="light_box" type="color">#FFFFFA</item>
+	<item name="light_box2" type="color">#EBEBFF</item>
+	<item name="light_line" type="color">#DBDBDB</item>
 </resources>

@@ -22,6 +22,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -44,7 +45,7 @@ public class EmotEditText extends EditText {
 	private LinearLayout emotRecentLayout;
 	private View scrollEmotSuggestionLayout;
 	private View scrollEmotRecentLayout;
-	private Button toggleLastEmot;
+	private View toggleLastEmot;
 	
 	private HashMap<String, Boolean> suggestedEmots = new HashMap<String, Boolean>();
 	Stack<Integer> lastEmotIndex = new Stack<Integer>();
@@ -141,7 +142,7 @@ public class EmotEditText extends EditText {
 	public void setEmotSuggestBox(View view){
 		emotSuggestionLayout = (LinearLayout) view.findViewById(R.id.viewEmotSuggestionLayout);
 		emotRecentLayout = (LinearLayout) view.findViewById(R.id.viewEmotRecentLayout);
-		toggleLastEmot = (Button)view.findViewById(R.id.buttonRecentEmots);
+		toggleLastEmot = view.findViewById(R.id.buttonRecentEmots);
 		scrollEmotSuggestionLayout = view.findViewById(R.id.scrollEmotSuggestionLayout);
 		scrollEmotRecentLayout = view.findViewById(R.id.scrollEmotRecentLayout);
 		
