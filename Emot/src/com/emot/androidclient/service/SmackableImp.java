@@ -1163,7 +1163,7 @@ public class SmackableImp implements Smackable {
 		final int       TS_COL = cursor.getColumnIndexOrThrow(ChatConstants.DATE);
 		final int PACKETID_COL = cursor.getColumnIndexOrThrow(ChatConstants.PACKET_ID);
 		ContentValues mark_sent = new ContentValues();
-		
+		mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
 		while (cursor.moveToNext()) {
 			int _id = cursor.getInt(_ID_COL);
 			String toJID = cursor.getString(JID_COL);
@@ -1196,12 +1196,12 @@ public class SmackableImp implements Smackable {
 					null, null);
 			if(messageType.equals(CHATTYPE)){
 				mXMPPConnection.sendPacket(newMessage);
-				mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+				
 				}else{
 					if(mJoined.get(toJID)){
 						Log.i(TAG, "sending message " +newMessage.getBody());
 						mXMPPConnection.sendPacket(newMessage);
-						mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+						
 					}else{
 						Log.i(TAG, "not joined in group " +toJID);
 					}
