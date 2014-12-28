@@ -6,15 +6,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
 
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Connection;
@@ -94,6 +92,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.emot.androidclient.data.ChatProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
@@ -115,10 +114,11 @@ public class SmackableImp implements Smackable {
 	final static private String TAG = SmackableImp.class.getSimpleName();
 
 	final static private int PACKET_TIMEOUT = 45000;
-
+	private static final String CHATTYPE = "chat";
+	private static final String GROUPCHATTYPE = "groupchat";
 	final static private String[] SEND_OFFLINE_PROJECTION = new String[] {
 		ChatConstants._ID, ChatConstants.JID,
-		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID };
+		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID ,ChatConstants.CHAT_TYPE};
 	final static private String SEND_OFFLINE_SELECTION =
 			ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
 					ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_NEW;
@@ -132,10 +132,11 @@ public class SmackableImp implements Smackable {
 
 	final static private String[] SEND_UNACKNOWLEDGED_PROJECTION = new String[] {
 		ChatConstants._ID, ChatConstants.JID,
-		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID };
+		ChatConstants.MESSAGE, ChatConstants.DATE, ChatConstants.PACKET_ID ,ChatConstants.CHAT_TYPE };
 	
 	final static private String SEND_UNACKNOWLEDGED_SELECTION =
 		ChatConstants.DIRECTION + " = " + ChatConstants.OUTGOING + " AND " +
+				
 		"("+
 		ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_FAILED +
 		" OR "+ ChatConstants.DELIVERY_STATUS + " = " + ChatConstants.DS_SENT_OR_READ +
@@ -349,7 +350,7 @@ public class SmackableImp implements Smackable {
 			registerMessageListener();
 			registerPresenceListener();
 			registerPongListener();
-			joinGroups();
+			
 			sendOfflineMessages();
 			sendFailedMessages();
 			sendUserWatching();
@@ -364,19 +365,15 @@ public class SmackableImp implements Smackable {
 	}
 	
 	private void joinGroups(){
+		
 		sStopService = false;
 		scheduledExecutorService = Executors.newScheduledThreadPool(1);
-		scheduledExecutorService.schedule(new Runnable() {
+		
 			
 			 
 			
 			
-			@Override
-			public void run() {
-				
-				if(sStopService ){
-					scheduledExecutorService.shutdownNow();
-				}else{
+			
 				
 					Log.i(TAG, "Login successful");
 					setChatRoomInvitationListener();
@@ -388,6 +385,9 @@ public class SmackableImp implements Smackable {
 						//						List<String> roomstoJoin2 = EmotApplication.getRooms();
 						Log.i(TAG, "rooms to join size " +roomstoJoin.length);
 						//sStopService = false;
+						for(int i = 0; i < roomstoJoin.length; i++){
+							mJoined.put(roomstoJoin[i], false);
+						}
 				int count = 0;
 				for(int i = 0; i < roomstoJoin.length; i++){
 					count++;
@@ -404,8 +404,9 @@ public class SmackableImp implements Smackable {
 						try {
 							
 							if(!mGroupChat2.isJoined()){
-							//mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+							
 								mGroupChat2.join(mConfig.userName + "@conference.emot-net","",dh, timeout);
+								mJoined.put(roomstoJoin[i], true);
 							Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
 							}else{
 								Log.i(TAG, "joining room done" );
@@ -419,12 +420,10 @@ public class SmackableImp implements Smackable {
 					}
 				}
 				
-			}
-		
-				}
+			
 	}
 	//mHandlerTask.run();
-}, 10, TimeUnit.SECONDS);
+
 
 	}
 
@@ -728,6 +727,18 @@ public class SmackableImp implements Smackable {
 		unregisterPongListener();
 		
 		mLastError = reason;
+		String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
+		if(rooms != null){
+			final String roomstoJoin[] = rooms.split(",");
+			//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
+			Log.i(TAG, "rooms to join " + roomstoJoin);
+			//						List<String> roomstoJoin2 = EmotApplication.getRooms();
+			Log.i(TAG, "rooms to join size " +roomstoJoin.length);
+			//sStopService = false;
+			for(int i = 0; i < roomstoJoin.length; i++){
+				mJoined.put(roomstoJoin[i], false);
+			}
+		}
 		updateConnectionState(ConnectionState.DISCONNECTED);
 		
 //		new Thread(new Runnable() {
@@ -759,11 +770,13 @@ public class SmackableImp implements Smackable {
 			
 			mGroupChat.create(pGroupName);
 			mGroupChat.changeSubject(pGroupName);
+			mJoined.put(roomID+"@conference.emot-net", false);
 			EmotApplication.setValue(roomID+"@conference.emot-net", pGroupName);
 			Intent intent = new Intent();
 			intent.setAction("GroupIDGenerated");
 			intent.putExtra("groupID", roomID+"@conference.emot-net");
 			intent.putExtra("grpSubject", pGroupName);
+			
 			mService.sendBroadcast(intent);
 			Log.i(TAG, "creating multi user chat2 " +mGroupChat);
 			form = mGroupChat.getConfigurationForm();
@@ -795,10 +808,11 @@ public class SmackableImp implements Smackable {
 
 			} catch (XMPPException e) {
 				Log.i(TAG, "Exception " +e.getMessage());
+				mService.sendBroadcast(new Intent("Group_Generated_Failed"));
 				e.printStackTrace();
 			}
 		} catch (XMPPException e1) {
-
+			mService.sendBroadcast(new Intent("Group_Generated_Failed"));
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
@@ -825,6 +839,7 @@ public class SmackableImp implements Smackable {
 					
 					mGroupChat2.join(mConfig.userName+"@conference.emot-net");
 					Log.i(TAG, "Room subject for recieved room is " + mGroupChat2.getSubject());
+					mJoined.put(room, true);
 					
 					String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
 					Log.i(TAG, "rooms being saved into shared preferences " +rooms);
@@ -849,14 +864,17 @@ public class SmackableImp implements Smackable {
 		DiscussionHistory dh = new DiscussionHistory();
 
 		Log.i(TAG, "joining user is " +members.get(0).getGJID());
+		
 		try {
+			mGroupChat.join(mConfig.userName +"@conference.emot-net");
+			mJoined.put(mGroupChat.getRoom(), true);
 			for(int i=0; i< size; i++){
 				Log.i(TAG, "joining user " + members.get(i).getGJID());
 				mGroupChat.invite(members.get(i).getGJID(),"");
 
 			}
 
-			mGroupChat.join(mConfig.userName +"@conference.emot-net");
+			
 			String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
 			Log.i(TAG, "rooms being saved into shared preferences " +rooms);
 			if(rooms == null){
@@ -955,6 +973,7 @@ public class SmackableImp implements Smackable {
 				SASLAuthentication.supportSASLMechanism("DIGEST-MD5", 0);
 
 				mXMPPConnection.login(mConfig.userName, mConfig.password, mConfig.ressource);
+				joinGroups();
 				//mXMPPConnection.login(mConfig.userName, mConfig.password);
 			}
 				//				scheduledExecutorService.schedule(new Runnable() {
@@ -1140,18 +1159,26 @@ public class SmackableImp implements Smackable {
 		final int      _ID_COL = cursor.getColumnIndexOrThrow(ChatConstants._ID);
 		final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
 		final int      MSG_COL = cursor.getColumnIndexOrThrow(ChatConstants.MESSAGE);
+		final int      MSG_TYPE = cursor.getColumnIndexOrThrow(ChatConstants.CHAT_TYPE);
 		final int       TS_COL = cursor.getColumnIndexOrThrow(ChatConstants.DATE);
 		final int PACKETID_COL = cursor.getColumnIndexOrThrow(ChatConstants.PACKET_ID);
 		ContentValues mark_sent = new ContentValues();
-		mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+		
 		while (cursor.moveToNext()) {
 			int _id = cursor.getInt(_ID_COL);
 			String toJID = cursor.getString(JID_COL);
 			String message = cursor.getString(MSG_COL);
 			String packetID = cursor.getString(PACKETID_COL);
+			String messageType = cursor.getString(MSG_TYPE);
 			long ts = cursor.getLong(TS_COL);
 			Log.d(TAG, "sendOfflineMessages: " + toJID + " > " + message);
-			final Message newMessage = new Message(toJID, Message.Type.chat);
+			 Message newMessage =null;
+			if(messageType.equals(CHATTYPE)){
+				newMessage = new Message(toJID, Message.Type.chat);
+			
+			}else{
+				newMessage = new Message(toJID, Message.Type.groupchat);
+			}
 			newMessage.setBody(message);
 			DelayInformation delay = new DelayInformation(new Date(ts));
 			newMessage.addExtension(delay);
@@ -1167,7 +1194,18 @@ public class SmackableImp implements Smackable {
 					+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
 			mContentResolver.update(rowuri, mark_sent,
 					null, null);
-			mXMPPConnection.sendPacket(newMessage);		// must be after marking delivered, otherwise it may override the SendFailListener
+			if(messageType.equals(CHATTYPE)){
+				mXMPPConnection.sendPacket(newMessage);
+				mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+				}else{
+					if(mJoined.get(toJID)){
+						Log.i(TAG, "sending message " +newMessage.getBody());
+						mXMPPConnection.sendPacket(newMessage);
+						mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
+					}else{
+						Log.i(TAG, "not joined in group " +toJID);
+					}
+				}// must be after marking delivered, otherwise it may override the SendFailListener
 		}
 		cursor.close();
 	}
@@ -1227,6 +1265,7 @@ public class SmackableImp implements Smackable {
 			final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
 			final int      MSG_COL = cursor.getColumnIndexOrThrow(ChatConstants.MESSAGE);
 			final int       TS_COL = cursor.getColumnIndexOrThrow(ChatConstants.DATE);
+			final int      MSG_TYPE = cursor.getColumnIndexOrThrow(ChatConstants.CHAT_TYPE);
 			final int PACKETID_COL = cursor.getColumnIndexOrThrow(ChatConstants.PACKET_ID);
 			ContentValues mark_sent = new ContentValues();
 			mark_sent.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
@@ -1235,9 +1274,15 @@ public class SmackableImp implements Smackable {
 				String toJID = cursor.getString(JID_COL);
 				String message = cursor.getString(MSG_COL);
 				String packetID = cursor.getString(PACKETID_COL);
+				String msgType = cursor.getString(MSG_TYPE);
 				long ts = cursor.getLong(TS_COL);
 				Log.i(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
-				final Message newMessage = new Message(toJID, Message.Type.chat);
+				 Message newMessage = null;
+				 if(msgType.equals(CHATTYPE)){
+					 newMessage = new Message(toJID, Message.Type.chat);
+				 }else{
+					 newMessage = new Message(toJID, Message.Type.groupchat);
+				 }
 				newMessage.setBody(message);
 				DelayInformation delay = new DelayInformation(new Date(ts));
 				newMessage.addExtension(delay);
@@ -1253,7 +1298,13 @@ public class SmackableImp implements Smackable {
 						+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
 				mContentResolver.update(rowuri, mark_sent,
 						null, null);
-				mXMPPConnection.sendPacket(newMessage);		// must be after marking delivered, otherwise it may override the SendFailListener
+				if(msgType.equals(CHATTYPE)){
+				mXMPPConnection.sendPacket(newMessage);
+				}else{
+					if(mJoined.get(toJID)){
+						mXMPPConnection.sendPacket(newMessage);
+					}
+				}// must be after marking delivered, otherwise it may override the SendFailListener
 			}
 			cursor.close();
 		}catch(Exception e){
@@ -1261,7 +1312,7 @@ public class SmackableImp implements Smackable {
 		}
 	}
 
-	public static void sendOfflineMessage(ContentResolver cr, String toJID, String message) {
+	public static void sendOfflineMessage(ContentResolver cr, String toJID, String message, String type) {
 		ContentValues values = new ContentValues();
 		values.put(ChatConstants.DIRECTION, ChatConstants.OUTGOING);
 		values.put(ChatConstants.JID, toJID);
@@ -1278,8 +1329,7 @@ public class SmackableImp implements Smackable {
 		ack.addExtension(new DeliveryReceipt(id));
 		mXMPPConnection.sendPacket(ack);
 	}
-	private static final String CHATTYPE = "chat";
-	private static final String GROUPCHATTYPE = "groupchat";
+	
 	public void sendMessage(String toJID, String message) {
 		Log.i(TAG, "Sending message");
 		final Message newMessage = new Message(toJID, Message.Type.chat);
@@ -2036,9 +2086,8 @@ public class SmackableImp implements Smackable {
 		}
 	}
 	private String mGrpMsgIDfrmSender;
-
+	private Map<String, Boolean> mJoined = new HashMap<String, Boolean>();; 
 	public void sendGroupMessage(String message, String toJID) {
-		//Message newMessage = new Message();
 		Log.i(TAG, "Sending group message " +message + "jid is " +toJID);
 		
 		try {
@@ -2050,19 +2099,22 @@ public class SmackableImp implements Smackable {
 			grpSubject = EmotApplication.getValue(toJID, "default");
 			newMessage.addExtension(new DeliveryReceiptRequest());
 			if (isAuthenticated()) {
+				Log.i(TAG, "mXMPPConnection is " +mXMPPConnection);
 				mGroupChat = new MultiUserChat(mXMPPConnection, toJID);
 				EmotApplication.setLongValue("historySince", System.currentTimeMillis());
-				
 				Log.i(TAG, "grpsubject in sending is " +grpSubject +"mSmackable is " +this);
-				
+				if(mJoined.get(toJID)){
 				addChatMessageToDB(ChatConstants.OUTGOING, mGroupChat.getRoom(), grpSubject,message, ChatConstants.DS_SENT_OR_READ,
 						System.currentTimeMillis(), newMessage.getPacketID(), GROUPCHATTYPE, mConfig.userName+"@conference.emot-net" );
-				//mGroupChat.sendMessage(newMessage.getBody());
 				Log.i(TAG, "sending grp name " + mGroupChat.getRoom());
 				newMessage.setProperty("roomName", mGroupChat.getRoom());
-			//	mGroupChat.sendMessage(newMessage);
 				mXMPPConnection.sendPacket(newMessage);
-				//mGroupChat.sendMessage(newMessage.);
+				}else{
+					Log.i(TAG, "not joined in group " +toJID);
+					addChatMessageToDB(ChatConstants.OUTGOING, toJID, grpSubject,message, ChatConstants.DS_NEW,
+							System.currentTimeMillis(), newMessage.getPacketID(),GROUPCHATTYPE, mConfig.userName+"@conference.emot-net");
+				}
+				
 
 			} else {
 				// send offline -> store to DB
@@ -2117,6 +2169,7 @@ public class SmackableImp implements Smackable {
 						if(mXMPPConnection != null && mXMPPConnection.isAuthenticated()){
 						mGroupChat = new MultiUserChat(mXMPPConnection, grpName);
 					mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+					mJoined.put(grpName, true);
 					RoomInfo info = MultiUserChat.getRoomInfo(mXMPPConnection, grpName);
 					Log.i(TAG, "Occupants in the group are " +mGroupChat.getMembers().iterator().next().getJid());
 					Log.i(TAG, "Group subject is " +info.getSubject());
@@ -2134,7 +2187,7 @@ public class SmackableImp implements Smackable {
 				}
 					
 				}
-			});
+			}).start();
 
 	}
 
@@ -2167,5 +2220,29 @@ public class SmackableImp implements Smackable {
 		Log.i(TAG, "members found to be returned are " +members);
 		members.add(mConfig.userName+"@emot-net");
 		return members;
+	}
+
+	@Override
+	public void changeGroupSubject(String grpID, String grpSubject) {
+		try {
+			MultiUserChat muc = new MultiUserChat(mXMPPConnection, grpID);
+			if(mJoined.get(grpID)){
+			muc.changeSubject(grpSubject);
+			}else{
+				muc.join(mConfig.userName + "@conference.emot-net");
+				muc.changeSubject(grpSubject);
+				mJoined.put(grpID, true);
+			}
+			EmotApplication.setValue(grpID, grpSubject);
+			
+			addChatMessageToDB(ChatConstants.OUTGOING, grpID, grpSubject, "Group Subject has been changed to " +grpSubject, ChatConstants.DS_SENT_OR_READ,
+					System.currentTimeMillis(), "sss", GROUPCHATTYPE, "");
+			Toast.makeText(getService(), "changed group subject to " +grpSubject, Toast.LENGTH_LONG).show();
+			mService.sendBroadcast(new Intent().setAction("GROUP_SUBJECT_CHANGED_SUCCESS"));
+		} catch (XMPPException e) {
+			Toast.makeText(getService(), "Could not change subject because of " +e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+		
 	}
 }

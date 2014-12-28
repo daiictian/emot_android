@@ -38,7 +38,7 @@
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:paddingLeft="5dp"
-                    android:src="@drawable/pencil" />
+                    android:src="@drawable/ic_action_edit" />
                 <EditText
                     android:id="@+id/EnterSubject"
                     android:layout_width="match_parent"
@@ -73,7 +73,7 @@
             </ListView>
 
             <Button
-                android:id="@+id/createGroup"
+                android:id="@+id/changeSubjectButton"
                 style="@style/btnStyleOrange"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"

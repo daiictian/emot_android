@@ -57,6 +57,22 @@ public class XMPPService extends GenericService {
 	private RemoteCallbackList<IXMPPChatCallback> chatCallbacks = new RemoteCallbackList<IXMPPChatCallback>();
 	private String grpSubject;
 	
+	private BroadcastReceiver mSubjectChangedReciever = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if(intent.getAction().equals("GROUP_SUBJECT_CHANGED")){
+				Log.i(TAG, "Broadcast received " + "GROUP_SUBJECT_CHANGED");
+				if(mSmackable != null && mSmackable.isAuthenticated()){
+					mSmackable.changeGroupSubject(intent.getStringExtra("grpID"),intent.getStringExtra("newGrpSubject"));
+				}else{
+					Toast.makeText(XMPPService.this, "Not connected to network", Toast.LENGTH_LONG).show();
+				}
+			}
+			
+		}
+	};
+	
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -161,6 +177,7 @@ public class XMPPService extends GenericService {
 		createGroupServiceChatStub();
 		registerReceiver(mConnectivityChangedReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 		registerReceiver(mMissedCallReceiver, new IntentFilter("android.intent.action.PHONE_STATE"));
+		registerReceiver(mSubjectChangedReciever, new IntentFilter("GROUP_SUBJECT_CHANGED"));
 		mPAlarmIntent = PendingIntent.getBroadcast(this, 0, mAlarmIntent,
 					PendingIntent.FLAG_UPDATE_CURRENT);
 		registerReceiver(mAlarmReceiver, new IntentFilter(RECONNECT_ALARM));
@@ -192,6 +209,7 @@ public class XMPPService extends GenericService {
 		unregisterReceiver(mConnectivityChangedReceiver);
 		unregisterReceiver(mAlarmReceiver);
 		unregisterReceiver(mMissedCallReceiver);
+		unregisterReceiver(mSubjectChangedReciever);
 	}
 
 	@Override
@@ -239,7 +257,7 @@ public class XMPPService extends GenericService {
 				mSmackable.sendGroupMessage(message, user);
 				}else{
 					SmackableImp.sendOfflineMessage(getContentResolver(),
-							user, message);
+							user, message, "groupchat");
 				}
 				
 				
@@ -336,7 +354,7 @@ public class XMPPService extends GenericService {
 					mSmackable.sendMessage(user, message);
 				else
 					SmackableImp.sendOfflineMessage(getContentResolver(),
-							user, message);
+							user, message, "chat");
 			}
 
 			public boolean isAuthenticated() throws RemoteException {

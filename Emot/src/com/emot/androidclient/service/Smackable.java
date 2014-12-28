@@ -43,6 +43,7 @@ public interface Smackable {
 	void joinGroup(String grpName, long date);
 	String getGroupSubject();
 	Service getService();
+	void changeGroupSubject(String grpSubject, String grpID);
 	List<String> getGroupMembers();
 	void leaveGroup(String grpName);
 	String getNameForJID(String jid);
