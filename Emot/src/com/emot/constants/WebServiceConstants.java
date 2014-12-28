@@ -2,7 +2,7 @@ package com.emot.constants;
 
 public final class WebServiceConstants {
 
-	public static final String HTTP = "https";
+	public static final String HTTP = "http";
 	public static final String SERVER_IP = "ec2-54-165-232-122.compute-1.amazonaws.com";
 	//public static final String CHAT_SERVER = "ec2-54-85-148-36.compute-1.amazonaws.com";
 	public static final String CHAT_SERVER = "emot-426416851.us-east-1.elb.amazonaws.com";

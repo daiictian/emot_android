@@ -63,5 +63,6 @@
     <string name="send">SEND</string>
     <string name="next">NEXT</string>
     <string name="title_activity_create_group">CreateGroup</string>
-
+	<string name="participants">Group Members</string>
+    
 </resources>

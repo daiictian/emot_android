@@ -3,10 +3,19 @@ package com.emot.screens;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,26 +38,81 @@ public class GroupInfo extends Activity{
 	private ContactArrayAdapter contactAdapter;
 	private ListView currentList;
 	private ShowContacts showContactsThread;
+	private ImageView changeGroup;
+	private ProgressDialog mProgress;
+	private EditText enterNewGroupSubject;
+	private String currentGrpID;
+	private Button mChangeSubject;
+	private BroadcastReceiver mGroupSubjectChanged = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			GroupInfo.this.finish();
+			
+		}
+	};
+	
+	
+	@Override
+	protected void onDestroy() {
+		unregisterReceiver(mGroupSubjectChanged);
+		super.onDestroy();
+	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
+		registerReceiver(mGroupSubjectChanged, new IntentFilter("GROUP_SUBJECT_CHANGED_SUCCESS"));
 		setContentView(R.layout.group_info);
+		changeGroup = (ImageView)findViewById(R.id.changeSubject);
+		enterNewGroupSubject = (EditText)findViewById(R.id.EnterSubject);
 		currentSubject = (TextView)findViewById(R.id.currentGrpSubject);
 		currentList = (ListView)findViewById(R.id.listviewMembers);
 		subject = getIntent().getStringExtra("currentSubject");
+		mChangeSubject = (Button)findViewById(R.id.changeSubjectButton);
+		currentGrpID = getIntent().getStringExtra("grpID");
 		currentMembers = getIntent().getStringArrayListExtra("currentMembers");
 		Log.i(TAG, "currentMembers are " +currentMembers);
 		contacts = new ArrayList<Contact>();
 		contactAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		currentList.setAdapter(contactAdapter);
 		currentSubject.setText(subject);
-		refreshContacts();
+		
+		
+		setOnclickListeners();
 		
 		
 		
 	}
+	
+	
+	private void setOnclickListeners(){
+		changeGroup.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				enterNewGroupSubject.setVisibility(View.VISIBLE);
+				
+			}
+		});
+		mChangeSubject.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent();
+				intent.setAction("GROUP_SUBJECT_CHANGED");
+				Log.i(TAG, "grpID in groupInfo is " +currentGrpID);
+				
+				intent.putExtra("newGrpSubject", enterNewGroupSubject.getText().toString());
+				intent.putExtra("grpID", currentGrpID);
+				sendBroadcast(intent);
+				
+			}
+		});
+	}
+	
 	
 	public void refreshContacts(){
 		Log.i(TAG, "Refreshing contacts !!!!");
@@ -58,7 +122,9 @@ public class GroupInfo extends Activity{
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
+		mProgress = new ProgressDialog(this);
+		
+		refreshContacts();
 		super.onResume();
 	}
 	
@@ -104,6 +170,10 @@ public class GroupInfo extends Activity{
 		protected void onPostExecute(Boolean resp) {
 			if(!resp){
 				Toast.makeText(EmotApplication.getAppContext(), "Sorry encountered some error while fetching contacts. Please try again later.", Toast.LENGTH_LONG).show();
+			}else{
+				if(mProgress != null){
+					mProgress.dismiss();
+				}
 			}
 		}
 	}

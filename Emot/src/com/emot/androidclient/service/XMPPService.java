@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.chat.IXMPPChatCallback;
@@ -25,6 +26,7 @@ import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.emotobjects.Contact;
+import com.emot.model.EmotApplication;
 import com.emot.screens.ContactScreen;
 import com.emot.screens.R;
 
@@ -54,6 +56,22 @@ public class XMPPService extends GenericService {
 	private Handler mMainHandler = new Handler();
 	private RemoteCallbackList<IXMPPChatCallback> chatCallbacks = new RemoteCallbackList<IXMPPChatCallback>();
 	private String grpSubject;
+	
+	private BroadcastReceiver mSubjectChangedReciever = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if(intent.getAction().equals("GROUP_SUBJECT_CHANGED")){
+				Log.i(TAG, "Broadcast received " + "GROUP_SUBJECT_CHANGED");
+				if(mSmackable != null && mSmackable.isAuthenticated()){
+					mSmackable.changeGroupSubject(intent.getStringExtra("grpID"),intent.getStringExtra("newGrpSubject"));
+				}else{
+					Toast.makeText(XMPPService.this, "Not connected to network", Toast.LENGTH_LONG).show();
+				}
+			}
+			
+		}
+	};
 	
 	
 	@Override
@@ -159,6 +177,7 @@ public class XMPPService extends GenericService {
 		createGroupServiceChatStub();
 		registerReceiver(mConnectivityChangedReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 		registerReceiver(mMissedCallReceiver, new IntentFilter("android.intent.action.PHONE_STATE"));
+		registerReceiver(mSubjectChangedReciever, new IntentFilter("GROUP_SUBJECT_CHANGED"));
 		mPAlarmIntent = PendingIntent.getBroadcast(this, 0, mAlarmIntent,
 					PendingIntent.FLAG_UPDATE_CURRENT);
 		registerReceiver(mAlarmReceiver, new IntentFilter(RECONNECT_ALARM));
@@ -190,6 +209,7 @@ public class XMPPService extends GenericService {
 		unregisterReceiver(mConnectivityChangedReceiver);
 		unregisterReceiver(mAlarmReceiver);
 		unregisterReceiver(mMissedCallReceiver);
+		unregisterReceiver(mSubjectChangedReciever);
 	}
 
 	@Override
@@ -237,7 +257,7 @@ public class XMPPService extends GenericService {
 				mSmackable.sendGroupMessage(message, user);
 				}else{
 					SmackableImp.sendOfflineMessage(getContentResolver(),
-							user, message);
+							user, message, "groupchat");
 				}
 				
 				
@@ -259,11 +279,20 @@ public class XMPPService extends GenericService {
 			}
 
 			@Override
-			public void createGroup(String grpName,
+			public boolean createGroup(String grpName,
 					List<Contact> members){
+				if(mSmackable != null && mSmackable.isAuthenticated()){
 				Log.i(TAG, "members   ----" +members.get(0).getName());
 				mSmackable.initMUC(grpName);
 				mSmackable.joinUsers(members);
+				return true;
+				}else{
+					Log.i(TAG, "not connected to network");
+					Intent intent = new Intent();
+					intent.setAction("GROUP_CREATED_ERROR");
+					mSmackable.getService().sendBroadcast(intent);
+					return false;
+				}
 				
 			}
 
@@ -325,7 +354,7 @@ public class XMPPService extends GenericService {
 					mSmackable.sendMessage(user, message);
 				else
 					SmackableImp.sendOfflineMessage(getContentResolver(),
-							user, message);
+							user, message, "chat");
 			}
 
 			public boolean isAuthenticated() throws RemoteException {
