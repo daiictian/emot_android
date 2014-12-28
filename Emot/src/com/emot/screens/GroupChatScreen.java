@@ -492,9 +492,12 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			if(intent.getAction().equals("GroupIDGenerated")){
 			Log.i(TAG, "grpID received is  " +intent.getStringExtra("groupID"));
 			grpName = intent.getStringExtra("groupID");
+			currentGrpSubject = intent.getStringExtra("grpSubject");
 			setChatWindowAdapter() ;
+			}
 			
 		}
 		

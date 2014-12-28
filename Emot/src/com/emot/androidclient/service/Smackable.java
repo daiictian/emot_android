@@ -3,6 +3,8 @@ package com.emot.androidclient.service;
 
 import java.util.List;
 
+import android.app.Service;
+
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
 import com.emot.emotobjects.Contact;
@@ -40,6 +42,7 @@ public interface Smackable {
 	void joinUsers(List<Contact> members);
 	void joinGroup(String grpName, long date);
 	String getGroupSubject();
+	Service getService();
 	List<String> getGroupMembers();
 	void leaveGroup(String grpName);
 	String getNameForJID(String jid);

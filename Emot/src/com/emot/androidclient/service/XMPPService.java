@@ -270,7 +270,9 @@ public class XMPPService extends GenericService {
 				return true;
 				}else{
 					Log.i(TAG, "not connected to network");
-					Toast.makeText(EmotApplication.getAppContext(), "Not connected to network", Toast.LENGTH_LONG).show();
+					Intent intent = new Intent();
+					intent.setAction("GROUP_CREATED_ERROR");
+					mSmackable.getService().sendBroadcast(intent);
 					return false;
 				}
 				

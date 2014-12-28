@@ -3,10 +3,14 @@ package com.emot.screens;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,12 +33,17 @@ public class GroupInfo extends Activity{
 	private ContactArrayAdapter contactAdapter;
 	private ListView currentList;
 	private ShowContacts showContactsThread;
-
+	private ImageView changeGroup;
+	private ProgressDialog mProgress;
+	private EditText enterNewGroupSubject;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.group_info);
+		changeGroup = (ImageView)findViewById(R.id.changeSubject);
+		enterNewGroupSubject = (EditText)findViewById(R.id.EnterSubject);
 		currentSubject = (TextView)findViewById(R.id.currentGrpSubject);
 		currentList = (ListView)findViewById(R.id.listviewMembers);
 		subject = getIntent().getStringExtra("currentSubject");
@@ -44,11 +53,26 @@ public class GroupInfo extends Activity{
 		contactAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		currentList.setAdapter(contactAdapter);
 		currentSubject.setText(subject);
-		refreshContacts();
+		
+		
+		setOnclickListeners();
 		
 		
 		
 	}
+	
+	
+	private void setOnclickListeners(){
+		changeGroup.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				enterNewGroupSubject.setVisibility(View.VISIBLE);
+				
+			}
+		});
+	}
+	
 	
 	public void refreshContacts(){
 		Log.i(TAG, "Refreshing contacts !!!!");
@@ -58,7 +82,9 @@ public class GroupInfo extends Activity{
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
+		mProgress = new ProgressDialog(this);
+		
+		refreshContacts();
 		super.onResume();
 	}
 	
@@ -104,6 +130,10 @@ public class GroupInfo extends Activity{
 		protected void onPostExecute(Boolean resp) {
 			if(!resp){
 				Toast.makeText(EmotApplication.getAppContext(), "Sorry encountered some error while fetching contacts. Please try again later.", Toast.LENGTH_LONG).show();
+			}else{
+				if(mProgress != null){
+					mProgress.dismiss();
+				}
 			}
 		}
 	}

@@ -3,8 +3,10 @@ package com.emot.screens;
 import java.util.ArrayList;
 
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,18 +35,41 @@ public class CreateGroup extends ActionBarActivity {
 	private SelectContactArrayAdapter contactAdapter;
 	private ShowContacts showContactsThread;
 	private Button createGroup;
+	
 	private EditText grpName;
 	private SearchView participantSelector;
 	private static final String TAG = "CreateGroup";
 	final static private String[] CONTACT_PROJECTION = new String[] {
 		RosterConstants.ALIAS, RosterConstants.STATUS_MESSAGE,
 		RosterConstants.AVATAR, RosterConstants.JID};
+	private BroadcastReceiver mGroupCreatedReceiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if(intent.getAction().equals("GROUP_CREATED_ERROR")){
+				Toast.makeText(getApplicationContext(), "Not connected to network", Toast.LENGTH_LONG).show();
+				CreateGroup.this.finish();
+			}
+			
+		}
+	};
+	
+	@Override
+	protected void onDestroy() {
+		unregisterReceiver(mGroupCreatedReceiver);
+		super.onDestroy();
+	}
+
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.create_group_screen);
+		
+		registerReceiver(mGroupCreatedReceiver, new IntentFilter("GROUP_CREATED_ERROR"));
 		mContactList = (ListView)findViewById(R.id.listviewContact);
+		
 		createGroup = (Button)findViewById(R.id.createGroup);
 		grpName = (EditText)findViewById(R.id.grpname);
 		participantSelector = (SearchView)findViewById(R.id.search_view);
@@ -132,6 +158,8 @@ public class CreateGroup extends ActionBarActivity {
 				
 			}
 		});
+		
+		
 		
 	}
 	

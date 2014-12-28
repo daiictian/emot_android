@@ -285,6 +285,10 @@ public class SmackableImp implements Smackable {
 		
 		
 	}
+	
+	public Service getService(){
+		return mService;
+	}
 
 	// this code runs a DNS resolver, might be blocking
 	private synchronized void initXMPPConnection() {
@@ -759,6 +763,7 @@ public class SmackableImp implements Smackable {
 			Intent intent = new Intent();
 			intent.setAction("GroupIDGenerated");
 			intent.putExtra("groupID", roomID+"@conference.emot-net");
+			intent.putExtra("grpSubject", pGroupName);
 			mService.sendBroadcast(intent);
 			Log.i(TAG, "creating multi user chat2 " +mGroupChat);
 			form = mGroupChat.getConfigurationForm();
@@ -786,6 +791,7 @@ public class SmackableImp implements Smackable {
 				submitForm.addField(field);
 				submitForm.addField(field2);
 				mGroupChat.sendConfigurationForm(submitForm);
+				
 
 			} catch (XMPPException e) {
 				Log.i(TAG, "Exception " +e.getMessage());
