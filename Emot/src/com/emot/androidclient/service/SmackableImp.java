@@ -77,6 +77,8 @@ import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptRequest;
 import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningTaskInfo;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -1140,6 +1142,7 @@ public class SmackableImp implements Smackable {
 			Log.i(TAG, 
 					" Setting status as "+mConfig.statusMessage + 
 					" config instance "+mConfig + 
+					" mode "+mConfig.statusMode + 
 					//" pref val = "+prefs.getString(PreferenceConstants.STATUS_MESSAGE, "") +
 					" pref old value = "+EmotApplication.getPrefs().getString(PreferenceConstants.STATUS_MESSAGE, "")
 			);
@@ -1249,6 +1252,18 @@ public class SmackableImp implements Smackable {
 		}
 		cursor.close();
 	}
+	
+	public boolean isRunning() {
+        ActivityManager activityManager = (ActivityManager) EmotApplication.getAppContext().getSystemService(Context.ACTIVITY_SERVICE);
+        List<RunningTaskInfo> tasks = activityManager.getRunningTasks(Integer.MAX_VALUE);
+
+        for (RunningTaskInfo task : tasks) {
+            if (EmotApplication.getAppContext().getPackageName().equalsIgnoreCase(task.baseActivity.getPackageName())) 
+                return true;                                  
+        }
+
+        return false;
+    }
 
 	public void sendNotacknowledgedMessages(String jid) {
 		try{
@@ -1454,14 +1469,23 @@ public class SmackableImp implements Smackable {
 
 			public void presenceChanged(Presence presence) {
 				Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): "+presence +" status"+ presence.getStatus());
+				
 
 				String jabberID = getBareJID(presence.getFrom());
+				
 				RosterEntry rosterEntry = mRoster.getEntry(jabberID);
 				Log.i(TAG, "Roster status = "+rosterEntry.getStatus() );
 				if (rosterEntry != null) {
 					updateRosterEntryInDB(rosterEntry);
 					mServiceCallBack.rosterChanged();
 				}
+				//Sending Chat status as gone
+				if(getStatusInt(presence)!=StatusMode.available.ordinal()){
+					mServiceCallBack.chatStateChanged(ChatState.gone.ordinal(), jabberID);
+				}else{
+					mServiceCallBack.chatStateChanged(ChatState.active.ordinal(), jabberID);
+				}
+				
 				sendNotacknowledgedMessages(jabberID);
 			}
 		};
@@ -1865,11 +1889,12 @@ public class SmackableImp implements Smackable {
 
 		Presence presence = mRoster.getPresence(entry.getUser());
 		int currentStatus = getStatusInt(presence);
+		Log.i(TAG, "available ordinal val "+StatusMode.available.ordinal());
 		values.put(RosterConstants.STATUS_MODE, currentStatus);
 		//Log.i(TAG, "Presence = " + presence);
 
-		if(currentStatus==StatusMode.available.ordinal()){
-			//Log.i(TAG, "ONLINE STATUS");
+		if(currentStatus != StatusMode.available.ordinal()){
+			Log.i(TAG, "AWAY STATUS");
 			values.put(RosterConstants.LAST_SEEN, getDateTime());
 		}
 		if (presence.getType() == Presence.Type.error) {
@@ -1891,7 +1916,7 @@ public class SmackableImp implements Smackable {
 		} catch (XMPPException e) {
 			e.printStackTrace();
 		}
-		//Log.i(TAG, "presence values = "+presence.getStatus());
+		Log.i(TAG, entry.getUser() +" presence values = "+presence.getStatus() + " curr status = "+currentStatus+" Presence mode= " + presence.getMode());
 		return values;
 	}
 

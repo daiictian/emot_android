@@ -2,7 +2,11 @@ package com.emot.androidclient.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.jivesoftware.smack.util.StringUtils;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -24,6 +28,7 @@ import com.emot.androidclient.IXMPPRosterCallback;
 import com.emot.androidclient.chat.IXMPPChatCallback;
 import com.emot.androidclient.exceptions.EmotXMPPException;
 import com.emot.androidclient.util.ConnectionState;
+import com.emot.androidclient.util.PreferenceConstants;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.emotobjects.Contact;
 import com.emot.model.EmotApplication;
@@ -37,6 +42,7 @@ public class XMPPService extends GenericService {
 	private static final int RECONNECT_MAXIMUM = 10*60;
 	private static final String RECONNECT_ALARM = "org.emot.androidclient.RECONNECT_ALARM";
 	private static final String TAG = XMPPService.class.getSimpleName();
+	private static final long STATUS_SEND_INTERVAL = 2000;
 	private int mReconnectTimeout = RECONNECT_AFTER;
 	private String mReconnectInfo = "";
 	private Intent mAlarmIntent = new Intent(RECONNECT_ALARM);
@@ -56,6 +62,7 @@ public class XMPPService extends GenericService {
 	private Handler mMainHandler = new Handler();
 	private RemoteCallbackList<IXMPPChatCallback> chatCallbacks = new RemoteCallbackList<IXMPPChatCallback>();
 	private String grpSubject;
+	private boolean lastRunningStatus = false;
 	
 	private BroadcastReceiver mSubjectChangedReciever = new BroadcastReceiver() {
 		
@@ -194,6 +201,7 @@ public class XMPPService extends GenericService {
 		}
 
 		mServiceNotification = ServiceNotification.getInstance();
+		
 	}
 
 	@Override
@@ -710,7 +718,27 @@ public class XMPPService extends GenericService {
 			}
 		});
 		
-		
+		//Timer which keeps updating user status
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+
+		    @Override
+		    public void run() {
+		    	boolean rnig = mSmackable.isRunning();
+		    	Log.i(TAG, "Running status = "+rnig);
+		    	if(lastRunningStatus!=rnig){
+		    		if(rnig){
+		    			EmotApplication.setValue(PreferenceConstants.STATUS_MODE, StatusMode.available.name());
+		    		}else{
+		    			EmotApplication.setValue(PreferenceConstants.STATUS_MODE, StatusMode.away.name());
+		    		}
+		    		lastRunningStatus = rnig;
+		    		mSmackable.setStatusFromConfig();
+		    	}
+		    	
+		    }
+
+		}, 0, STATUS_SEND_INTERVAL);
 	}
 
 	private class ReconnectAlarmReceiver extends BroadcastReceiver {

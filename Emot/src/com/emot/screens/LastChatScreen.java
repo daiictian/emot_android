@@ -51,6 +51,7 @@ public class LastChatScreen extends ActionBarActivity {
 	private Intent xmppServiceIntent;
 	private ServiceConnection xmppServiceConnection;
 	private XMPPRosterServiceAdapter serviceAdapter;
+	private View viewEmpty;
 	private Stub rosterCallback;
 	private EmotConfiguration mConfig;
 
@@ -102,6 +103,7 @@ public class LastChatScreen extends ActionBarActivity {
 
 	private void intializeUI(){
 		listLastChat = (ListView)findViewById(R.id.listLastChat);
+		viewEmpty = findViewById(R.id.view_last_chats);
 	}
 	
 	private void setAdapter(){
@@ -116,10 +118,19 @@ public class LastChatScreen extends ActionBarActivity {
 				ChatProvider.ChatConstants.DELIVERY_STATUS 
 		};
 		int[] projection_to = new int[] { R.id.textLastChatUser, R.id.textLastChatItem };
-		String selection =  ChatProvider.ChatConstants.JID + " != '"+EmotConfiguration.getConfig().jabberID+"'" + ") GROUP BY ("+ ChatProvider.ChatConstants.JID;
+		String selection =  ChatProvider.ChatConstants.JID + " != '"+EmotConfiguration.getConfig().jabberID+"'" + ")  GROUP BY ("+ ChatProvider.ChatConstants.JID;
 		//Log.i(TAG, "selection is " + selection);
 		String[] groupby = new String[]{ChatProvider.ChatConstants.JID};
-		Cursor cursor = getContentResolver().query(ChatProvider.CONTENT_URI, projection, selection, null, null);
+		Cursor cursor = getContentResolver().query(
+				ChatProvider.CONTENT_URI, 
+				projection, 
+				selection, 
+				null, 
+				ChatProvider.ChatConstants.DATE + " DESC");
+		if(cursor.getCount()>0){
+			viewEmpty.setVisibility(View.GONE);
+			listLastChat.setVisibility(View.VISIBLE);
+		}
 		//Log.i(TAG, "cursor count "+cursor.getCount());
 		final ListAdapter adapter = new LastChatAdapter(cursor, projection, projection_to);
 		listLastChat.setAdapter(adapter);
@@ -309,7 +320,12 @@ public class LastChatScreen extends ActionBarActivity {
 			byte[] avatar = null;
 			String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";
 			String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS, RosterProvider.RosterConstants.AVATAR};
-			Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
+			Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(
+					RosterProvider.CONTENT_URI, 
+					projection, 
+					selection, 
+					null, 
+					null);
 			//Log.i(TAG, "users found length = "+cursor.getCount());
 			if(cursor.getCount()>0){
 				while(cursor.moveToNext()){

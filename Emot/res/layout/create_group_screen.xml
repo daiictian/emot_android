@@ -12,9 +12,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:paddingTop="5dp" >
+        android:padding="5dp">
 
         <EditText
             android:id="@+id/grpname"
@@ -27,6 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:iconifiedByDefault="false"
+            android:layout_gravity="left|center_vertical"
             app:queryHint="@string/selectParticipant" />
 
         <RelativeLayout
@@ -38,7 +37,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:divider="@color/grey"
-                android:dividerHeight="1dp" >
+                android:dividerHeight="1dp"
+                android:layout_marginBottom="100dp" >
             </ListView>
 
             <Button

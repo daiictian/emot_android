@@ -52,6 +52,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getSupportActionBar().setTitle("Update Profile");
 		getSupportActionBar().setHomeButtonEnabled(true);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		setContentView(R.layout.profile);
@@ -204,6 +205,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.i(TAG, "On activity result "+ resultCode + " result code " +RESULT_OK);
 		if (resultCode != RESULT_OK)
 			return;
 
@@ -313,7 +315,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		Bitmap bitmap;
 		Log.i(TAG, "img is "+img);
 		if(img==null){
-			bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+			bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_profile);
 		}else{
 			byte[] bArray =  Base64.decode(img, Base64.DEFAULT);
 			bitmap = BitmapFactory.decodeByteArray(bArray , 0, bArray.length);
