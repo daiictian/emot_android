@@ -155,7 +155,10 @@ public class EmotEditText extends EditText {
 					scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
 				}else{
 					Log.i(TAG, "opening recent layout");
-					if(emotRecentLayout.getChildCount()<=0){
+					
+					//Remove if condition to get latest emots every time
+					//if(emotRecentLayout.getChildCount()<=0){
+						emotRecentLayout.removeAllViews();
 						Log.i(TAG, "get count less than zero");
 						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 								DBContract.EmotsDBEntry.TABLE_NAME, 
@@ -175,7 +178,7 @@ public class EmotEditText extends EditText {
 							final Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
 							ImageView view = new ImageView(EmotApplication.getAppContext());
 							view.setId(0);
-							RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+							RelativeLayout.LayoutParams params = getEmotParams();
 							view.setLayoutParams(params);
 							view.setImageBitmap(emot.getEmotImg());
 							view.setDrawingCacheEnabled(true);
@@ -199,7 +202,7 @@ public class EmotEditText extends EditText {
 							emotRecentLayout.addView(view);
 						}
 						cr.close();
-					}
+					//}
 						
 					scrollEmotRecentLayout.setVisibility(View.VISIBLE);
 					scrollEmotSuggestionLayout.setVisibility(View.GONE);
@@ -235,12 +238,18 @@ public class EmotEditText extends EditText {
 		if(!lastEmotIndex.isEmpty() && lastEmotIndex.peek()>txt.length()){
 			lastEmotIndex.pop();
 		}
+		Log.i(TAG, "text = "+txt + " length="+txt.length());
+		
 		if(!lastEmotIndex.isEmpty() && lastSpace<lastEmotIndex.peek()){
+			if(txt.length()-1<lastEmotIndex.peek()){
+				return;
+			}
+			Log.i(TAG, "lastEmotIndex = "+lastEmotIndex.peek());
 			lastWord = txt.substring(lastEmotIndex.peek());
 		}else{
 			lastWord = txt.substring(lastSpace);
 		}
-		 
+		Log.i(TAG, "lastWord = "+lastWord);
 		
 		if(updateEmotTask==null){
 			updateEmotTask = new UpdateEmotSuggestions(lastWord);
@@ -251,6 +260,10 @@ public class EmotEditText extends EditText {
 			updateEmotTask.execute();
 		}
 		//Log.i(TAG, "Text changed 222" + s.toString());
+		
+		//Showing suggested emots on text change
+		scrollEmotRecentLayout.setVisibility(View.GONE);
+		scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
 	}
 	
 	public class UpdateEmotSuggestions extends AsyncTask<Void, Emot, Void>{
@@ -285,7 +298,7 @@ public class EmotEditText extends EditText {
 			final Emot emot = values[0];
 			ImageView view = new ImageView(EmotApplication.getAppContext());
 			view.setId(0);
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			RelativeLayout.LayoutParams params = getEmotParams();
 			view.setLayoutParams(params);
 			view.setImageBitmap(emot.getEmotImg());
 			view.setDrawingCacheEnabled(true);
@@ -312,6 +325,12 @@ public class EmotEditText extends EditText {
 			}
 		}
 
+	}
+	
+	private RelativeLayout.LayoutParams getEmotParams(){
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		params.setMargins(40, 0, 40, 0);
+		return params;
 	}
 
 }

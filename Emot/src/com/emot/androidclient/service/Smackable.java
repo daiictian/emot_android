@@ -47,4 +47,5 @@ public interface Smackable {
 	List<String> getGroupMembers();
 	void leaveGroup(String grpName);
 	String getNameForJID(String jid);
+	boolean isRunning();
 }

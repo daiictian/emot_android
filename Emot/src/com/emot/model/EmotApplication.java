@@ -84,6 +84,13 @@ public class EmotApplication extends Application {
 		return true;
 	}
 	
+	public static boolean setValue(String k, int v) {
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(k, v); 
+		editor.commit();
+		return true;
+	}
+	
 	public static boolean setLongValue(String k, long v) {
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putLong(k, v); 

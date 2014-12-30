@@ -18,7 +18,7 @@
             android:id="@+id/imageAvatar"
             android:layout_width="150dip"
             android:layout_height="150dip"
-            android:src="@drawable/blank_user_image" />
+            android:src="@drawable/blank_profile" />
     </LinearLayout>
 
     <RelativeLayout

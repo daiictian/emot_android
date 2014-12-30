@@ -155,20 +155,31 @@ public class CreateGroup extends ActionBarActivity {
 				}else{
 					Toast.makeText(CreateGroup.this, "Please enter group name", Toast.LENGTH_LONG).show();
 				}
-				
 			}
 		});
-		
-		
-		
 	}
 	
 	
 	
 	public void refreshContacts(){
 		Log.i(TAG, "Refreshing contacts !!!!");
-		showContactsThread = new ShowContacts();
-		showContactsThread.execute();
+//		showContactsThread = new ShowContacts();
+//		showContactsThread.execute();
+		
+		
+		//Doing this on UI thread
+		Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
+		
+		Log.i(TAG, "contacts found  = "+cr.getCount());
+		while (cr.moveToNext()) {
+		    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
+		    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
+		    contact.setAvatar(cr.getBlob(cr.getColumnIndex(RosterConstants.AVATAR)));
+		    contacts.add(contact);
+		}
+		cr.close();
+		contactAdapter.notifyDataSetChanged();
+		
 	}
 
 	@Override

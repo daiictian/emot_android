@@ -64,5 +64,7 @@
     <string name="next">NEXT</string>
     <string name="title_activity_create_group">CreateGroup</string>
 	<string name="participants">Group Members</string>
+	<string name="blank_chat_hi">Hello there !</string>
+	<string name="seem_new">Welcome to emot. You seem new here. Start chatting with anyone on your contact list to experience the awesomeness...</string>
     
 </resources>

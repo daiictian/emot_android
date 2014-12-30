@@ -37,6 +37,7 @@ public class ImageHelper {
 
 		return output;
 	}
+	
 
 	public static byte[] getByteArray(Bitmap bitmap){
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();

@@ -9,7 +9,11 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,11 +43,14 @@ import com.emot.androidclient.chat.XMPPChatServiceAdapter;
 import com.emot.androidclient.data.ChatProvider;
 import com.emot.androidclient.data.ChatProvider.ChatConstants;
 import com.emot.androidclient.data.RosterProvider;
+import com.emot.androidclient.data.RosterProvider.RosterConstants;
 import com.emot.androidclient.service.IXMPPChatService;
 import com.emot.androidclient.service.XMPPService;
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
+import com.emot.common.ImageHelper;
 import com.emot.model.EmotApplication;
 
 public class ChatScreen extends ActionBarActivity {
@@ -67,6 +74,7 @@ public class ChatScreen extends ActionBarActivity {
 	private Stub chatCallback;
 	private String ONLINE_STATUS = "online";
 	private String TYPING_STATUS = "typing ...";
+	private String LAST_SEEN = "";
 	private final static int INTERVAL = 1000 * 30;
 	Handler mHandler = new Handler();
 	private View emotSuggestion;
@@ -278,6 +286,8 @@ public class ChatScreen extends ActionBarActivity {
 				Log.i(TAG, "new chat state = "+state + " from = "+from + " composing val = "+ChatState.composing.ordinal());
 				if(state == ChatState.composing.ordinal() && chatFriend.equals(from)){
 					lastSeen = TYPING_STATUS;
+				}else if(state == ChatState.gone.ordinal() && chatFriend.equals(from)){
+					lastSeen = LAST_SEEN + " " + EmotUtils.getTimeSimple();
 				}else{
 					lastSeen = ONLINE_STATUS;
 				}
@@ -386,13 +396,15 @@ public class ChatScreen extends ActionBarActivity {
 		String[] projection = new String[] {
 				RosterProvider.RosterConstants.ALIAS,
 				RosterProvider.RosterConstants.LAST_SEEN,
-				RosterProvider.RosterConstants.STATUS_MODE };
+				RosterProvider.RosterConstants.STATUS_MODE,
+				RosterProvider.RosterConstants.AVATAR};
 		Cursor cursor = EmotApplication
 				.getAppContext()
 				.getContentResolver()
 				.query(RosterProvider.CONTENT_URI, projection, selection, null,
 						null);
 		Log.i(TAG, "users found length = " + cursor.getCount());
+		byte[] avatar = null;
 		while (cursor.moveToNext()) {
 			int mode = cursor
 					.getInt(cursor
@@ -402,17 +414,30 @@ public class ChatScreen extends ActionBarActivity {
 			String last_seen = cursor.getString(cursor
 					.getColumnIndex(RosterProvider.RosterConstants.LAST_SEEN));
 			if (mode == StatusMode.available.ordinal()) {
-				lastSeen = "online";
+				lastSeen = ONLINE_STATUS;
 			} else if (last_seen != null) {
-				lastSeen = last_seen;
+				lastSeen = LAST_SEEN + " "+ EmotUtils.getTimeSimple(last_seen);
 			} else {
 				lastSeen = "";
 			}
 			chatAlias = name;
 			Log.i(TAG, "chat alias : " + chatAlias);
 			Log.i(TAG, "last seen : " + lastSeen);
+			
+			//Seting avatar image
+			avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
 		}
 		cursor.close();
+		
+		Bitmap bitmap;
+		if(avatar!=null){
+			bitmap = BitmapFactory.decodeByteArray(avatar , 0, avatar.length);
+		}else{
+			bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+		}
+		Resources res = getResources();
+		BitmapDrawable bd = new BitmapDrawable(res, ImageHelper.getRoundedCornerBitmap(bitmap, 10));
+    	getSupportActionBar().setLogo(bd);
 	}
 	
 	public void setFriendStatusDB(){
@@ -438,7 +463,7 @@ public class ChatScreen extends ActionBarActivity {
 					getSupportActionBar().setSubtitle(ONLINE_STATUS);
 				}
 			} else if (last_seen != null) {
-				getSupportActionBar().setSubtitle(last_seen);
+				getSupportActionBar().setSubtitle(LAST_SEEN + " " + EmotUtils.getTimeSimple(last_seen));
 			} else {
 				getSupportActionBar().setSubtitle("");
 			}
