@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:padding="5dp"
         android:orientation="vertical" >
 
         <TextView
@@ -20,7 +21,6 @@
             android:layout_gravity="center"
             android:textSize="25sp"
             android:textStyle="italic"
-            android:layout_margin="10dp"
             android:text="@string/blank_chat_hi" />
 
         <TextView
@@ -37,12 +37,11 @@
             android:text="@string/seem_new"/>
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/buttonLastChatOkay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/btnStyleOrange"
-            android:layout_margin="10dp"
-            android:layout_gravity="bottom"
+            android:layout_gravity="center|bottom"
             android:text="OKAY" />
 
     </LinearLayout>

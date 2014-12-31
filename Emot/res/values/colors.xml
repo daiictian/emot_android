@@ -28,4 +28,5 @@
 	<item name="light_box" type="color">#FFFFFA</item>
 	<item name="light_box2" type="color">#EBEBFF</item>
 	<item name="light_line" type="color">#DBDBDB</item>
+	<item name="light_grey" type="color">#E7E7E7</item>
 </resources>

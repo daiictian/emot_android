@@ -19,6 +19,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -104,6 +105,13 @@ public class LastChatScreen extends ActionBarActivity {
 	private void intializeUI(){
 		listLastChat = (ListView)findViewById(R.id.listLastChat);
 		viewEmpty = findViewById(R.id.view_last_chats);
+		findViewById(R.id.buttonLastChatOkay).setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				startActivity(new Intent(LastChatScreen.this, ContactScreen.class));
+			}
+		});
 	}
 	
 	private void setAdapter(){

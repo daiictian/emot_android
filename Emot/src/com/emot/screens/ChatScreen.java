@@ -601,7 +601,8 @@ public class ChatScreen extends ActionBarActivity {
 			if (from_me) {
 				chatBoxRight.setVisibility(View.GONE);
 				chatBoxLeft.setVisibility(View.VISIBLE);
-				mDateTimeLeft.setText(date);
+				String nd = EmotUtils.getTimeSimple(date);
+				mDateTimeLeft.setText(nd);
 				mChatTextLeft.setText(message);
 				switch (delivery_status) {
 				case ChatConstants.DS_NEW:
@@ -624,7 +625,8 @@ public class ChatScreen extends ActionBarActivity {
 			} else {
 				chatBoxLeft.setVisibility(View.GONE);
 				chatBoxRight.setVisibility(View.VISIBLE);
-				mDateTimeRight.setText(date);
+				String nd = EmotUtils.getTimeSimple(date);
+				mDateTimeRight.setText(nd);
 				mChatTextRight.setText(message);
 				switch (delivery_status) {
 				case ChatConstants.DS_NEW:

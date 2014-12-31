@@ -423,7 +423,7 @@ public class Registration extends ActionBarActivity {
 					public void onTaskComplete(String result) {
 						//Contacts updated in SQLite. You might want to update UI
 						pd.cancel();
-						startActivity(new Intent(EmotApplication.getAppContext(), ContactScreen.class));
+						startActivity(new Intent(EmotApplication.getAppContext(), LastChatScreen.class));
 						finish();
 					}
 

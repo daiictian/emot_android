@@ -69,14 +69,15 @@
 
             <com.emot.common.EmotEditText
                 android:id="@+id/editTextStatus"
+                android:inputType="textVisiblePassword|textMultiLine"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginBottom="2dp"
                 android:layout_marginLeft="2dp"
                 android:layout_weight="90"
+                android:singleLine="false"
                 android:lines="3"
-                android:background="@drawable/border"
-                android:inputType="textVisiblePassword" />
+                android:background="@drawable/border" />
 
             <ImageView
                 android:id="@+id/dove_send"
