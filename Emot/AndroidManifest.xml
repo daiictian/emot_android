@@ -87,6 +87,7 @@
             android:name="com.emot.androidclient.service.XMPPService"
             android:process=":my_process"
             android:label="@string/app_name" >
+       
             <intent-filter>
                 <action android:name="com.emot.androidclient.service.XMPPService" />
             </intent-filter>

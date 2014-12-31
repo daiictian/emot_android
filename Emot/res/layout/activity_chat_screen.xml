@@ -40,6 +40,7 @@
             android:layout_weight="9"
             android:divider="@null"
             android:stackFromBottom="true"
+            
             android:transcriptMode="alwaysScroll" />
 
         <View
