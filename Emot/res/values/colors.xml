@@ -28,5 +28,14 @@
 	<item name="light_box" type="color">#FFFFFA</item>
 	<item name="light_box2" type="color">#EBEBFF</item>
 	<item name="light_line" type="color">#DBDBDB</item>
+
 	<item name="light_grey" type="color">#E7E7E7</item>
+
+	<color name="text_color_default">#00000C</color>
+    <color name="text_color_inverse">#FFFFFF</color>
+
+    <color name="list_row_default_bg">#ffffff</color>
+    <color name="list_row_pressed_bg">#008cef</color>
+    <color name="list_row_selected_bg">#86d3f6</color>
+
 </resources>

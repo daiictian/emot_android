@@ -94,7 +94,9 @@ public class GroupChatScreen extends ActionBarActivity {
 
 	@Override
 	protected void onStop() {
-
+		if(mProgressDialog != null){
+			mProgressDialog.dismiss();
+		}
 		super.onStop();
 	}
 	
@@ -437,49 +439,9 @@ public class GroupChatScreen extends ActionBarActivity {
 	private View currentlySelectedView;
 	private StringBuilder messageToCopy = new StringBuilder();
 
-	private TextWatcher groupMessageWatcher = new TextWatcher() {
+	
 
-		@Override
-		public void onTextChanged(CharSequence s, int start, int before, int count) {
-			if(s.length() > 0 && s.charAt(start) =='@'){
-				occupantTag = "";
-				isStartListeningForTag = true;
-				return;
-			}
-			if(s.length() > 0 && isStartListeningForTag && s.charAt(start) == ' ' ){
-				isStartListeningForTag = false;	
-			}
-			if(s.length() > 0 && isStartListeningForTag)
-				occupantTag(s.charAt(start));
-		}
-
-		@Override
-		public void beforeTextChanged(CharSequence s, int start, int count,
-				int after) {
-
-
-		}
-
-		@Override
-		public void afterTextChanged(Editable s) {
-
-
-		}
-	};
-
-	private boolean isStartListeningForTag;
-
-	/**
-	 * @param message
-	 * check if group message intended to be sent has any occupant tagged
-	 */
-	private void isTagPresentInMessage(final String message){
-
-		//find all occurences of '@'
-
-
-	}
-
+	
 	private String occupantTag = "";
 
 	private void occupantTag(final char s){
