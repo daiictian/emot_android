@@ -12,7 +12,7 @@
     <item name="darkorange" type="color">#FFFF8800</item>
     <item name="darkred" type="color">#FFCC0000</item>
     <item name="chat_bg" type="color">#7accc8</item>
-    <item name="white" type="color">#ffffff</item>
+   
     <item name="black" type="color">#000000</item>
     <item name="grey" type="color">#eeeeee</item>
     <item name="dark_grey" type="color">#706F6F</item>
