@@ -46,6 +46,7 @@ public class EmotEditText extends EditText {
 	private View scrollEmotSuggestionLayout;
 	private View scrollEmotRecentLayout;
 	private View toggleLastEmot;
+	private boolean recent_emot_clicked = false;
 	
 	private HashMap<String, Boolean> suggestedEmots = new HashMap<String, Boolean>();
 	Stack<Integer> lastEmotIndex = new Stack<Integer>();
@@ -153,23 +154,26 @@ public class EmotEditText extends EditText {
 					Log.i(TAG, "opening suggestion layout");
 					scrollEmotRecentLayout.setVisibility(View.GONE);
 					scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
+					toggleLastEmot.setBackgroundColor(EmotApplication.getAppContext().getResources().getColor(R.color.white));
 				}else{
 					Log.i(TAG, "opening recent layout");
 					
 					//Remove if condition to get latest emots every time
 					//if(emotRecentLayout.getChildCount()<=0){
 						emotRecentLayout.removeAllViews();
-						Log.i(TAG, "get count less than zero");
+						
+						String selection = DBContract.EmotsDBEntry.LAST_USED + " != ''";
 						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 								DBContract.EmotsDBEntry.TABLE_NAME, 
 								new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
-								null, 
+								selection, 
 								null, 
 								null, 
 								null, 
 								DBContract.EmotsDBEntry.LAST_USED + " desc", 
 								"20"
 						);
+						Log.i(TAG, "count = "+cr.getCount());
 						while (cr.moveToNext())
 						{
 							String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
@@ -187,6 +191,7 @@ public class EmotEditText extends EditText {
 								@Override
 								public void onClick(View v) {
 									Log.i(TAG, "Image clicked !!!");
+									recent_emot_clicked = true;
 									EmotEditText.this.addEmot(emot);
 									ContentValues values = new ContentValues();
 									int time = (int) (System.currentTimeMillis());
@@ -206,6 +211,7 @@ public class EmotEditText extends EditText {
 						
 					scrollEmotRecentLayout.setVisibility(View.VISIBLE);
 					scrollEmotSuggestionLayout.setVisibility(View.GONE);
+					toggleLastEmot.setBackgroundColor(EmotApplication.getAppContext().getResources().getColor(R.color.dark_grey));
 				}
 				
 			}
@@ -251,19 +257,27 @@ public class EmotEditText extends EditText {
 		}
 		Log.i(TAG, "lastWord = "+lastWord);
 		
-		if(updateEmotTask==null){
-			updateEmotTask = new UpdateEmotSuggestions(lastWord);
-			updateEmotTask.execute();
-		}else{
-			updateEmotTask.cancel(true);
-			updateEmotTask = new UpdateEmotSuggestions(lastWord);
-			updateEmotTask.execute();
+		//Start emoticon suggestiononly if word length greater than 3
+		if(lastWord.length()>2){
+			if(updateEmotTask==null){
+				updateEmotTask = new UpdateEmotSuggestions(lastWord);
+				updateEmotTask.execute();
+			}else{
+				updateEmotTask.cancel(true);
+				updateEmotTask = new UpdateEmotSuggestions(lastWord);
+				updateEmotTask.execute();
+			}
 		}
+		
 		//Log.i(TAG, "Text changed 222" + s.toString());
 		
 		//Showing suggested emots on text change
-		scrollEmotRecentLayout.setVisibility(View.GONE);
-		scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
+		if(!recent_emot_clicked){
+			scrollEmotRecentLayout.setVisibility(View.GONE);
+			scrollEmotSuggestionLayout.setVisibility(View.VISIBLE);
+			toggleLastEmot.setBackgroundColor(EmotApplication.getAppContext().getResources().getColor(R.color.white));
+		}
+		recent_emot_clicked = false;
 	}
 	
 	public class UpdateEmotSuggestions extends AsyncTask<Void, Emot, Void>{
@@ -278,7 +292,7 @@ public class EmotEditText extends EditText {
 			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 					DBContract.EmotsDBEntry.TABLE_NAME, 
 					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
-					DBContract.EmotsDBEntry.TAGS+" match '"+text+"';", 
+					DBContract.EmotsDBEntry.TAGS+" match '"+text+"*';", 
 					null, null, null, null, null
 			);
 			while (cr.moveToNext())
