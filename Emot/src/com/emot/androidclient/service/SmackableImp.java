@@ -405,14 +405,12 @@ public class SmackableImp implements Smackable {
 						final long timeout = 4000;
 						try {
 							
-							if(!mGroupChat2.isJoined()){
 							
 								mGroupChat2.join(mConfig.userName + "@conference.emot-net","",dh, timeout);
 								mJoined.put(roomstoJoin[i], true);
 							Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
-							}else{
-								Log.i(TAG, "joining room done" );
-							}
+							
+							
 						} catch (XMPPException e) {
 							//sStopService = false;
 							// TODO Auto-generated catch block
@@ -464,6 +462,7 @@ public class SmackableImp implements Smackable {
 	 */
 	@Override
 	public synchronized void requestConnectionState(ConnectionState new_state, final boolean create_account) {
+		
 		Log.i(TAG, "requestConnState: " + mState + " -> " + new_state + (create_account ? " create_account!" : ""));
 		mRequestedState = new_state;
 		if (new_state == mState)
@@ -481,8 +480,9 @@ public class SmackableImp implements Smackable {
 
 				// register ping (connection) timeout handler: 2*PACKET_TIMEOUT(30s) + 3s
 				registerPongTimeout(2*PACKET_TIMEOUT + 3000, "connection");
+				
 
-				new Thread() {
+				Thread t1 = new Thread() {
 					@Override
 					public void run() {
 						updateConnectingThread(this);
@@ -499,7 +499,10 @@ public class SmackableImp implements Smackable {
 							finishConnectingThread();
 						}
 					}
-				}.start();
+				};
+				t1.start();
+				
+				
 				break;
 			case CONNECTING:
 			case DISCONNECTING:
@@ -803,8 +806,12 @@ public class SmackableImp implements Smackable {
 				field.addValue("1");
 				FormField field2 = new FormField("muc#roomconfig_membersonly");
 				field2.addValue("1");
+				FormField field3 = new FormField("muc#roomconfig_changesubject");
+				field3.addValue("1");
 				submitForm.addField(field);
 				submitForm.addField(field2);
+				submitForm.addField(field3);
+				
 				mGroupChat.sendConfigurationForm(submitForm);
 				
 
@@ -975,9 +982,11 @@ public class SmackableImp implements Smackable {
 				SASLAuthentication.supportSASLMechanism("DIGEST-MD5", 0);
 
 				mXMPPConnection.login(mConfig.userName, mConfig.password, mConfig.ressource);
-				joinGroups();
+				
 				//mXMPPConnection.login(mConfig.userName, mConfig.password);
 			}
+			joinGroups();
+			sendOfflineMessages();
 				//				scheduledExecutorService.schedule(new Runnable() {
 				//
 				//							@Override
@@ -1193,17 +1202,22 @@ public class SmackableImp implements Smackable {
 				packetID = newMessage.getPacketID();
 				mark_sent.put(ChatConstants.PACKET_ID, packetID);
 			}
-			Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY
-					+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
-			mContentResolver.update(rowuri, mark_sent,
-					null, null);
+			
 			if(messageType.equals(CHATTYPE)){
 				mXMPPConnection.sendPacket(newMessage);
+				Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY
+						+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
+				mContentResolver.update(rowuri, mark_sent,
+						null, null);
 				
 				}else{
 					if(mJoined.get(toJID)){
 						Log.i(TAG, "sending message " +newMessage.getBody());
 						mXMPPConnection.sendPacket(newMessage);
+						Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY
+								+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
+						mContentResolver.update(rowuri, mark_sent,
+								null, null);
 						
 					}else{
 						Log.i(TAG, "not joined in group " +toJID);
@@ -1332,6 +1346,7 @@ public class SmackableImp implements Smackable {
 		values.put(ChatConstants.DIRECTION, ChatConstants.OUTGOING);
 		values.put(ChatConstants.JID, toJID);
 		values.put(ChatConstants.MESSAGE, message);
+		values.put(ChatConstants.CHAT_TYPE, type);
 		values.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_NEW);
 		values.put(ChatConstants.DATE, System.currentTimeMillis());
 
@@ -1666,6 +1681,12 @@ public class SmackableImp implements Smackable {
 						String fromJID = getBareJID(msg.getFrom());
 						if(msg.getSubject() != null){
 							Log.i(TAG, "saving to SP " + fromJID + "= " + msg.getSubject());
+							Intent intent = new Intent();
+							intent.putExtra("newSubject", msg.getSubject());
+							intent.setAction("GroupSubjectChanged");
+							addChatMessageToDB(ChatConstants.OUTGOING, fromJID, msg.getSubject(), "", ChatConstants.DS_SENT_OR_READ,
+									System.currentTimeMillis(), "sss", GROUPCHATTYPE, "");
+							mService.sendBroadcast(intent);
 							EmotApplication.setValue(fromJID, msg.getSubject());
 						}
 						 grpSubject = EmotApplication.getValue(fromJID, "default");
@@ -2259,9 +2280,9 @@ public class SmackableImp implements Smackable {
 				mJoined.put(grpID, true);
 			}
 			EmotApplication.setValue(grpID, grpSubject);
-			
-			addChatMessageToDB(ChatConstants.OUTGOING, grpID, grpSubject, "Group Subject has been changed to " +grpSubject, ChatConstants.DS_SENT_OR_READ,
-					System.currentTimeMillis(), "sss", GROUPCHATTYPE, "");
+			sendGroupMessage("Group Subject has been changed to " +grpSubject, grpID);
+//			addChatMessageToDB(ChatConstants.OUTGOING, grpID, grpSubject, "Group Subject has been changed to " +grpSubject, ChatConstants.DS_SENT_OR_READ,
+//					System.currentTimeMillis(), "sss", GROUPCHATTYPE, "");
 			Toast.makeText(getService(), "changed group subject to " +grpSubject, Toast.LENGTH_LONG).show();
 			mService.sendBroadcast(new Intent().setAction("GROUP_SUBJECT_CHANGED_SUCCESS"));
 		} catch (XMPPException e) {

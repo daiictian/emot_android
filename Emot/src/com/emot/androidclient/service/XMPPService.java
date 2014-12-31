@@ -102,6 +102,7 @@ public class XMPPService extends GenericService {
 
 	@Override
 	public void onRebind(Intent intent) {
+		Log.i(TAG, "on Rebind called");
 		userStartedWatching();
 		String chatPartner = intent.getDataString();
 		if ((chatPartner != null)) {

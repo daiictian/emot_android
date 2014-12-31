@@ -98,23 +98,43 @@ public class GroupChatScreen extends ActionBarActivity {
 		super.onStop();
 	}
 	
+	protected boolean needs_to_bind_unbind = false;
+	
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (!needs_to_bind_unbind)
+			return;
+		if (hasFocus){
+			bindXMPPService();
+			Log.i(TAG, "binding XMPP service");
+		}
+		else
+			unbindXMPPService();
+		needs_to_bind_unbind = false;
+	}
+
+	
 
 	@Override
 	protected void onDestroy() {
 		unregisterReceiver(mGrpIDCreatedReceiver);
 		unregisterReceiver(mGrpCreatedFailedReceiver);
 		unregisterReceiver(mGroupFailedReceiver);
+		unregisterReceiver(mGrpSubjectChangedReceiver);
 		super.onDestroy();
 	}
 
-
+	ActionBar ab;
 	@Override
 	protected void onResume() {
 		super.onResume();
+		bindXMPPService();
+		needs_to_bind_unbind = true;
 		if(isCreateGrp){
 			mProgressDialog = ProgressDialog.show(this, "", "Creating Group");
 		}
-		ActionBar ab = getSupportActionBar();
+		 ab = getSupportActionBar();
 		if(grpName != null && !grpName.trim().equals("")){
 			setChatWindowAdapter();
 			}
@@ -143,14 +163,16 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		}
 		
-		registerXMPPService();
 		
-		bindXMPPService();
+		
+		//bindXMPPService();
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+		isCreateGrp = false;
+		needs_to_bind_unbind = true;
 		unbindXMPPService();
 	}
 
@@ -173,7 +195,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		mServiceIntent.putExtra("sinceDate", mDate);
 		mServiceIntent.putExtra("groupSubject", grpSubject);
 		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
-
+		//mServiceIntent.setAction("com.emot.androidclient.service.XMPPService");
 		mServiceConnection = new ServiceConnection() {
 
 
@@ -211,7 +233,7 @@ public class GroupChatScreen extends ActionBarActivity {
 	}
 
 	private void bindXMPPService() {
-		bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+		EmotApplication.getAppContext().bindService(mServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -297,6 +319,7 @@ public class GroupChatScreen extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		//Small hack to load preferences for service
 		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		
@@ -305,6 +328,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		registerReceiver(mGrpIDCreatedReceiver, new IntentFilter("GroupIDGenerated"));
 		registerReceiver(mGroupFailedReceiver, new IntentFilter("GROUP_CREATED_ERROR"));
 		registerReceiver(mGrpCreatedFailedReceiver, new IntentFilter("Group_Generated_Failed"));
+		registerReceiver(mGrpSubjectChangedReceiver, new IntentFilter("GroupSubjectChanged"));
 		grpName = incomingIntent
 				.getStringExtra("grpName");
 		grpSubject = incomingIntent.getStringExtra(INTENT_GRPCHAT_SUBJECT);
@@ -323,8 +347,38 @@ public class GroupChatScreen extends ActionBarActivity {
 
 		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
 		chatEntry.setEmotSuggestBox(emotSuggestion);
-		
+		//
+//		if(isCreateGrp){
+//			mProgressDialog = ProgressDialog.show(this, "", "Creating Group");
+//		}
+		ActionBar ab = getSupportActionBar();
+		if(grpName != null && !grpName.trim().equals("")){
+			setChatWindowAdapter();
+			}
+		ab.setHomeButtonEnabled(true);
+		ab.setDisplayHomeAsUpEnabled(true);
+		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
+		if(!isCreateGrp){
+			grpSubject = EmotApplication.getValue(grpName, "default");
+			Log.i(TAG, "grpSubject is " +grpSubject);
+			}
+			setAliasFromDB();
+			Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
+			userTitle.setText(grpSubject);
+			//chatEntry.addTextChangedListener(groupMessageWatcher);
+			ab.setTitle(chatAlias);
+			ab.setSubtitle(lastSeen);
 
+			
+			if (grpSubject == null) {
+				Toast.makeText(EmotApplication.getAppContext(),
+						"Incorrect username", Toast.LENGTH_LONG).show();
+				finish();
+			}
+			//
+		
+		registerXMPPService();
+		
 		sendButton.setEnabled(true);
 
 		sendButton.setOnClickListener(new View.OnClickListener() {
@@ -439,11 +493,12 @@ public class GroupChatScreen extends ActionBarActivity {
 	private void sendMessage(String message, String tag) {
 		chatEntry.setText(null);
 
-		if (!mServiceAdapter.isServiceAuthenticated()) {
+		if (mServiceAdapter == null && !mServiceAdapter.isServiceAuthenticated()) {
 			// Show single tick and try later
 			// showToastNotification(R.string.toast_stored_offline);
-		}           
+		}else{           
 		 mServiceAdapter.sendMessage(grpName, message, occupantTag);
+		}
 	}
 
 	private void setAliasFromDB() {
@@ -533,6 +588,25 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 			Log.i(TAG, "grpID received is  " +intent.getStringExtra("groupID"));
 			grpName = intent.getStringExtra("groupID");
 			currentGrpSubject = intent.getStringExtra("grpSubject");
+			setChatWindowAdapter() ;
+			}
+			
+		}
+		
+	};
+	private BroadcastReceiver mGrpSubjectChangedReceiver = new BroadcastReceiver(){
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			if(intent.getAction().equals("GroupSubjectChanged")){
+				
+			Log.i(TAG, "grpID received is  " +intent.getStringExtra("newSubject"));
+			String newSubject = intent.getStringExtra("newSubject");
+			grpSubject = newSubject;
+			setAliasFromDB();
+			ab.setTitle(chatAlias);
+			//userTitle.setText(newSubject);
 			setChatWindowAdapter() ;
 			}
 			
