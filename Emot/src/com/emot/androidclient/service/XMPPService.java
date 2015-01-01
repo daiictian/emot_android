@@ -17,10 +17,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -176,6 +181,53 @@ public class XMPPService extends GenericService {
 				
 			}
 		};
+		private WakeLock wakeLock = null;
+        private WifiLock wifiLock = null;
+		
+		private void setWifiLock(){
+			 
+		        try {
+		            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+
+		            // acquire a WakeLock to keep the CPU running
+		            wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,
+		                    "MyWakeLock");
+		            if(!wakeLock.isHeld()){
+		                wakeLock.acquire();
+		                Log.i(TAG, "WakeLock acquired!");
+		            }
+
+		           
+
+
+		            WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+		            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL , "MyWifiLock");
+		            if(!wifiLock.isHeld()){
+		                wifiLock.acquire();
+		                Log.i(TAG, "WiFiLock acquired!");
+		            }
+
+		            
+		        } finally {
+		            // release the WakeLock to allow CPU to sleep
+//		            if (wakeLock != null) {
+//		                if (wakeLock.isHeld()) {
+//		                    wakeLock.release();
+//		                    Log.i("ServiceAlarmBroadcastReceiver", "WakeLock released!");
+//		                }
+//		            }
+//
+//		            // release the WifiLock
+//		            if (wifiLock != null) {
+//		                if (wifiLock.isHeld()) {
+//		                    wifiLock.release();
+//		                    Log.i("ServiceAlarmBroadcastReceiver", "WiFi Lock released!");
+//		                }
+//		            }
+		        }
+		 
+			
+		}
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -202,6 +254,10 @@ public class XMPPService extends GenericService {
 		}
 
 		mServiceNotification = ServiceNotification.getInstance();
+//		Settings.System.putInt(getContentResolver(),
+//				  Settings.System.WIFI_SLEEP_POLICY, 
+//				  Settings.System.WIFI_SLEEP_POLICY_NEVER);
+		//setWifiLock();
 		
 	}
 
@@ -219,6 +275,21 @@ public class XMPPService extends GenericService {
 		unregisterReceiver(mAlarmReceiver);
 		unregisterReceiver(mMissedCallReceiver);
 		unregisterReceiver(mSubjectChangedReciever);
+		  if (wakeLock != null) {
+              if (wakeLock.isHeld()) {
+                  wakeLock.release();
+                  Log.i("ServiceAlarmBroadcastReceiver", "WakeLock released!");
+              }
+          }
+
+          // release the WifiLock
+          if (wifiLock != null) {
+              if (wifiLock.isHeld()) {
+                  wifiLock.release();
+                  Log.i("ServiceAlarmBroadcastReceiver", "WiFi Lock released!");
+              }
+          }
+
 	}
 
 	@Override
@@ -629,7 +700,7 @@ public class XMPPService extends GenericService {
 	// called from Smackable when connection broke down
 	private void connectionFailed(String reason) {
 		logInfo("connectionFailed: " + reason);
-		//TODO: error message from downstream?
+		Log.i(TAG, "network connected? " + networkConnected() + " authenticated? " + mSmackable.isAuthenticated());
 		//mLastConnectionError = reason;
 		if (!networkConnected()) {
 			mReconnectInfo = getString(R.string.conn_no_network);
@@ -644,7 +715,13 @@ public class XMPPService extends GenericService {
 			mReconnectTimeout = mReconnectTimeout * 2;
 			if (mReconnectTimeout > RECONNECT_MAXIMUM)
 				mReconnectTimeout = RECONNECT_MAXIMUM;
-		} else {
+		} else if(networkConnected()){
+			
+			mReconnectInfo = "Request online";
+			
+			mSmackable.requestConnectionState(ConnectionState.ONLINE);
+			
+		}else {
 			connectionClosed();
 		}
 

@@ -67,7 +67,8 @@
             android:layout_height="10dp"
             android:layout_toRightOf="@id/chatDateRight"
             android:layout_below="@id/chatContentRight"
-            android:layout_marginLeft="5dp"/>
+            android:layout_marginLeft="5dp"
+            android:visibility="gone"/>
     </RelativeLayout>
 
 </LinearLayout>

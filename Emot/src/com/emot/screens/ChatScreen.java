@@ -758,24 +758,24 @@ public class ChatScreen extends ActionBarActivity {
 				String nd = EmotUtils.getTimeSimple(date);
 				mDateTimeRight.setText(nd);
 				mChatTextRight.setText(message);
-				switch (delivery_status) {
-				case ChatConstants.DS_NEW:
-					mChatTickRight.setImageDrawable(getResources().getDrawable(
-							R.drawable.wait_tick));
-					break;
-				case ChatConstants.DS_SENT_OR_READ:
-					mChatTickRight.setImageDrawable(getResources().getDrawable(
-							R.drawable.single_tick));
-					break;
-				case ChatConstants.DS_ACKED:
-					mChatTickRight.setImageDrawable(getResources().getDrawable(
-							R.drawable.double_tick));
-					break;
-				case ChatConstants.DS_FAILED:
-					mChatTickRight.setImageDrawable(getResources().getDrawable(
-							R.drawable.fail_tick));
-					break;
-				}
+//				switch (delivery_status) {
+//				case ChatConstants.DS_NEW:
+//					mChatTickRight.setImageDrawable(getResources().getDrawable(
+//							R.drawable.wait_tick));
+//					break;
+//				case ChatConstants.DS_SENT_OR_READ:
+//					mChatTickRight.setImageDrawable(getResources().getDrawable(
+//							R.drawable.single_tick));
+//					break;
+//				case ChatConstants.DS_ACKED:
+//					mChatTickRight.setImageDrawable(getResources().getDrawable(
+//							R.drawable.double_tick));
+//					break;
+//				case ChatConstants.DS_FAILED:
+//					mChatTickRight.setImageDrawable(getResources().getDrawable(
+//							R.drawable.fail_tick));
+//					break;
+//				}
 			}
 
 			// getMessageView().setText(message);

@@ -986,34 +986,34 @@ public class SmackableImp implements Smackable {
 				setChatRoomInvitationListener();
 				//mXMPPConnection.login(mConfig.userName, mConfig.password);
 			}
-			joinGroups();
-			sendOfflineMessages();
-			//				scheduledExecutorService.schedule(new Runnable() {
-			//
-			//							@Override
-			//							public void run() {
-			//								if(mXMPPConnection != null && !mXMPPConnection.isAuthenticated() && !sStopService){
-			//
-			//								}else if(sStopService){
-			//									
-			//									scheduledExecutorService.shutdown();
-			//								}else{
-			//									
-			//									try {
-			//										sStopService = true;
-			//										
-			//										mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
-			//									} catch (XMPPException e) {
-			//										sStopService = false;
-			//										// TODO Auto-generated catch block
-			//										e.printStackTrace();
-			//									}
-			//								}
-			//
-			//							}
-			//						}, 5, TimeUnit.SECONDS);
-			//initMUC("myroom");
 
+			//joinGroups();
+			//sendOfflineMessages();
+				//				scheduledExecutorService.schedule(new Runnable() {
+				//
+				//							@Override
+				//							public void run() {
+				//								if(mXMPPConnection != null && !mXMPPConnection.isAuthenticated() && !sStopService){
+				//
+				//								}else if(sStopService){
+				//									
+				//									scheduledExecutorService.shutdown();
+				//								}else{
+				//									
+				//									try {
+				//										sStopService = true;
+				//										
+				//										mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+				//									} catch (XMPPException e) {
+				//										sStopService = false;
+				//										// TODO Auto-generated catch block
+				//										e.printStackTrace();
+				//									}
+				//								}
+				//
+				//							}
+				//						}, 5, TimeUnit.SECONDS);
+							//initMUC("myroom");
 
 			Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 			Log.d(TAG, "SM: can resume = " + mStreamHandler.isResumePossible() + " needbind=" + need_bind);
