@@ -34,6 +34,7 @@ import com.emot.constants.ApplicationConstants;
 import com.emot.model.Emot;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
+import com.emot.persistence.EmotDBHelper;
 import com.emot.persistence.EmoticonDBHelper;
 import com.emot.screens.R;
 
@@ -91,7 +92,7 @@ public class EmotEditText extends EditText {
 	}
 	
 	
-	public void updateEmots(CharSequence text){
+	public void updateEmots(CharSequence text, int startPoint){
 		Spannable spannable = new SpannableStringBuilder(text);
 		Log.i(TAG, "String = " + spannable);
 		//Log.i(TAG, "len = "+spannable.length());
@@ -125,27 +126,9 @@ public class EmotEditText extends EditText {
 					//Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
 					//DB QUERY TO GET IMAGE
 					String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
-					//Log.i(TAG, "emot_hash = "+emot_hash);
-					Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
-							DBContract.EmotsDBEntry.TABLE_NAME, 
-							new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_IMG_LARGE} , 
-							DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", 
-							null, null, null, null, null);
-					Bitmap emot_img = null;
-					while (cr.moveToNext())
-					{
-						byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-						byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
-						emot_img = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, emot_hash);
-					}
-					cr.close();
-					//Set to some default if not found
-					if(emot_img == null){
-						Log.i(TAG, "Emoticon not found !!!");
-						emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
-					}
+					Bitmap emot_img = EmoticonDBHelper.getEmotImg(emot_hash);
 					Log.i(TAG, "Replacing with emoticon !!!");
-					replaceWithEmot(startFound, endFound, emot_img);
+					replaceWithEmot(startPoint+startFound, startPoint+endFound, emot_img);
 					curr = curr+6;
 				}else{
 					curr++;
@@ -158,27 +141,33 @@ public class EmotEditText extends EditText {
 	}
 	
 	public void addEmot(Emot emot){
-		Spannable spannable = getText();
-		int start = spannable.length();
-		Log.i(TAG, "len1 = "+start + " String = "+getText().toString());
-		String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
-		if(start>0 && getText().charAt(start-1) != ' '){
-			while(start>0 && getText().charAt(start-1) != ' ' && !isLastEmotLocation(start-1)){
-				Log.i(TAG, "@@@@@@@@@ len1 = "+start + " String = "+getText().toString());
-				start--;
-				dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+		try{
+			Spannable spannable = getText();
+			int start = getSelectionStart();
+			int end = getSelectionEnd();
+			Log.i(TAG, "len1 = "+start + " String = "+getText().toString());
+			String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
+			if(start>0 && getText().charAt(start-1) != ' '){
+				while(start>0 && getText().charAt(start-1) != ' ' && !isLastEmotLocation(start-1)){
+					Log.i(TAG, "@@@@@@@@@ len1 = "+start + " String = "+getText().toString());
+					start--;
+					dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+				}
+				//setText(getText().toString().substring(0, start));
+				//setSelection(getText().length());
 			}
-			//setText(getText().toString().substring(0, start));
-			//setSelection(getText().length());
+			
+			Log.i(TAG, "111 " + getText().toString());
+			getText().replace(Math.min(start, end), Math.max(start, end), appendString, 0, appendString.length());
+			Log.i(TAG, "222 " + getText().toString());
+			//spannable.setSpan(new ImageSpan(EmotApplication.getAppContext(), emot), start+1, start+2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			replaceWithEmot(start, start+appendString.length(), emot.getEmotImg());
+			lastEmotIndex.push(getText().length()-1);
+			Log.i(TAG, "333 " + getText().toString());
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 		
-		Log.i(TAG, "111 " + getText().toString());
-		append(appendString);
-		Log.i(TAG, "222 " + getText().toString());
-		//spannable.setSpan(new ImageSpan(EmotApplication.getAppContext(), emot), start+1, start+2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		replaceWithEmot(start, start+appendString.length(), emot.getEmotImg());
-		lastEmotIndex.push(getText().length()-1);
-		Log.i(TAG, "333 " + getText().toString());
 	}
 
 	public void addSmiles(Context context, Spannable spannable) {
@@ -302,7 +291,10 @@ public class EmotEditText extends EditText {
 	
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		updateEmots(s);
+		if(before==0){
+			updateEmots(s.subSequence(start, start+count), start);
+		}
+		Log.i(TAG, "Chnage : "+s+" start = "+start + " before = "+before + " count = "+count );
 		if(emotSuggestionLayout==null){
 			super.onTextChanged(s, start, before, count);
 			return;

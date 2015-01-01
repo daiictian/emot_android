@@ -89,26 +89,7 @@ public class EmotTextView extends TextView {
 					//Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
 					//DB QUERY TO GET IMAGE
 					String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
-					//Log.i(TAG, "emot_hash = "+emot_hash);
-					Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
-							DBContract.EmotsDBEntry.TABLE_NAME, 
-							new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_IMG_LARGE} , 
-							DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", 
-							null, null, null, null, null);
-					Bitmap emot_img = null;
-					while (cr.moveToNext())
-					{
-						byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-						byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
-						emot_img = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, emot_hash);
-					}
-					cr.close();
-					//Set to some default if not found
-					if(emot_img == null){
-						Log.i(TAG, "Emoticon not found !!!");
-						emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
-					}
-					Log.i(TAG, "Replacing with emoticon !!!");
+					Bitmap emot_img = EmoticonDBHelper.getEmotImg(emot_hash);
 					replaceWithEmot(spannable, startFound, endFound, emot_img);
 					curr = curr+6;
 				}else{
@@ -190,21 +171,7 @@ public class EmotTextView extends TextView {
 						//Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
 						//DB QUERY TO GET IMAGE
 						String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
-						//Log.i(TAG, "emot_hash = "+emot_hash);
-						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG} , DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", null, null, null, null, null);
-						Bitmap emot_img = null;
-						while (cr.moveToNext())
-						{
-							byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-							emot_img = BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length);
-						}
-						cr.close();
-						//Set to some default if not found
-						if(emot_img == null){
-							Log.i(TAG, "Emoticon not found !!!");
-							emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
-						}
-						Log.i(TAG, "Replacing with emoticon !!!");
+						Bitmap emot_img = EmoticonDBHelper.getEmotImg(emot_hash);
 						replaceWithEmot(spannable, startFound, endFound, emot_img);
 						curr = curr+6;
 					}else{

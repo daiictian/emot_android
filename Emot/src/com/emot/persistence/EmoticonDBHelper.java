@@ -5,12 +5,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 
 import com.emot.androidclient.util.EmotUtils;
 import com.emot.model.EmotApplication;
+import com.emot.screens.R;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -26,6 +29,7 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 	private static final String DATABASE_PATH = Environment.getDataDirectory().toString()+"/data/com.emot.screens/databases/";
 	private static final String TAG = EmoticonDBHelper.class.getSimpleName();
 	private static EmoticonDBHelper emoticonHelperInstance;
+	private static HashMap<String, Bitmap> emotCache = new HashMap<String, Bitmap>();
 
 	Context context;
 
@@ -148,6 +152,35 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 			Log.i(TAG, "Pulling image from small");
 		}
 		return BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length);
+	}
+	
+	public static Bitmap getEmotImg(String emot_hash){
+		Bitmap emot_img = emotCache.get(emot_hash);
+		if(emot_img==null){
+			Log.i(TAG, "emot image from DB");
+			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
+					DBContract.EmotsDBEntry.TABLE_NAME, 
+					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_IMG_LARGE} , 
+					DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", 
+					null, null, null, null, null);
+			
+			while (cr.moveToNext())
+			{
+				byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
+				byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
+				emot_img = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, emot_hash);
+			}
+			cr.close();
+			//Set to some default if not found
+			if(emot_img == null){
+				Log.i(TAG, "Emoticon not found !!!");
+				emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+			}
+			emotCache.put(emot_hash, emot_img);
+		}else{
+			Log.i(TAG, "emot image from hash");
+		}
+		return emot_img;
 	}
 
 }
