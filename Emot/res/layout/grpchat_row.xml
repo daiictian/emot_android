@@ -24,7 +24,7 @@
             android:id="@+id/chatContentLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="someting rubissh for testing the layout bro"
+            android:text="someting empty layout bro"
             android:textColor="@color/white" 
             android:textSize="15sp"
             android:textStyle="bold"/>
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/chatContentLeft"
             android:text="10-08-2014 10:19 PM"
-            android:textColor="@color/dark_grey"
+            android:textColor="@color/white"
             android:textSize="8sp" />
 
         <ImageView
@@ -73,7 +73,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/grpMemberName2"
-            android:text="Some rubbish again brother."
+            android:text="Some empty again brother."
             android:textColor="@color/dark_grey"
             android:textStyle="bold"
             android:textSize="15sp" />

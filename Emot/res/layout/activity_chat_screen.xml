@@ -62,7 +62,9 @@
 
         <LinearLayout
             android:layout_width="match_parent"
+
             android:layout_height="wrap_content"
+
             android:background="@color/light_box"
             android:orientation="horizontal" >
 
@@ -70,17 +72,21 @@
                 android:id="@+id/editTextStatus"
                 android:inputType="textVisiblePassword|textMultiLine"
                 android:layout_width="0dp"
+
                 android:layout_height="wrap_content"
                 android:layout_weight="80"
+
                 android:lines="2"
                 android:background="@drawable/border" />
 
             <ImageView
                 android:id="@+id/dove_send"
+
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="20"
-                android:src="@drawable/ic_send" />
+                android:src="@drawable/ic_launcher" />
+
         </LinearLayout>
     </LinearLayout>
 

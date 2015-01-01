@@ -48,6 +48,7 @@ import com.emot.androidclient.data.EmotConfiguration;
 import com.emot.androidclient.data.RosterProvider;
 import com.emot.androidclient.service.IXMPPGroupChatService;
 import com.emot.androidclient.service.XMPPService;
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.androidclient.util.StatusMode;
 import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
@@ -131,7 +132,7 @@ public class GroupChatScreen extends ActionBarActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		bindXMPPService();
+		
 		needs_to_bind_unbind = true;
 		if(isCreateGrp){
 			mProgressDialog = ProgressDialog.show(this, "", "Creating Group");
@@ -210,8 +211,14 @@ public class GroupChatScreen extends ActionBarActivity {
 				mServiceAdapter.clearNotifications(grpName);
 				if(isCreateGrp){
 
-
+					if(mServiceAdapter != null){
 					mServiceAdapter.createGroup(grpSubject, grpchatmembers);
+					}else{
+						if(mProgressDialog != null){
+							mProgressDialog.dismiss();
+						}
+						Toast.makeText(GroupChatScreen.this, "Could create group chat. Pleae try again", Toast.LENGTH_LONG).show();
+					}
 
 				}
 				mServiceAdapter.joinExistingGroup(grpName, isCreateGrp, mDate);
@@ -380,6 +387,7 @@ public class GroupChatScreen extends ActionBarActivity {
 			//
 		
 		registerXMPPService();
+		bindXMPPService();
 		
 		sendButton.setEnabled(true);
 
@@ -565,11 +573,15 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 				
 			Log.i(TAG, "grpID received is  " +intent.getStringExtra("newSubject"));
 			String newSubject = intent.getStringExtra("newSubject");
+			String grpID = intent.getStringExtra("grpID");
+			if(grpID.equals(grpName)){
 			grpSubject = newSubject;
 			setAliasFromDB();
+			
 			ab.setTitle(chatAlias);
 			//userTitle.setText(newSubject);
 			setChatWindowAdapter() ;
+			}
 			}
 			
 		}
@@ -716,7 +728,8 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 			if (from_me) {
 				chatBoxRight.setVisibility(View.GONE);
 				chatBoxLeft.setVisibility(View.VISIBLE);
-				mDateTimeLeft.setText(date);
+				String nd = EmotUtils.getTimeSimple(date);
+				mDateTimeLeft.setText(nd);
 				mChatTextLeft.setText(message);
 				switch (delivery_status) {
 				case ChatConstants.DS_NEW:
@@ -739,7 +752,8 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 			} else {
 				chatBoxLeft.setVisibility(View.GONE);
 				chatBoxRight.setVisibility(View.VISIBLE);
-				mDateTimeRight.setText(date);
+				String nd = EmotUtils.getTimeSimple(date);
+				mDateTimeRight.setText(nd);
 				mChatTextRight.setText(message);
 				Log.i(TAG, "mGrpmeber is " +mGrpMember);
 				mGrpMember.setText(from);

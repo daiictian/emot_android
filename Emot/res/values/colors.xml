@@ -18,6 +18,8 @@
     <item name="light_bg" type="color">#F5F6FA</item>
     <item name="light_yellow" type="color">#FEFFED</item>
     <item name="bagni" type="color">#7677B5</item>
+    <item name="light_bagni" type="color">#9FA0CB</item>
+    
     <item name="halka_white" type="color">#e5ecee</item>
     <item name="halka_gulabi" type="color">#f2e0f1</item>
     <item name="halka_hara" type="color">#b3f181</item>
@@ -27,12 +29,21 @@
 	<item name="light_box" type="color">#FFFFFA</item>
 	<item name="light_box2" type="color">#EBEBFF</item>
 	<item name="light_line" type="color">#DBDBDB</item>
+
 	<item name="white" type="color">#ffffff</item>
+	
+
+	
+	<item name="dark_green" type="color">#009933</item>
+<item name="bright_orange" type="color">#FF6600</item>
 	<item name="light_grey" type="color">#E7E7E7</item>
+
+
 	<color name="text_color_default">#00000C</color>
     <color name="text_color_inverse">#FFFFFF</color>
     <color name="list_row_default_bg">#ffffff</color>
-    <color name="list_row_pressed_bg">#008cef</color>
+  <color name="list_row_pressed_bg">#008cef</color> 
+ 
     <color name="list_row_selected_bg">#86d3f6</color>
 
 </resources>

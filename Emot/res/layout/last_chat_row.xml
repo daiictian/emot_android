@@ -35,10 +35,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Name"
+            
+            
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@color/dark_grey"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textColor="@color/dark_green"
+            android:textSize="16sp"
+            />
 
         <com.emot.common.EmotTextView
             android:id="@+id/textLastChatItem"
@@ -47,7 +49,7 @@
             android:lines="1"
             android:text="chat"
             android:textColor="@drawable/list_item_text_selector"
-            android:textSize="10sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
 </LinearLayout>

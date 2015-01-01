@@ -378,7 +378,7 @@ public class SmackableImp implements Smackable {
 			
 				
 					Log.i(TAG, "Login successful");
-					setChatRoomInvitationListener();
+					
 					String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
 					if(rooms != null){
 						final String roomstoJoin[] = rooms.split(",");
@@ -982,7 +982,7 @@ public class SmackableImp implements Smackable {
 				SASLAuthentication.supportSASLMechanism("DIGEST-MD5", 0);
 
 				mXMPPConnection.login(mConfig.userName, mConfig.password, mConfig.ressource);
-				
+				setChatRoomInvitationListener();
 				//mXMPPConnection.login(mConfig.userName, mConfig.password);
 			}
 			joinGroups();
@@ -1682,10 +1682,11 @@ public class SmackableImp implements Smackable {
 						if(msg.getSubject() != null){
 							Log.i(TAG, "saving to SP " + fromJID + "= " + msg.getSubject());
 							Intent intent = new Intent();
+							intent.putExtra("grpID", fromJID);
 							intent.putExtra("newSubject", msg.getSubject());
 							intent.setAction("GroupSubjectChanged");
-							addChatMessageToDB(ChatConstants.OUTGOING, fromJID, msg.getSubject(), "", ChatConstants.DS_SENT_OR_READ,
-									System.currentTimeMillis(), "sss", GROUPCHATTYPE, "");
+							//addChatMessageToDB(ChatConstants.OUTGOING, fromJID, msg.getSubject(), "", ChatConstants.DS_SENT_OR_READ,
+							//		System.currentTimeMillis(), "sss", GROUPCHATTYPE, "");
 							mService.sendBroadcast(intent);
 							EmotApplication.setValue(fromJID, msg.getSubject());
 						}
