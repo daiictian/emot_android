@@ -108,8 +108,6 @@
             android:name="com.emot.androidclient.data.RosterProvider"
             android:authorities="com.emot.androidclient.provider.Roster"
             android:exported="false" />
-
-        <activity android:name="de.duenndns.ssl.MemorizingActivity" />
         
     </application>
 

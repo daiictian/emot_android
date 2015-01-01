@@ -19,14 +19,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -89,15 +93,43 @@ public class Registration extends ActionBarActivity {
 		super.onDestroy();
 		unbindXMPPService();
 	}
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(getApplicationContext(), "received", Toast.LENGTH_SHORT);
+            String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
+            
+            if(state==null)
+                return;
+     
+            //phone is ringing
+            if(state.equals(TelephonyManager.EXTRA_STATE_RINGING)){           
+                //get caller's number
+                Bundle bundle = intent.getExtras();
+                String callerPhoneNumber= bundle.getString("incoming_number").replaceAll("[^\\d.]", "");
+                callerPhoneNumber = callerPhoneNumber.substring(callerPhoneNumber.length()-10, callerPhoneNumber.length());
+                Log.i(TAG, "Received call from "+callerPhoneNumber);
+                
+                if(viewVerificationBlock!=null && mEnterVerificationCode!=null && viewVerificationBlock.getVisibility()==View.VISIBLE){
+                	mEnterVerificationCode.setText(callerPhoneNumber);
+                	mSendVerificationCode.performClick();
+                }
+            }
+        }
+    };
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
+		
+        
 		if(EmotApplication.getValue(PreferenceConstants.USER_APPID, null)!=null){
 			startActivity(new Intent(this, LastChatScreen.class));
 			finish();
 		}
+		
 		String[] locales = Locale.getISOCountries();
 		for (String countryCode : locales) {
 			Locale obj = new Locale("", countryCode);
@@ -108,6 +140,13 @@ public class Registration extends ActionBarActivity {
 		setContentView(R.layout.layout_register_screen);
 		createUICallback();
 		initializeUI();
+		
+		
+		//Register for call receive
+		IntentFilter filter = new IntentFilter();
+        filter.addAction("android.intent.action.PHONE_STATE");
+        registerReceiver(receiver, filter);
+        
 		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 		suggestCountryOnEntry();
 		setOnClickListeners();

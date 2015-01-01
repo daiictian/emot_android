@@ -299,7 +299,11 @@ public class ChatScreen extends ActionBarActivity {
 		sendButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				sendMessage(chatEntry.getText().toString());
+				String sendText = chatEntry.getText().toString();
+				if(sendText.trim().equals("")){
+					return;	
+				}
+				sendMessage(sendText);
 			}
 		});
 
@@ -410,6 +414,7 @@ public class ChatScreen extends ActionBarActivity {
 	private int currPosition;
 	private Map<Integer,String> messageToCopyList = new HashMap<Integer,String>();
 	private StringBuilder messageToCopy = new StringBuilder();
+	
 	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	private void putText(final Map<Integer,String> messages){
@@ -467,7 +472,7 @@ public class ChatScreen extends ActionBarActivity {
 					selectedRow.add(currPosition);
 					message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 					Toast.makeText(EmotApplication.getAppContext(),
-							"messge selected " + message, Toast.LENGTH_LONG).show();
+							"Selected. Copy from top right icon.", Toast.LENGTH_LONG).show();
 					
 						messageToCopyList.put(currPosition, message);
 					
@@ -612,7 +617,8 @@ public class ChatScreen extends ActionBarActivity {
 	}
 
 	private void markAsRead(int id) {
-		Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
+		Uri rowuri = Uri.parse("content://" +
+				"" + ChatProvider.AUTHORITY + "/"
 				+ ChatProvider.TABLE_NAME + "/" + id);
 		Log.d(TAG, "markAsRead: " + rowuri);
 		ContentValues values = new ContentValues();

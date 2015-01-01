@@ -15,6 +15,7 @@ import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import com.emot.constants.ApplicationConstants;
 import com.emot.model.EmotApplication;
 
 public class EmotUtils {
@@ -82,5 +83,20 @@ public class EmotUtils {
 			EmotApplication.setValue(PreferenceConstants.EMOTICON_SIZE, size);
 		}
 		return size;
+	}
+	
+	public static String replaceTag(String message){
+		String new_message = "";
+		int sindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_START);
+		while(sindx >= 0){
+			new_message = new_message + message.substring(0, sindx);
+			new_message = new_message + "☐";
+			int eindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_END) + ApplicationConstants.EMOT_TAGGER_END.length();
+			message = message.substring(eindx, message.length());
+			
+			sindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_START);
+		}
+		new_message = new_message + message;
+		return new_message;
 	}
 }

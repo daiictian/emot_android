@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v4.view.ViewPager.LayoutParams;
 import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -26,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView.BufferType;
 
 import com.emot.androidclient.util.EmotUtils;
 import com.emot.constants.ApplicationConstants;
@@ -86,6 +88,73 @@ public class EmotEditText extends EditText {
 			return false;
 		}
 		return loc==lastEmotIndex.peek();
+	}
+	
+	
+	public void updateEmots(CharSequence text){
+		Spannable spannable = new SpannableStringBuilder(text);
+		Log.i(TAG, "String = " + spannable);
+		//Log.i(TAG, "len = "+spannable.length());
+		int len = spannable.length();
+		int curr = 0;
+		boolean findStartTag = true;
+		int startFound = 0;
+		while(curr < len-ApplicationConstants.EMOT_TAGGER_START.length()){
+			if(findStartTag){
+				String foundStr = "";
+			    for(int j=0; j<ApplicationConstants.EMOT_TAGGER_START.length(); j++){
+			    	foundStr = foundStr + spannable.charAt(curr+j);
+			    }
+				//Log.i(TAG, "start Found string = "+foundStr);
+				if(foundStr.equals(ApplicationConstants.EMOT_TAGGER_START)){
+					startFound = curr;
+					curr = curr + ApplicationConstants.EMOT_TAGGER_START.length() - 1;
+					findStartTag = false;
+				}else{
+					curr++;
+				}
+			}else{
+				String foundStr = "";
+				for(int j=0; j<ApplicationConstants.EMOT_TAGGER_END.length(); j++){
+			    	foundStr = foundStr + spannable.charAt(curr+j);
+			    }
+				//Log.i(TAG, "end Found string = "+foundStr);
+				if(foundStr.equals(ApplicationConstants.EMOT_TAGGER_END)){
+					int endFound = curr + ApplicationConstants.EMOT_TAGGER_END.length();
+					findStartTag = true;
+					//Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
+					//DB QUERY TO GET IMAGE
+					String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
+					//Log.i(TAG, "emot_hash = "+emot_hash);
+					Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
+							DBContract.EmotsDBEntry.TABLE_NAME, 
+							new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_IMG_LARGE} , 
+							DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", 
+							null, null, null, null, null);
+					Bitmap emot_img = null;
+					while (cr.moveToNext())
+					{
+						byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
+						byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
+						emot_img = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, emot_hash);
+					}
+					cr.close();
+					//Set to some default if not found
+					if(emot_img == null){
+						Log.i(TAG, "Emoticon not found !!!");
+						emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+					}
+					Log.i(TAG, "Replacing with emoticon !!!");
+					replaceWithEmot(startFound, endFound, emot_img);
+					curr = curr+6;
+				}else{
+					curr++;
+				}
+			}
+		}
+		
+		Log.i(TAG, "For text = "+text);
+		//Log.i(TAG, "Updating emots in emottextview ");
 	}
 	
 	public void addEmot(Emot emot){
@@ -233,6 +302,7 @@ public class EmotEditText extends EditText {
 	
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		updateEmots(s);
 		if(emotSuggestionLayout==null){
 			super.onTextChanged(s, start, before, count);
 			return;

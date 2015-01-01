@@ -19,6 +19,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.emot.androidclient.data.EmotConfiguration;
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.androidclient.util.LogConstants;
 import com.emot.constants.ApplicationConstants;
 import com.emot.screens.ChatScreen;
@@ -132,7 +133,7 @@ public abstract class GenericService extends Service {
 	}
 	
 	private void setNotification(String fromJid, String fromUserId, String message, boolean is_error, boolean grpchat, String msgSenderinGrp) {
-		message = replaceTag(message);
+		message = EmotUtils.replaceTag(message);
 		Log.i(TAG, "New message = "+message);
 		int mNotificationCounter = 0;
 		if (notificationCount.containsKey(fromJid)) {
@@ -202,20 +203,7 @@ public abstract class GenericService extends Service {
 		}
 	}
 	
-	private String replaceTag(String message){
-		String new_message = "";
-		int sindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_START);
-		while(sindx >= 0){
-			new_message = new_message + message.substring(0, sindx);
-			new_message = new_message + "☐";
-			int eindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_END) + ApplicationConstants.EMOT_TAGGER_END.length();
-			message = message.substring(eindx, message.length());
-			
-			sindx = message.indexOf(ApplicationConstants.EMOT_TAGGER_START);
-		}
-		new_message = new_message + message;
-		return new_message;
-	}
+	
 
 	private void setLEDNotification() {
 		if (mConfig.isLEDNotify) {
