@@ -3,9 +3,11 @@ package com.emot.screens;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jivesoftware.smackx.ChatState;
@@ -230,7 +232,7 @@ public class ChatScreen extends ActionBarActivity {
 			this.finish();
 			return true;
 		case R.id.action_copy_text:
-			putText(messageToCopy.toString());
+			putText(messageToCopyList);
 			for(View currentView : currentlySelectedViewList){
 				currentView.setBackgroundColor(0x00000000);
 			}
@@ -241,9 +243,7 @@ public class ChatScreen extends ActionBarActivity {
 			  
 			        iter.remove();
 			}
-			if(messageToCopy.length() > 0){
-			messageToCopy.delete(0, messageToCopy.length() - 1);
-			}
+			messageToCopyList.clear();
 			
 			return true;
 		default:
@@ -408,17 +408,31 @@ public class ChatScreen extends ActionBarActivity {
 	private View currentlySelectedView;
 	private List<View> currentlySelectedViewList = new ArrayList<View>();
 	private int currPosition;
+	private Map<Integer,String> messageToCopyList = new HashMap<Integer,String>();
 	private StringBuilder messageToCopy = new StringBuilder();
 	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
-	private void putText(final String text){
+	private void putText(final Map<Integer,String> messages){
+		StringBuilder sb = new StringBuilder();
+		Iterator itr  = messages.entrySet().iterator();
+		while(itr.hasNext()){
+			Map.Entry pairs = (Map.Entry)itr.next();
+			if(sb.length() != 0){
+				sb.append("\n" +(String)pairs.getValue());
+			}else{
+				sb.append((String)pairs.getValue());
+			}
+			itr.remove();
+			
+		}
+		
 	    int sdk = android.os.Build.VERSION.SDK_INT;
 	    if(sdk < android.os.Build.VERSION_CODES. HONEYCOMB) {
 	        android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-	        clipboard.setText(text);
+	        clipboard.setText(sb.toString());
 	    } else {
 	        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE); 
-	        android.content.ClipData clip = ClipData.newPlainText("simple text",text);
+	        android.content.ClipData clip = ClipData.newPlainText("simple text",sb.toString());
 	        clipboard.setPrimaryClip(clip);
 	    }
 	}
@@ -454,11 +468,15 @@ public class ChatScreen extends ActionBarActivity {
 					message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 					Toast.makeText(EmotApplication.getAppContext(),
 							"messge selected " + message, Toast.LENGTH_LONG).show();
-					if(messageToCopy.length() != 0){
-					messageToCopy.append("\n" +message);
-					}else{
-						messageToCopy.append(message);	
-					}
+					
+						messageToCopyList.put(currPosition, message);
+					
+//					if(messageToCopy.length() != 0){
+//						messageToCopy
+//					messageToCopy.append("\n" +message);
+//					}else{
+//						messageToCopy.append(message);	
+//					}
 					currentlySelectedView.setSelected(true);
 					currentlySelectedViewList.add(currentlySelectedView);
 					currentlySelectedView.setBackgroundColor(color.darkgreen);
@@ -466,6 +484,7 @@ public class ChatScreen extends ActionBarActivity {
 				}else{
 					Log.i(TAG, "Deselecting");
 					currentlySelectedView.setBackgroundColor(0x00000000);
+					messageToCopyList.remove(currPosition);
 					selectedRow.remove(currPosition);
 				}
 
