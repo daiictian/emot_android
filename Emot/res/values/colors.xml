@@ -18,6 +18,8 @@
     <item name="light_bg" type="color">#F5F6FA</item>
     <item name="light_yellow" type="color">#FEFFED</item>
     <item name="bagni" type="color">#7677B5</item>
+    <item name="light_bagni" type="color">#9FA0CB</item>
+    
     <item name="halka_white" type="color">#e5ecee</item>
     <item name="halka_gulabi" type="color">#f2e0f1</item>
     <item name="halka_hara" type="color">#b3f181</item>

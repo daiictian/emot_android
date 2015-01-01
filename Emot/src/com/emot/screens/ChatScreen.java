@@ -1,12 +1,20 @@
 package com.emot.screens;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.jivesoftware.smackx.ChatState;
 
+import android.annotation.SuppressLint;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
@@ -26,10 +34,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -52,9 +62,10 @@ import com.emot.common.EmotEditText;
 import com.emot.common.EmotTextView;
 import com.emot.common.ImageHelper;
 import com.emot.model.EmotApplication;
+import com.emot.screens.R.color;
 
 public class ChatScreen extends ActionBarActivity {
-
+	
 	private ImageView sendButton;
 	private EmotEditText chatEntry;
 	private TextView userTitle;
@@ -218,6 +229,23 @@ public class ChatScreen extends ActionBarActivity {
 			Log.i(TAG, "back pressed");
 			this.finish();
 			return true;
+		case R.id.action_copy_text:
+			putText(messageToCopy.toString());
+			for(View currentView : currentlySelectedViewList){
+				currentView.setBackgroundColor(0x00000000);
+			}
+			Iterator<Integer> iter = selectedRow.iterator();
+			while (iter.hasNext()) {
+			   int i = iter.next();
+
+			  
+			        iter.remove();
+			}
+			if(messageToCopy.length() > 0){
+			messageToCopy.delete(0, messageToCopy.length() - 1);
+			}
+			
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -267,7 +295,7 @@ public class ChatScreen extends ActionBarActivity {
 		// chatList.add("Howdy");
 
 		sendButton.setEnabled(true);
-
+		setOnclickListeners();
 		sendButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -370,6 +398,82 @@ public class ChatScreen extends ActionBarActivity {
 
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.chat_screen, menu);
+		return true;
+	}
+	private Set<Integer> selectedRow = new HashSet<Integer>();
+	private View currentlySelectedView;
+	private List<View> currentlySelectedViewList = new ArrayList<View>();
+	private int currPosition;
+	private StringBuilder messageToCopy = new StringBuilder();
+	@SuppressLint("NewApi")
+	@SuppressWarnings("deprecation")
+	private void putText(final String text){
+	    int sdk = android.os.Build.VERSION.SDK_INT;
+	    if(sdk < android.os.Build.VERSION_CODES. HONEYCOMB) {
+	        android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+	        clipboard.setText(text);
+	    } else {
+	        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE); 
+	        android.content.ClipData clip = ClipData.newPlainText("simple text",text);
+	        clipboard.setPrimaryClip(clip);
+	    }
+	}
+	
+	@SuppressLint("NewApi")
+	@SuppressWarnings("deprecation")
+	private void delText(){
+	    int sdk = android.os.Build.VERSION.SDK_INT;
+	    if(sdk < android.os.Build.VERSION_CODES. HONEYCOMB) {
+	        android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+	        clipboard.setText(null);
+	    } else {
+	        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE); 
+	        android.content.ClipData clip = ClipData.newPlainText("simple text",null);
+	        clipboard.setPrimaryClip(clip);
+	    }
+	}
+	
+	private void setOnclickListeners(){
+		chatView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Cursor cursor = (Cursor)parent.getItemAtPosition(position);
+
+				currentlySelectedView = view;
+				Log.i(TAG, "Current view is " +parent.getChildAt(position));
+				String message = "";
+				currPosition = position;
+				if(!selectedRow.contains(currPosition)){
+					selectedRow.add(currPosition);
+					message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
+					Toast.makeText(EmotApplication.getAppContext(),
+							"messge selected " + message, Toast.LENGTH_LONG).show();
+					if(messageToCopy.length() != 0){
+					messageToCopy.append("\n" +message);
+					}else{
+						messageToCopy.append(message);	
+					}
+					currentlySelectedView.setSelected(true);
+					currentlySelectedViewList.add(currentlySelectedView);
+					currentlySelectedView.setBackgroundColor(color.darkgreen);
+
+				}else{
+					Log.i(TAG, "Deselecting");
+					currentlySelectedView.setBackgroundColor(0x00000000);
+					selectedRow.remove(currPosition);
+				}
+
+				return false;
+			}
+		});
+	}
+	
 	void startRepeatingTask()
 	{
 	    mHandlerTask.run(); 
@@ -383,6 +487,7 @@ public class ChatScreen extends ActionBarActivity {
 	private void sendMessage(String message) {
 		chatEntry.setText(null);
 		mServiceAdapter.sendMessage(chatFriend, message);
+		delText();
 		if (!mServiceAdapter.isServiceAuthenticated()) {
 			// Show single tick and try later
 			// showToastNotification(R.string.toast_stored_offline);
