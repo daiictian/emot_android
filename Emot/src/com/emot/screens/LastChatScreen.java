@@ -1,5 +1,8 @@
 package com.emot.screens;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -39,6 +42,7 @@ import com.emot.androidclient.data.RosterProvider.RosterConstants;
 import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.service.XMPPService;
 import com.emot.androidclient.util.ConnectionState;
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.common.ImageHelper;
 import com.emot.common.TaskCompletedRunnable;
 import com.emot.emotobjects.Contact;
@@ -55,6 +59,7 @@ public class LastChatScreen extends ActionBarActivity {
 	private View viewEmpty;
 	private Stub rosterCallback;
 	private EmotConfiguration mConfig;
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +110,7 @@ public class LastChatScreen extends ActionBarActivity {
 	private void intializeUI(){
 		listLastChat = (ListView)findViewById(R.id.listLastChat);
 		viewEmpty = findViewById(R.id.view_last_chats);
+		
 		findViewById(R.id.buttonLastChatOkay).setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -120,6 +126,7 @@ public class LastChatScreen extends ActionBarActivity {
 				ChatProvider.ChatConstants._ID,
 				ChatProvider.ChatConstants.JID,
 				ChatProvider.ChatConstants.GRP_SUBJECT,
+				ChatProvider.ChatConstants.DATE,
 				ChatProvider.ChatConstants.CHAT_TYPE,
 				"MAX("+ChatProvider.ChatConstants.DATE+")",
 				ChatProvider.ChatConstants.MESSAGE, 
@@ -222,17 +229,28 @@ public class LastChatScreen extends ActionBarActivity {
 				
 			}
 			String message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
+			long time = cursor.getLong(cursor.getColumnIndex(ChatProvider.ChatConstants.DATE));
+			Log.i(TAG, "Time is " +time);
 			String status = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
 			boolean isNew = false;
 			if(status.equals(ChatConstants.DS_NEW)){
 				isNew = true;
 			}
-			wrapper.populateRow(user, message, isNew);
+			String date = getDateString(time);
+			String nd = EmotUtils.getTimeSimple(date);
+			
+			wrapper.populateRow(user, message, isNew, nd);
 			return row;
 		}
 		
 	}
 	
+	private String getDateString(long milliSeconds) {
+		SimpleDateFormat dateFormater = new SimpleDateFormat(
+				"yy-MM-dd HH:mm:ss");
+		Date date = new Date(milliSeconds);
+		return dateFormater.format(date);
+	}
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -307,16 +325,18 @@ public class LastChatScreen extends ActionBarActivity {
 	
 	class LastChatWrapper{
 		public TextView username;
+		public TextView mTime;
 		public TextView lastchat;
 		public ImageView useravatar;
 		
 		public LastChatWrapper(View base){
 			username = (TextView)base.findViewById(R.id.textLastChatUser);
+			mTime = (TextView)base.findViewById(R.id.time);
 			lastchat = (TextView)base.findViewById(R.id.textLastChatItem);
 			useravatar = (ImageView)base.findViewById(R.id.image_last_chat);
 		}
 		
-		public void populateRow(String user, String last_chat, boolean isNew){
+		public void populateRow(String user, String last_chat, boolean isNew, final String time){
 			//username.setText(user);
 			
 			
@@ -360,6 +380,8 @@ public class LastChatScreen extends ActionBarActivity {
         	
 			
 			lastchat.setText(last_chat);
+			Log.i(TAG, "time is again " +time);
+			mTime.setText(time);
 			if(isNew){
 				lastchat.setTextColor(EmotApplication.getAppContext().getResources().getColor(R.color.green));
 			}else{
