@@ -29,7 +29,6 @@
         <activity
             android:name=".ChatScreen"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustPan"
             android:screenOrientation="portrait" >
         </activity>
         <activity
