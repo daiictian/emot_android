@@ -38,9 +38,10 @@
             android:layout_alignParentTop="true"
             android:background="@color/halka_white"
             android:ems="10"
-            android:hint="What&apos;s up !"
+            android:hint="@string/default_status"
             android:inputType="textMultiLine"
-            android:maxLength="140" />
+            android:maxLength="140"
+            android:imeOptions="actionDone" />
 
         <Button
             android:id="@+id/buttonProfileSave"
@@ -49,7 +50,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_below="@id/editTextStatus"
-            android:text="DONE" />
+            android:text="@string/done" />
     </RelativeLayout>
 
 </LinearLayout>

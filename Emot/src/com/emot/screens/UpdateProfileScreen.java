@@ -6,6 +6,7 @@ import org.jivesoftware.smack.util.StringUtils;
 
 import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -21,13 +22,18 @@ import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 import com.emot.androidclient.XMPPRosterServiceAdapter;
@@ -100,6 +106,20 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		});
 		Log.i(TAG, "on create of update profile screen");
 		registerXMPPService();
+		
+		editStatus.setOnEditorActionListener(new OnEditorActionListener() {
+	        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+	            if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
+	                Log.i(TAG,"Enter pressed");
+	                saveButton.performClick();
+	                InputMethodManager imm = (InputMethodManager)getSystemService(
+	                	      Context.INPUT_METHOD_SERVICE);
+	                	imm.hideSoftInputFromWindow(editStatus.getWindowToken(), 0);
+	                return true;
+	            }    
+	            return false;
+	        }
+	    });
 	}
 
 

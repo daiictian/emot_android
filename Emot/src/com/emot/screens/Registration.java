@@ -26,11 +26,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.telephony.TelephonyManager;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -93,43 +97,43 @@ public class Registration extends ActionBarActivity {
 		super.onDestroy();
 		unbindXMPPService();
 	}
-	
+
 	private BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Toast.makeText(getApplicationContext(), "received", Toast.LENGTH_SHORT);
-            String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-            
-            if(state==null)
-                return;
-     
-            //phone is ringing
-            if(state.equals(TelephonyManager.EXTRA_STATE_RINGING)){           
-                //get caller's number
-                Bundle bundle = intent.getExtras();
-                String callerPhoneNumber= bundle.getString("incoming_number").replaceAll("[^\\d.]", "");
-                callerPhoneNumber = callerPhoneNumber.substring(callerPhoneNumber.length()-10, callerPhoneNumber.length());
-                Log.i(TAG, "Received call from "+callerPhoneNumber);
-                
-                if(viewVerificationBlock!=null && mEnterVerificationCode!=null && viewVerificationBlock.getVisibility()==View.VISIBLE){
-                	mEnterVerificationCode.setText(callerPhoneNumber);
-                	mSendVerificationCode.performClick();
-                }
-            }
-        }
-    };
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Toast.makeText(getApplicationContext(), "received", Toast.LENGTH_SHORT);
+			String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
+
+			if(state==null)
+				return;
+
+			//phone is ringing
+			if(state.equals(TelephonyManager.EXTRA_STATE_RINGING)){           
+				//get caller's number
+				Bundle bundle = intent.getExtras();
+				String callerPhoneNumber= bundle.getString("incoming_number").replaceAll("[^\\d.]", "");
+				callerPhoneNumber = callerPhoneNumber.substring(callerPhoneNumber.length()-10, callerPhoneNumber.length());
+				Log.i(TAG, "Received call from "+callerPhoneNumber);
+
+				if(viewVerificationBlock!=null && mEnterVerificationCode!=null && viewVerificationBlock.getVisibility()==View.VISIBLE){
+					mEnterVerificationCode.setText(callerPhoneNumber);
+					mSendVerificationCode.performClick();
+				}
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
-		
-        
+		Log.i(TAG, getSHA(EmotApplication.getAppContext()));
+
 		if(EmotApplication.getValue(PreferenceConstants.USER_APPID, null)!=null){
 			startActivity(new Intent(this, LastChatScreen.class));
 			finish();
 		}
-		
+
 		String[] locales = Locale.getISOCountries();
 		for (String countryCode : locales) {
 			Locale obj = new Locale("", countryCode);
@@ -140,21 +144,35 @@ public class Registration extends ActionBarActivity {
 		setContentView(R.layout.layout_register_screen);
 		createUICallback();
 		initializeUI();
-		
-		
+
+
 		//Register for call receive
 		IntentFilter filter = new IntentFilter();
-        filter.addAction("android.intent.action.PHONE_STATE");
-        registerReceiver(receiver, filter);
-        
+		filter.addAction("android.intent.action.PHONE_STATE");
+		registerReceiver(receiver, filter);
+
 		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
 		suggestCountryOnEntry();
 		setOnClickListeners();
-//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
-//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
-//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
+		
+		//		new EmoticonDBHelper(EmotApplication.getAppContext()).createDatabase();
+		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
+		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
 	}
 
+	public String getSHA(Context context) {
+		String sign=null;
+		try {
+			PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_SIGNATURES);
+			for (Signature signature : info.signatures) {
+				MessageDigest md = MessageDigest.getInstance("SHA");
+				md.update(signature.toByteArray());
+				sign = Base64 .encodeToString(md.digest(), Base64.DEFAULT);
+			}
+		} catch (Exception e) {
+		} 
+		return sign;
+	}
 
 
 	private boolean isNumberValid(final String pNumber, String code){
@@ -290,11 +308,11 @@ public class Registration extends ActionBarActivity {
 								Editor e = EmotApplication.getPrefs().edit();
 								e.putBoolean(PreferenceConstants.REQUIRE_SSL, false);
 								e.commit();
-								
+
 								//Register and bind
 								registerXMPPService();
 								bindXMPPService();
-								
+
 							}else{
 								throw new Exception("Registration failed");
 							}
@@ -318,27 +336,27 @@ public class Registration extends ActionBarActivity {
 
 			}
 		});
-		
+
 		mCountrySelector.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				
+
 				Log.i(TAG,"ssssssssssssss" + mCountrySelector.getText().toString() );
 				Log.i(TAG,"ssssssssssssss" +mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())) );
 				Log.i(TAG, "ssss " +String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())) ));
 				String countryCode = String.valueOf(mCountryCallingCodeMap.get(mCountryCode.get(mCountrySelector.getText().toString())));
 				mEnterMobile.setText("+"+countryCode+"-");
-				
+
 				EmotApplication.setValue(PreferenceConstants.COUNTRY_PHONE_CODE, countryCode);
 				EmotApplication.setValue(PreferenceConstants.COUNTRY_CODE, mCountryCode.get(mCountrySelector.getText().toString()));
 				Log.i(TAG, "ph code = "+mCountryCode.get(mCountrySelector.getText().toString()) + " c code="+countryCode);
 			}
 		});
 	}
-	
-	
+
+
 
 	private String hText(final String input){
 
@@ -365,35 +383,35 @@ public class Registration extends ActionBarActivity {
 		return new BigInteger(130, mRandom).toString(32);
 	}
 
-//	private void addItemsOnCountrySpinner() {
-//
-//
-//		List<String> list = new ArrayList<String>();
-//		for(String key : mCountryCode.keySet()){
-//			list.add(key);
-//		}
-//		Collections.sort(list);
-//
-//		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
-//				android.R.layout.simple_spinner_item, list);
-//		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//		mCountryList.setAdapter(dataAdapter);
-//	}
-	
+	//	private void addItemsOnCountrySpinner() {
+	//
+	//
+	//		List<String> list = new ArrayList<String>();
+	//		for(String key : mCountryCode.keySet()){
+	//			list.add(key);
+	//		}
+	//		Collections.sort(list);
+	//
+	//		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+	//				android.R.layout.simple_spinner_item, list);
+	//		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+	//		mCountryList.setAdapter(dataAdapter);
+	//	}
+
 	private void suggestCountryOnEntry(){
-		
+
 		List<String> list = new ArrayList<String>();
 		for(String key : mCountryCode.keySet()){
 			list.add(key);
 		}
 		Collections.sort(list);
-		
+
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>  
-        (this,android.R.layout.select_dialog_item,list);
+		(this,android.R.layout.select_dialog_item,list);
 		mCountrySelector.setThreshold(1);//will start working from first character  
 		mCountrySelector.setAdapter(adapter);//setting the adapter data into the AutoCompleteTextView  
 	}
-	
+
 	private void createUICallback() {
 		rosterCallback = new IXMPPRosterCallback.Stub() {
 			@Override
@@ -414,7 +432,7 @@ public class Registration extends ActionBarActivity {
 		mSubmitNumber = (Button)findViewById(R.id.submitNumber);
 		mEnterVerificationCode = (EditText)findViewById(R.id.verificationCode);
 		mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
-		
+
 		pd = new ProgressDialog(Registration.this);
 		pd.setMessage("Loading");
 		viewMobileBlock = findViewById(R.id.viewRegisterMobileBlock);
@@ -450,13 +468,13 @@ public class Registration extends ActionBarActivity {
 			}
 		};
 	}
-	
+
 	private void openContactScreen(){
 		Thread waitForConnection = new Thread(new Runnable() {
-			
+
 			@Override
 			public void run() {
-				
+
 				ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 					@Override
 					public void onTaskComplete(String result) {

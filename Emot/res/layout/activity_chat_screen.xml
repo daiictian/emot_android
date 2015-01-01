@@ -81,11 +81,11 @@
 
             <ImageView
                 android:id="@+id/dove_send"
-
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="20"
-                android:src="@drawable/ic_launcher" />
+                android:src="@drawable/ic_launcher"
+                android:background="@drawable/list_selector_flatcolor" />
 
         </LinearLayout>
     </LinearLayout>

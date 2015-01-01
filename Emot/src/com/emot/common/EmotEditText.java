@@ -144,7 +144,7 @@ public class EmotEditText extends EditText {
 		try{
 			Spannable spannable = getText();
 			int start = getSelectionStart();
-			int end = getSelectionEnd();
+			
 			Log.i(TAG, "len1 = "+start + " String = "+getText().toString());
 			String appendString = ApplicationConstants.EMOT_TAGGER_START + emot.getEmotHash() + ApplicationConstants.EMOT_TAGGER_END;
 			if(start>0 && getText().charAt(start-1) != ' '){
@@ -156,6 +156,7 @@ public class EmotEditText extends EditText {
 				//setText(getText().toString().substring(0, start));
 				//setSelection(getText().length());
 			}
+			int end = getSelectionEnd();
 			
 			Log.i(TAG, "111 " + getText().toString());
 			getText().replace(Math.min(start, end), Math.max(start, end), appendString, 0, appendString.length());
