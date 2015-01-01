@@ -1,5 +1,6 @@
 package com.emot.androidclient.util;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.text.ParseException;
@@ -8,9 +9,18 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.text.format.DateFormat;
+import android.util.DisplayMetrics;
+import android.util.Log;
+
+import com.emot.model.EmotApplication;
 
 public class EmotUtils {
+
+	private static final String TAG = EmotUtils.class.getSimpleName();
+	private static int DIVISION_FACTOR = 16;
 
 	public static String generateRoomID(){
 		SecureRandom random = new SecureRandom();
@@ -48,8 +58,29 @@ public class EmotUtils {
 			e.printStackTrace();
 			return "";
 		}
-		
-		
-		
+	}
+	
+	public static byte[] resizeEmoticon(byte[] img){
+		Bitmap inputImg = BitmapFactory.decodeByteArray(img , 0, img.length);
+		int size = getEmoticonSize();
+		Bitmap bmp = Bitmap.createScaledBitmap(inputImg, size, size, false);
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+		byte outputImage[] = stream.toByteArray();
+		return outputImage;
+	}
+	
+	private static int getEmoticonSize(){
+		int size = 0;
+		size = EmotApplication.getValue(PreferenceConstants.EMOTICON_SIZE, 0);
+		if(size==0){
+			DisplayMetrics metrics = EmotApplication.getAppContext().getResources().getDisplayMetrics();
+			int width = metrics.widthPixels;
+			int height = metrics.heightPixels;
+			Log.i(TAG, "width = "+width + " height = "+height);
+			size = width/DIVISION_FACTOR;
+			EmotApplication.setValue(PreferenceConstants.EMOTICON_SIZE, size);
+		}
+		return size;
 	}
 }

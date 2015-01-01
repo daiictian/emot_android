@@ -106,6 +106,10 @@ public class EmotApplication extends Application {
 	public static String getValue(String k, String d) {
 		return prefs.getString(k, d);
 	}
+	
+	public static int getValue(String emoticonSize, int i) {
+		return prefs.getInt(emoticonSize, i);
+	}
 
 	public static String getDateTime() {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(
@@ -114,110 +118,8 @@ public class EmotApplication extends Application {
 		return dateFormat.format(date);
 	}
 
-	public static void configure(ProviderManager pm) {
-
-		//  Private Data Storage
-		pm.addIQProvider("query","jabber:iq:private", new PrivateDataManager.PrivateDataIQProvider());
-
-		//  Time
-		try {
-			pm.addIQProvider("query","jabber:iq:time", Class.forName("org.jivesoftware.smackx.packet.Time"));
-		} catch (ClassNotFoundException e) {
-			Log.w("TestClient", "Can't load class for org.jivesoftware.smackx.packet.Time");
-		}
-
-		//  Roster Exchange
-		pm.addExtensionProvider("x","jabber:x:roster", new RosterExchangeProvider());
-
-		//  Message Events
-		pm.addExtensionProvider("x","jabber:x:event", new MessageEventProvider());
-
-		//  Chat State
-		pm.addExtensionProvider("active","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
-		pm.addExtensionProvider("composing","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider()); 
-		pm.addExtensionProvider("paused","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
-		pm.addExtensionProvider("inactive","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
-		pm.addExtensionProvider("gone","http://jabber.org/protocol/chatstates", new ChatStateExtension.Provider());
-
-		//  XHTML
-		pm.addExtensionProvider("html","http://jabber.org/protocol/xhtml-im", new XHTMLExtensionProvider());
-
-		//  Group Chat Invitations
-		pm.addExtensionProvider("x","jabber:x:conference", new GroupChatInvitation.Provider());
-
-		//  Service Discovery # Items    
-		pm.addIQProvider("query","http://jabber.org/protocol/disco#items", new DiscoverItemsProvider());
-
-		//  Service Discovery # Info
-		pm.addIQProvider("query","http://jabber.org/protocol/disco#info", new DiscoverInfoProvider());
-
-		//  Data Forms
-		pm.addExtensionProvider("x","jabber:x:data", new DataFormProvider());
-
-		//  MUC User
-		pm.addExtensionProvider("x","http://jabber.org/protocol/muc#user", new MUCUserProvider());
-
-		//  MUC Admin    
-		pm.addIQProvider("query","http://jabber.org/protocol/muc#admin", new MUCAdminProvider());
-
-		//  MUC Owner    
-		pm.addIQProvider("query","http://jabber.org/protocol/muc#owner", new MUCOwnerProvider());
-
-		//  Delayed Delivery
-		pm.addExtensionProvider("x","jabber:x:delay", new DelayInformationProvider());
-
-		//  Version
-		try {
-			pm.addIQProvider("query","jabber:iq:version", Class.forName("org.jivesoftware.smackx.packet.Version"));
-		} catch (ClassNotFoundException e) {
-			//  Not sure what's happening here.
-		}
-
-		//  VCard
-		pm.addIQProvider("vCard","vcard-temp", new VCardProvider());
-
-		//  Offline Message Requests
-		pm.addIQProvider("offline","http://jabber.org/protocol/offline", new OfflineMessageRequest.Provider());
-
-		//  Offline Message Indicator
-		pm.addExtensionProvider("offline","http://jabber.org/protocol/offline", new OfflineMessageInfo.Provider());
-
-		//  Last Activity
-		pm.addIQProvider("query","jabber:iq:last", new LastActivity.Provider());
-
-		//  User Search
-		pm.addIQProvider("query","jabber:iq:search", new UserSearch.Provider());
-
-		//  SharedGroupsInfo
-		pm.addIQProvider("sharedgroup","http://www.jivesoftware.org/protocol/sharedgroup", new SharedGroupsInfo.Provider());
-
-		//  JEP-33: Extended Stanza Addressing
-		pm.addExtensionProvider("addresses","http://jabber.org/protocol/address", new MultipleAddressesProvider());
-
-		//   FileTransfer
-		pm.addIQProvider("si","http://jabber.org/protocol/si", new StreamInitiationProvider());
-
-		pm.addIQProvider("query","http://jabber.org/protocol/bytestreams", new BytestreamsProvider());
-
-		//  Privacy
-		pm.addIQProvider("query","jabber:iq:privacy", new PrivacyProvider());
-		pm.addIQProvider("command", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider());
-		pm.addExtensionProvider("malformed-action", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.MalformedActionError());
-		pm.addExtensionProvider("bad-locale", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.BadLocaleError());
-		pm.addExtensionProvider("bad-payload", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.BadPayloadError());
-		pm.addExtensionProvider("bad-sessionid", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.BadSessionIDError());
-		pm.addExtensionProvider("session-expired", "http://jabber.org/protocol/commands", new AdHocCommandDataProvider.SessionExpiredError());
-		
-		pm.addExtensionProvider(DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE, new DeliveryReceipt.Provider());
-		pm.addExtensionProvider(DeliveryReceiptRequest.ELEMENT, new DeliveryReceiptRequest().getNamespace(), new DeliveryReceiptRequest.Provider());
-		
-		//pm.addExtensionProvider("offline", "http://jabber.org/protocol/offline", new org.jivesoftware.smackx.packet.OfflineMessageInfo.Provider());
-		//pm.addIQProvider("offline", "http://jabber.org/protocol/offline", new org.jivesoftware.smackx.packet.OfflineMessageRequest.Provider());
-	}
-
 	public static String randomId() {
 		return new BigInteger(130, new SecureRandom()).toString(32);
 	}
-
 	
 }

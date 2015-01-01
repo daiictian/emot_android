@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.constants.ApplicationConstants;
 import com.emot.model.Emot;
 import com.emot.model.EmotApplication;
@@ -165,7 +166,7 @@ public class EmotEditText extends EditText {
 						String selection = DBContract.EmotsDBEntry.LAST_USED + " != ''";
 						Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 								DBContract.EmotsDBEntry.TABLE_NAME, 
-								new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
+								new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH, DBContract.EmotsDBEntry.EMOT_IMG_LARGE}, 
 								selection, 
 								null, 
 								null, 
@@ -178,8 +179,11 @@ public class EmotEditText extends EditText {
 						{
 							String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
 							byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-							Log.i(TAG, "Recent Emot hash is "+hash);
-							final Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
+							byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
+							Log.i(TAG, "emot img "+emotImg);
+							Log.i(TAG, "Emot hash is "+hash);
+							Bitmap emotBmp = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, hash);
+							final Emot emot = new Emot(hash, emotBmp);
 							ImageView view = new ImageView(EmotApplication.getAppContext());
 							view.setId(0);
 							RelativeLayout.LayoutParams params = getEmotParams();
@@ -291,7 +295,7 @@ public class EmotEditText extends EditText {
 		protected Void doInBackground(Void... params) {
 			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 					DBContract.EmotsDBEntry.TABLE_NAME, 
-					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH}, 
+					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH, DBContract.EmotsDBEntry.EMOT_IMG_LARGE}, 
 					DBContract.EmotsDBEntry.TAGS+" match '"+text+"*';", 
 					null, null, null, null, null
 			);
@@ -299,8 +303,11 @@ public class EmotEditText extends EditText {
 			{
 				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
 				byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
+				byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
+				Log.i(TAG, "emot img "+emotImg);
 				Log.i(TAG, "Emot hash is "+hash);
-				Emot emot = new Emot(hash, BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length));
+				Bitmap emotBmp = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, hash);
+				Emot emot = new Emot(hash, emotBmp);
 				publishProgress(emot);
 			}
 			cr.close();

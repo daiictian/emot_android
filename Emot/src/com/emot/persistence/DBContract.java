@@ -31,6 +31,7 @@ public final class DBContract {
 	public static abstract class EmotsDBEntry implements BaseColumns{
 
 		public static final String TABLE_NAME = "emots";
+		public static final String EMOT_IMG_LARGE = "emot_img_large";
 		public static final String EMOT_IMG = "emot_img";
 		public static final String TAGS = "tags";
 		public static final String EMOT_HASH = "emot_hash";

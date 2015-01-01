@@ -12,6 +12,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.emot.androidclient.util.EmotUtils;
 import com.emot.constants.ApplicationConstants;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
@@ -89,12 +90,17 @@ public class EmotTextView extends TextView {
 					//DB QUERY TO GET IMAGE
 					String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
 					//Log.i(TAG, "emot_hash = "+emot_hash);
-					Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(DBContract.EmotsDBEntry.TABLE_NAME, new String[] {DBContract.EmotsDBEntry.EMOT_IMG} , DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", null, null, null, null, null);
+					Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
+							DBContract.EmotsDBEntry.TABLE_NAME, 
+							new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_IMG_LARGE} , 
+							DBContract.EmotsDBEntry.EMOT_HASH+" match '"+emot_hash+"';", 
+							null, null, null, null, null);
 					Bitmap emot_img = null;
 					while (cr.moveToNext())
 					{
 						byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-						emot_img = BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length);
+						byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
+						emot_img = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, emot_hash);
 					}
 					cr.close();
 					//Set to some default if not found

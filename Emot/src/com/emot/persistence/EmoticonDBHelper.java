@@ -6,10 +6,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.emot.androidclient.util.EmotUtils;
+import com.emot.model.EmotApplication;
+
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.util.Log;
 
@@ -124,6 +130,24 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
+	}
+	
+	public static Bitmap getEmot(byte[] emotImg, byte[] emotImgLrg, String emot_hash){
+		if(emotImg==null){
+			Log.i(TAG, "Pulling image from large");
+			emotImg = EmotUtils.resizeEmoticon(emotImgLrg);
+			ContentValues values = new ContentValues();
+			values.put(DBContract.EmotsDBEntry.EMOT_IMG, emotImg);
+			getInstance(EmotApplication.getAppContext()).getWritableDatabase().update(
+					DBContract.EmotsDBEntry.TABLE_NAME, 
+					values, 
+					DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot_hash+"'", 
+					null
+			);
+		}else{
+			Log.i(TAG, "Pulling image from small");
+		}
+		return BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length);
 	}
 
 }

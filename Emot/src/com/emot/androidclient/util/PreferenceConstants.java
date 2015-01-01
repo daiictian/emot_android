@@ -31,4 +31,5 @@ public class PreferenceConstants {
 	public static final String AVATAR_UPDATED = "avatar_updated";
 	public static final String COUNTRY_CODE = "country_code";
 	public static final String COUNTRY_PHONE_CODE = "country_phone_code";
+	public static final String EMOTICON_SIZE = "emoticon_size";
 }
