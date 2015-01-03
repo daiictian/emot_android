@@ -33,6 +33,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
@@ -74,6 +75,7 @@ public class Registration extends ActionBarActivity {
 
 	private static final String TAG = Registration.class.getSimpleName();
 	private EditText mEnterMobile;
+	private Button mRetry;
 	private Spinner mCountryList;
 	private Button mSubmitNumber;
 	private EditText mEnterVerificationCode;
@@ -98,10 +100,14 @@ public class Registration extends ActionBarActivity {
 	protected void onDestroy() {
 		Log.i(TAG, "Activity destroy called !!!");
 		super.onDestroy();
+		if(pd != null){
+			pd.dismiss();
+		}
 		unregisterReceiver(receiver);
+		
 		unbindXMPPService();
 	}
-
+	private static volatile boolean receivedMissedCall;
 	private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -122,6 +128,8 @@ public class Registration extends ActionBarActivity {
 				if(viewVerificationBlock!=null && mEnterVerificationCode!=null && viewVerificationBlock.getVisibility()==View.VISIBLE){
 					mEnterVerificationCode.setText(callerPhoneNumber);
 					mSendVerificationCode.performClick();
+					receivedMissedCall = true;
+					retryCounter.cancel();
 				}
 			}
 		}
@@ -192,6 +200,119 @@ public class Registration extends ActionBarActivity {
 		}
 		return isValid;
 	}
+	
+	private void reclaimMemory(){
+		ActivityManager am = (ActivityManager) getSystemService(Activity.ACTIVITY_SERVICE);
+		try{
+		List<RunningServiceInfo> rsi = am.getRunningServices(20);
+		if(rsi != null){
+		for(RunningServiceInfo a: rsi){
+			ComponentName n = a.service;
+			Log.i(TAG, "Killing process " + n.getPackageName());
+			am.killBackgroundProcesses(n.getPackageName());
+		}
+		}
+		}catch(Exception e){
+			
+		}
+	}
+	private CountDownTimer retryCounter;
+	class  RetryCounter extends CountDownTimer{
+		
+	     public RetryCounter(long millisInFuture, long countDownInterval) {
+			super(millisInFuture, countDownInterval);
+			// TODO Auto-generated constructor stub
+		}
+
+		public void onTick(long millisUntilFinished) {
+	    	 
+	    	
+	         mRetry.setText("Retrying in.. " + millisUntilFinished / 1000);
+	    	 
+	     }
+
+	     public void onFinish() {
+	    	 if(pd != null){
+	    		 pd.dismiss();
+	    	 }
+	    	
+	    	 reclaimMemory();
+	    	 sendRegistrationRequest();
+	    	 mRetry.setEnabled(false);
+	    	
+	     }
+	  }
+	private void sendRegistrationRequest(){
+		pd.show();
+		
+	    
+		mMobileNumber = mEnterMobile.getText().toString().replaceAll("[^\\d.]", "");
+		if(isNumberValid(mEnterMobile.getText().toString(), EmotApplication.getValue(PreferenceConstants.COUNTRY_CODE, ""))){
+			String url = WebServiceConstants.HTTP + "://"+ 
+					WebServiceConstants.SERVER_IP
+					+WebServiceConstants.PATH_API+WebServiceConstants.OP_SETCODE
+					+WebServiceConstants.GET_QUERY+WebServiceConstants.DEVICE_TYPE+
+					"="+mMobileNumber;
+			URL wsURL = null;
+			Log.d(TAG, "wsurl is  " +wsURL);
+			try {
+				wsURL = new URL(url);
+			} catch (MalformedURLException e) {
+
+				e.printStackTrace();
+			}
+			Log.d(TAG, "wsurl is  " +wsURL);
+			TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
+
+				@Override
+				public void onTaskComplete(String result) {
+					pd.hide();
+					viewMobileBlock.setVisibility(View.GONE);
+					viewVerificationBlock.setVisibility(View.VISIBLE);
+					mRetry.setEnabled(true);
+					/////
+					retryCounter = new RetryCounter(30000, 1000);
+					retryCounter.start();
+					Log.i("Registration", "callback called");
+					try {
+						JSONObject resultJson = new JSONObject(result);
+
+						Log.i("TAG", "callback called");
+						String status = resultJson.getString("status");
+						if(status.equals("true")){
+							Log.i("Registration", "status us true");
+							//Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
+						}else{
+							Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
+							Log.i(TAG, "registration status is " +status);
+							Log.d(TAG, "message from server " + resultJson.getString("message"));
+
+						}
+					}
+					catch (JSONException e) {
+
+						e.printStackTrace();
+					}catch(Exception e){
+						e.printStackTrace();
+					}
+
+				}
+
+				@Override
+				public void onTaskError(String error) {
+					pd.cancel();
+					Toast.makeText(Registration.this, error, Toast.LENGTH_LONG).show();
+				}
+			};
+
+			EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
+			registrationHTTPClient.execute(new Void[]{});
+		}else{
+			pd.cancel();
+			Toast.makeText(Registration.this, "Mobile Number is invalid", Toast.LENGTH_LONG).show();
+		}
+
+	}
 
 	private void setOnClickListeners() {
 
@@ -199,85 +320,9 @@ public class Registration extends ActionBarActivity {
 
 			@Override
 			public void onClick(View v) {
-				ActivityManager am = (ActivityManager) getSystemService(Activity.ACTIVITY_SERVICE);
-				try{
-				List<RunningServiceInfo> rsi = am.getRunningServices(20);
-				if(rsi != null){
-				for(RunningServiceInfo a: rsi){
-					ComponentName n = a.service;
-					Log.i(TAG, "Killing process " + n.getPackageName());
-					am.killBackgroundProcesses(n.getPackageName());
-				}
-				}
-				}catch(Exception e){
-					
-				}
-			    
-				pd.show();
-				
-			    
-				mMobileNumber = mEnterMobile.getText().toString().replaceAll("[^\\d.]", "");
-				if(isNumberValid(mEnterMobile.getText().toString(), EmotApplication.getValue(PreferenceConstants.COUNTRY_CODE, ""))){
-					String url = WebServiceConstants.HTTP + "://"+ 
-							WebServiceConstants.SERVER_IP
-							+WebServiceConstants.PATH_API+WebServiceConstants.OP_SETCODE
-							+WebServiceConstants.GET_QUERY+WebServiceConstants.DEVICE_TYPE+
-							"="+mMobileNumber;
-					URL wsURL = null;
-					Log.d(TAG, "wsurl is  " +wsURL);
-					try {
-						wsURL = new URL(url);
-					} catch (MalformedURLException e) {
-
-						e.printStackTrace();
-					}
-					Log.d(TAG, "wsurl is  " +wsURL);
-					TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
-
-						@Override
-						public void onTaskComplete(String result) {
-							pd.hide();
-							viewMobileBlock.setVisibility(View.GONE);
-							viewVerificationBlock.setVisibility(View.VISIBLE);
-							Log.i("Registration", "callback called");
-							try {
-								JSONObject resultJson = new JSONObject(result);
-
-								Log.i("TAG", "callback called");
-								String status = resultJson.getString("status");
-								if(status.equals("true")){
-									Log.i("Registration", "status us true");
-									//Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
-								}else{
-									Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
-									Log.i(TAG, "registration status is " +status);
-									Log.d(TAG, "message from server " + resultJson.getString("message"));
-
-								}
+				reclaimMemory();
+			    sendRegistrationRequest();
 							}
-							catch (JSONException e) {
-
-								e.printStackTrace();
-							}catch(Exception e){
-								e.printStackTrace();
-							}
-
-						}
-
-						@Override
-						public void onTaskError(String error) {
-							pd.cancel();
-							Toast.makeText(Registration.this, error, Toast.LENGTH_LONG).show();
-						}
-					};
-
-					EmotHTTPClient registrationHTTPClient = new EmotHTTPClient(wsURL, null, taskCompletedRunnable);
-					registrationHTTPClient.execute(new Void[]{});
-				}else{
-					pd.cancel();
-					Toast.makeText(Registration.this, "Mobile Number is invalid", Toast.LENGTH_LONG).show();
-				}
-			}
 
 		});
 
@@ -455,7 +500,8 @@ public class Registration extends ActionBarActivity {
 		mSubmitNumber = (Button)findViewById(R.id.submitNumber);
 		mEnterVerificationCode = (EditText)findViewById(R.id.verificationCode);
 		mSendVerificationCode = (Button)findViewById(R.id.sendVerificationCode);
-
+		mRetry = (Button)findViewById(R.id.Retry);
+		mRetry.setEnabled(false);
 		pd = new ProgressDialog(Registration.this);
 		pd.setMessage("Loading");
 		viewMobileBlock = findViewById(R.id.viewRegisterMobileBlock);

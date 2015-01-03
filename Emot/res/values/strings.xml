@@ -61,6 +61,7 @@
     <string name="invite_text">Hi there! I am using emot. Lets you chat through smiley suggestions. Download the app from here.</string>
     <string name="createGroup">CREATE GROUP</string>
     <string name="send">SEND</string>
+    <string name="retry">Retrying in</string>
     <string name="next">NEXT</string>
     <string name="title_activity_create_group">CreateGroup</string>
 	<string name="participants">Group Members</string>
