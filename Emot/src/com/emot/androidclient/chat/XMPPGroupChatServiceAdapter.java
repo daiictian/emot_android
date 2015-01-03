@@ -18,28 +18,28 @@ public class XMPPGroupChatServiceAdapter {
 
 	public XMPPGroupChatServiceAdapter(IXMPPGroupChatService xmppServiceStub,
 			String jabberID) {
-		Log.i(TAG, "New XMPPChatServiceAdapter construced");
+		//Log.i(TAG, "New XMPPChatServiceAdapter construced");
 		this.xmppGrpServiceStub = xmppServiceStub;
 		this.grpJabberID = jabberID;
 		
 	}
 	
 	public void createGroup(final String grpName, final List<Contact> members){
-		Log.i(TAG, "Called createGroup(): " + grpJabberID + ": " + grpName);
+		//Log.i(TAG, "Called createGroup(): " + grpJabberID + ": " + grpName);
 		 
-		Log.i(TAG, "Members are " +members);
+		//Log.i(TAG, "Members are " +members);
 		
 			Thread t = new Thread(new Runnable() {
 				
 				@Override
 				public void run() {
 					try {
-						Log.i(TAG, "members before sending to service " +members);
+						//Log.i(TAG, "members before sending to service " +members);
 					 xmppGrpServiceStub.createGroup(grpName, members);
-					Log.i(TAG, "members after sending to service " +members);// TODO Auto-generated method stub
+					//Log.i(TAG, "members after sending to service " +members);// TODO Auto-generated method stub
 					} catch (RemoteException e) {
-						Log.i(TAG, "Remote Exception occured " +e.getMessage());
-						e.printStackTrace();
+						//Log.i(TAG, "Remote Exception occured " +e.getMessage());
+						//e.printStackTrace();
 						
 					}
 				}
@@ -52,11 +52,11 @@ public class XMPPGroupChatServiceAdapter {
 	
 	public void leaveGroup(final String grpName){
 		try {
-			Log.i(TAG, "leaving group " +grpName);
+			//Log.i(TAG, "leaving group " +grpName);
 			xmppGrpServiceStub.leaveGroup(grpName);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 	}
@@ -67,7 +67,7 @@ public class XMPPGroupChatServiceAdapter {
 			xmppGrpServiceStub.joinGroup(grpName, isCreateGrp, date);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 	}
@@ -79,7 +79,7 @@ public class XMPPGroupChatServiceAdapter {
 			subject = xmppGrpServiceStub.getGroupSubject();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return subject;
 	}
@@ -91,7 +91,7 @@ public class XMPPGroupChatServiceAdapter {
 			members = xmppGrpServiceStub.getGroupMembers();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		return members;
@@ -102,10 +102,10 @@ public class XMPPGroupChatServiceAdapter {
 	public void sendMessage(String user, String message, String tag) {
 		
 		try {
-			Log.i(TAG, "Called sendMessage(): " + user + ": " + message);
+			//Log.i(TAG, "Called sendMessage(): " + user + ": " + message);
 			 xmppGrpServiceStub.sendGroupMessage(user, message, tag);
 		} catch (RemoteException e) {
-			Log.e(TAG, "caught RemoteException: " + e.getMessage());
+			//Log.e(TAG, "caught RemoteException: " + e.getMessage());
 		}
 		
 		
@@ -115,7 +115,7 @@ public class XMPPGroupChatServiceAdapter {
 		try {
 			return xmppGrpServiceStub.isAuthenticated();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return false;
 	}
@@ -124,7 +124,7 @@ public class XMPPGroupChatServiceAdapter {
 		try {
 			xmppGrpServiceStub.clearNotifications(Jid);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 }

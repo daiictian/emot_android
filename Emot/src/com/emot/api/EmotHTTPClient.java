@@ -63,10 +63,10 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 
 			result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
 			result.append("=");
-			Log.d(TAG, pair.getName() + " = "+pair.getValue());
+			//Log.d(TAG, pair.getName() + " = "+pair.getValue());
 			result.append(URLEncoder.encode(pair.getValue(), "UTF-8"));
 		}
-		//Log.d(TAG, "Post data: " + result.toString());
+		////Log.d(TAG, "Post data: " + result.toString());
 		return result.toString();
 	}
 	
@@ -76,7 +76,7 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 			url = new URL(pUrl);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		return url;
@@ -112,30 +112,30 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 				out.print(getQuery(reqContent));
 				out.close();
 			}
-			Log.d(TAG, "connection : " + urlConnection.toString());
+			//Log.d(TAG, "connection : " + urlConnection.toString());
 			int status = urlConnection.getResponseCode();
-			Log.d(TAG, "status =" + status);
+			//Log.d(TAG, "status =" + status);
 			System.out.println("status= " +status);
 			if (urlConnection.getErrorStream() != null) {
 				in = urlConnection.getErrorStream();
-				Log.d(TAG, "Error : " );
+				//Log.d(TAG, "Error : " );
 			}
 
 			if (status == HttpsURLConnection.HTTP_OK) {
 				in = urlConnection.getInputStream();
 				String contentEncoding = urlConnection
 						.getHeaderField("Content-Encoding");
-				Log.d(TAG, "Content encoding : " + contentEncoding);
+				//Log.d(TAG, "Content encoding : " + contentEncoding);
 				System.out.println("Content encoding : " + contentEncoding);
 				br = new BufferedReader(new InputStreamReader(in));
-				//Log.i(TAG, "Single Response String is " +br.readLine() + " ready value = "+br.ready());
+				////Log.i(TAG, "Single Response String is " +br.readLine() + " ready value = "+br.ready());
 				while (/*br.ready() && */(line = br.readLine()) != null) {
-					Log.i(TAG, "One line read ... "+line);
+					//Log.i(TAG, "One line read ... "+line);
 					sb.append(line);
 				}
 				result = sb.toString();
 				
-				Log.i(TAG, "Response String is " +sb);
+				//Log.i(TAG, "Response String is " +sb);
 				if (contentEncoding != null
 						&& contentEncoding.equalsIgnoreCase("gzip")) {
 					in = new GZIPInputStream(in);
@@ -143,9 +143,9 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 			}
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch(IOException e){
-			e.printStackTrace();
+			//e.printStackTrace();
 		} 
 
 		return result;
@@ -153,13 +153,13 @@ public class EmotHTTPClient extends AsyncTask<Void, Void, String>{
 
 	@Override
 	protected void onPostExecute(String result) {
-		Log.i("Registration", "in postExecute");
-		Log.i("task Val", taskCompletedRunnable.toString());
+		//Log.i("Registration", "in postExecute");
+		//Log.i("task Val", taskCompletedRunnable.toString());
 		if(result!=null){
 			taskCompletedRunnable.onTaskComplete(result);
 		}else{
 			taskCompletedRunnable.onTaskError("Something went wrong while processing your request. Please try again later.");
-			Log.e(TAG, "Server not responding. Received null result");
+			//Log.e(TAG, "Server not responding. Received null result");
 		}
 	}
 

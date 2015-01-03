@@ -1,5 +1,7 @@
 package com.emot.emotobjects;
 
+import com.emot.constants.WebServiceConstants;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -17,7 +19,7 @@ public class Contact implements Parcelable{
 	}
 
 	public String getName() {
-		return name;
+		return name.replaceAll("@"+ WebServiceConstants.CHAT_DOMAIN, "");
 	}
 
 	public void setName(String name) {

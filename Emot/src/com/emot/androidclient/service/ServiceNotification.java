@@ -43,11 +43,11 @@ abstract class ServiceNotification {
 			private static final EclairAndBeyond sInstance = new EclairAndBeyond();
 		}
 		public void showNotification(Service context, int id, Notification n) {
-			Log.d("EclairAndBeyond", "showNotification " + id + " " + n);
+			//Log.d("EclairAndBeyond", "showNotification " + id + " " + n);
 			context.startForeground(id, n);
 		}
 		public void hideNotification(Service context, int id) {
-			Log.d("EclairAndBeyond", "hideNotification");
+			//Log.d("EclairAndBeyond", "hideNotification");
 			context.stopForeground(true);
 		}
 	}

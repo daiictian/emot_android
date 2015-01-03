@@ -34,12 +34,12 @@ public class ImageDownloader extends AsyncTask<Void, Void, Bitmap> {
 
 	@Override
 	protected void onPreExecute() {
-		Log.i(TAG, "onPreExecute Called");
+		//Log.i(TAG, "onPreExecute Called");
 	}
 
 	@Override
 	protected void onPostExecute(Bitmap result) {
-		Log.i(TAG, "onPostExecute Called");
+		//Log.i(TAG, "onPostExecute Called");
 		this.bitmapHandler.processImage(result);
 	}
 
@@ -57,8 +57,7 @@ public class ImageDownloader extends AsyncTask<Void, Void, Bitmap> {
 			final int statusCode = response.getStatusLine().getStatusCode();
 
 			if (statusCode != HttpStatus.SC_OK) {
-				Log.w("ImageDownloader", "Error " + statusCode + 
-						" while retrieving bitmap from " + url);
+				//Log.w("ImageDownloader", "Error " + statusCode + " while retrieving bitmap from " + url);
 				return null;
 
 			}
@@ -84,8 +83,7 @@ public class ImageDownloader extends AsyncTask<Void, Void, Bitmap> {
 		} catch (Exception e) {
 			// You Could provide a more explicit error message for IOException
 			getRequest.abort();
-			Log.e("ImageDownloader", "Something went wrong while" +
-					" retrieving bitmap from " + url + e.toString());
+			//Log.e("ImageDownloader", "Something went wrong while" +" retrieving bitmap from " + url + e.toString());
 		} 
 
 		return null;

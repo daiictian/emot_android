@@ -19,7 +19,7 @@ public class XMPPRosterServiceAdapter {
 	private IXMPPRosterService xmppServiceStub;
 	
 	public XMPPRosterServiceAdapter(IXMPPRosterService xmppServiceStub) {
-		Log.i(TAG, "New XMPPRosterServiceAdapter construced");
+		//Log.i(TAG, "New XMPPRosterServiceAdapter construced");
 		this.xmppServiceStub = xmppServiceStub;
 	}
 	
@@ -27,7 +27,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.setStatusFromConfig();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -35,7 +35,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.addRosterItem(user, alias, group);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -43,7 +43,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.renameRosterGroup(group, newGroup);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -51,7 +51,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.renameRosterItem(contact, newItemName);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -60,7 +60,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.moveRosterItemToGroup(user, group);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -68,7 +68,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.addRosterGroup(group);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -76,7 +76,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.removeRosterItem(user);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -84,7 +84,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.disconnect();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -92,7 +92,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.connect();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -100,9 +100,9 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.registerRosterCallback(uiCallback);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -110,9 +110,9 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.unregisterRosterCallback(uiCallback);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -120,7 +120,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			return ConnectionState.values()[xmppServiceStub.getConnectionState()];
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return ConnectionState.OFFLINE;
 	}
@@ -129,7 +129,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			return xmppServiceStub.getConnectionStateString();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return null;
 	}
@@ -142,7 +142,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.sendPresenceRequest(user, type);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -150,7 +150,7 @@ public class XMPPRosterServiceAdapter {
 		try {
 			return xmppServiceStub.changePassword(newPassword);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return "service connection failure.";
 		}
 	}
@@ -159,19 +159,19 @@ public class XMPPRosterServiceAdapter {
 		try {
 			xmppServiceStub.setAvatar();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
 	public void setAvatar(Bitmap bmp){
 		try {
-			Log.i(TAG, "cache directory : "+ImageHelper.getCacheDir(EmotApplication.getAppContext()));
+			//Log.i(TAG, "cache directory : "+ImageHelper.getCacheDir(EmotApplication.getAppContext()));
 			String filePath = ImageHelper.getCacheDir(EmotApplication.getAppContext());
 			saveBitmap(bmp, "profile", filePath, false);
 			//Save file bmp to file path
 			xmppServiceStub.setAvatar();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -187,7 +187,7 @@ public class XMPPRosterServiceAdapter {
                 return f;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Could not save bitmap", e);
+            //Log.e(TAG, "Could not save bitmap", e);
         } finally {
             try{
                 out.close();

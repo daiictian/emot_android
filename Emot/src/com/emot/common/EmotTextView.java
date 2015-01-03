@@ -42,10 +42,10 @@ public class EmotTextView extends TextView {
 		
 //		SpannableStringBuilder builder = new SpannableStringBuilder(text);
 //		super.setText((Spannable)builder, type);
-		Log.i(TAG, "EMOT TEXT = "+emotText + " TEXT = "+text);
+		//Log.i(TAG, "EMOT TEXT = "+emotText + " TEXT = "+text);
 		updateEmots(text, type);
 //		if(emotText==null || emotText.toString().equals("")){
-//			Log.i(TAG, "starting text = "+text);
+//			//Log.i(TAG, "starting text = "+text);
 //			super.setText(text, type);
 //			placeEmotTask = new PlaceEmot(text, type);
 //			placeEmotTask.execute();
@@ -57,8 +57,8 @@ public class EmotTextView extends TextView {
 	
 	public void updateEmots(CharSequence text, BufferType bufferType){
 		Spannable spannable = new SpannableStringBuilder(text);
-		Log.i(TAG, "String = " + spannable);
-		//Log.i(TAG, "len = "+spannable.length());
+		//Log.i(TAG, "String = " + spannable);
+		////Log.i(TAG, "len = "+spannable.length());
 		int len = spannable.length();
 		int curr = 0;
 		boolean findStartTag = true;
@@ -69,7 +69,7 @@ public class EmotTextView extends TextView {
 			    for(int j=0; j<ApplicationConstants.EMOT_TAGGER_START.length(); j++){
 			    	foundStr = foundStr + spannable.charAt(curr+j);
 			    }
-				//Log.i(TAG, "start Found string = "+foundStr);
+				////Log.i(TAG, "start Found string = "+foundStr);
 				if(foundStr.equals(ApplicationConstants.EMOT_TAGGER_START)){
 					startFound = curr;
 					curr = curr + ApplicationConstants.EMOT_TAGGER_START.length() - 1;
@@ -82,11 +82,11 @@ public class EmotTextView extends TextView {
 				for(int j=0; j<ApplicationConstants.EMOT_TAGGER_END.length(); j++){
 			    	foundStr = foundStr + spannable.charAt(curr+j);
 			    }
-				//Log.i(TAG, "end Found string = "+foundStr);
+				////Log.i(TAG, "end Found string = "+foundStr);
 				if(foundStr.equals(ApplicationConstants.EMOT_TAGGER_END)){
 					int endFound = curr + ApplicationConstants.EMOT_TAGGER_END.length();
 					findStartTag = true;
-					//Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
+					////Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
 					//DB QUERY TO GET IMAGE
 					String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
 					Bitmap emot_img = EmoticonDBHelper.getEmotImg(emot_hash);
@@ -99,13 +99,13 @@ public class EmotTextView extends TextView {
 		}
 		
 		this.emotText = spannable;
-		Log.i(TAG, "SETTING emotext = "+this.emotText + " .For text = "+text);
+		//Log.i(TAG, "SETTING emotext = "+this.emotText + " .For text = "+text);
 		super.setText(spannable, bufferType);
-		//Log.i(TAG, "Updating emots in emottextview ");
+		////Log.i(TAG, "Updating emots in emottextview ");
 	}
 	
 	public void replaceWithEmot(Spannable spannable, int start, int end, Bitmap emot){
-		//Log.i(TAG, "Spanneblae "+spannable);
+		////Log.i(TAG, "Spanneblae "+spannable);
         boolean set = true;
         for (ImageSpan span : spannable.getSpans(start, end, ImageSpan.class)){
             if (spannable.getSpanStart(span) >= start && spannable.getSpanEnd(span) <= end){
@@ -134,13 +134,13 @@ public class EmotTextView extends TextView {
 		protected Spannable doInBackground(Void... params) {
 			SpannableStringBuilder builder = new SpannableStringBuilder(text);
 			updateEmots(builder);
-			Log.i(TAG, "thread text = "+builder.toString());
+			//Log.i(TAG, "thread text = "+builder.toString());
 			return builder;
 		}
 		
 		public void updateEmots(Spannable spannable){
-			//Log.i(TAG, "String = " + spannable);
-			//Log.i(TAG, "len = "+spannable.length());
+			////Log.i(TAG, "String = " + spannable);
+			////Log.i(TAG, "len = "+spannable.length());
 			int len = spannable.length();
 			int curr = 0;
 			boolean findStartTag = true;
@@ -151,7 +151,7 @@ public class EmotTextView extends TextView {
 				    for(int j=0; j<ApplicationConstants.EMOT_TAGGER_START.length(); j++){
 				    	foundStr = foundStr + spannable.charAt(curr+j);
 				    }
-					//Log.i(TAG, "start Found string = "+foundStr);
+					////Log.i(TAG, "start Found string = "+foundStr);
 					if(foundStr.equals(ApplicationConstants.EMOT_TAGGER_START)){
 						startFound = curr;
 						curr = curr + ApplicationConstants.EMOT_TAGGER_START.length() - 1;
@@ -164,11 +164,11 @@ public class EmotTextView extends TextView {
 					for(int j=0; j<ApplicationConstants.EMOT_TAGGER_END.length(); j++){
 				    	foundStr = foundStr + spannable.charAt(curr+j);
 				    }
-					//Log.i(TAG, "end Found string = "+foundStr);
+					////Log.i(TAG, "end Found string = "+foundStr);
 					if(foundStr.equals(ApplicationConstants.EMOT_TAGGER_END)){
 						int endFound = curr + ApplicationConstants.EMOT_TAGGER_END.length();
 						findStartTag = true;
-						//Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
+						////Log.i(TAG, "start - end : "+ spannable.charAt(startFound) + spannable.charAt(endFound-1));
 						//DB QUERY TO GET IMAGE
 						String emot_hash = spannable.subSequence(startFound + ApplicationConstants.EMOT_TAGGER_START.length(), endFound - ApplicationConstants.EMOT_TAGGER_END.length()).toString();
 						Bitmap emot_img = EmoticonDBHelper.getEmotImg(emot_hash);
@@ -179,11 +179,11 @@ public class EmotTextView extends TextView {
 					}
 				}
 			}
-			//Log.i(TAG, "Updating emots in emottextview ");
+			////Log.i(TAG, "Updating emots in emottextview ");
 		}
 		
 		public void replaceWithEmot(Spannable spannable, int start, int end, Bitmap emot){
-			//Log.i(TAG, "Spanneblae "+spannable);
+			////Log.i(TAG, "Spanneblae "+spannable);
 	        boolean set = true;
 	        for (ImageSpan span : spannable.getSpans(start, end, ImageSpan.class)){
 	            if (spannable.getSpanStart(span) >= start && spannable.getSpanEnd(span) <= end){
@@ -201,7 +201,7 @@ public class EmotTextView extends TextView {
 		@Override
 		protected void onPostExecute(Spannable result) {
 			//super.onPostExecute(result);
-			Log.i(TAG, "emot text = "+this.text+" span = "+result);
+			//Log.i(TAG, "emot text = "+this.text+" span = "+result);
 			EmotTextView.this.emotText = result;
 			EmotTextView.super.setText(result, this.bufferType);
 		}

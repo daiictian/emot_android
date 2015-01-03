@@ -74,7 +74,7 @@ public class XMPPService extends GenericService {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if(intent.getAction().equals("GROUP_SUBJECT_CHANGED")){
-				Log.i(TAG, "Broadcast received " + "GROUP_SUBJECT_CHANGED");
+				//Log.i(TAG, "Broadcast received " + "GROUP_SUBJECT_CHANGED");
 				if(mSmackable != null && mSmackable.isAuthenticated()){
 					mSmackable.changeGroupSubject(intent.getStringExtra("grpID"),intent.getStringExtra("newGrpSubject"));
 				}else{
@@ -91,7 +91,7 @@ public class XMPPService extends GenericService {
 		userStartedWatching();
 		Long date = intent.getLongExtra("sinceDate", -1);
 		grpSubject = intent.getStringExtra("groupSubject");
-		Log.i(TAG, "date is " +date);
+		//Log.i(TAG, "date is " +date);
 		String chatPartner = intent.getDataString();
 		boolean isforgrpchat = intent.getBooleanExtra("isforgrpchat", false);
 		if ((chatPartner != null) && !isforgrpchat) {
@@ -107,7 +107,7 @@ public class XMPPService extends GenericService {
 
 	@Override
 	public void onRebind(Intent intent) {
-		Log.i(TAG, "on Rebind called");
+		//Log.i(TAG, "on Rebind called");
 		userStartedWatching();
 		String chatPartner = intent.getDataString();
 		if ((chatPartner != null)) {
@@ -142,12 +142,12 @@ public class XMPPService extends GenericService {
 	                haveConnectedMobile = true;
 	    }
 	    boolean a = haveConnectedWifi || haveConnectedMobile;
-	    Log.i(TAG,"have network connection " +a);
+	    //Log.i(TAG,"have network connection " +a);
 	    return haveConnectedWifi || haveConnectedMobile;
 	}
 	private BroadcastReceiver mConnectivityChangedReceiver = new BroadcastReceiver() {      
         public void onReceive(Context context, Intent intent) {
-            Log.i(TAG, "Hey, net?");
+            //Log.i(TAG, "Hey, net?");
            
             	if(haveNetworkConnection()){
             		new Thread(new Runnable() {
@@ -156,19 +156,19 @@ public class XMPPService extends GenericService {
 						public void run() {
 						try {
 							if(mSmackable != null){
-								Log.i(TAG, "while network switch");
+								//Log.i(TAG, "while network switch");
 							mSmackable.requestConnectionState(ConnectionState.ONLINE);
 							}
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
+							//e.printStackTrace();
 						}
 							
 						}
 					}).start();
 				
             	}else{
-            		Log.i(TAG, "Not having WiFi or Mobile connection");
+            		//Log.i(TAG, "Not having WiFi or Mobile connection");
             	}
 			
         }};
@@ -177,7 +177,7 @@ public class XMPPService extends GenericService {
 			
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				Log.i(TAG,"Missed Call received");
+				//Log.i(TAG,"Missed Call received");
 				
 			}
 		};
@@ -194,7 +194,7 @@ public class XMPPService extends GenericService {
 		                    "MyWakeLock");
 		            if(!wakeLock.isHeld()){
 		                wakeLock.acquire();
-		                Log.i(TAG, "WakeLock acquired!");
+		                //Log.i(TAG, "WakeLock acquired!");
 		            }
 
 		           
@@ -204,7 +204,7 @@ public class XMPPService extends GenericService {
 		            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL , "MyWifiLock");
 		            if(!wifiLock.isHeld()){
 		                wifiLock.acquire();
-		                Log.i(TAG, "WiFiLock acquired!");
+		                //Log.i(TAG, "WiFiLock acquired!");
 		            }
 
 		            
@@ -213,7 +213,7 @@ public class XMPPService extends GenericService {
 //		            if (wakeLock != null) {
 //		                if (wakeLock.isHeld()) {
 //		                    wakeLock.release();
-//		                    Log.i("ServiceAlarmBroadcastReceiver", "WakeLock released!");
+//		                    //Log.i("ServiceAlarmBroadcastReceiver", "WakeLock released!");
 //		                }
 //		            }
 //
@@ -221,7 +221,7 @@ public class XMPPService extends GenericService {
 //		            if (wifiLock != null) {
 //		                if (wifiLock.isHeld()) {
 //		                    wifiLock.release();
-//		                    Log.i("ServiceAlarmBroadcastReceiver", "WiFi Lock released!");
+//		                    //Log.i("ServiceAlarmBroadcastReceiver", "WiFi Lock released!");
 //		                }
 //		            }
 		        }
@@ -231,7 +231,7 @@ public class XMPPService extends GenericService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.i(TAG, "JABBER ID " + mConfig.jabberID);
+		//Log.i(TAG, "JABBER ID " + mConfig.jabberID);
 		createServiceRosterStub();
 		createServiceChatStub();
 		createGroupServiceChatStub();
@@ -278,7 +278,7 @@ public class XMPPService extends GenericService {
 		  if (wakeLock != null) {
               if (wakeLock.isHeld()) {
                   wakeLock.release();
-                  Log.i("ServiceAlarmBroadcastReceiver", "WakeLock released!");
+                  //Log.i("ServiceAlarmBroadcastReceiver", "WakeLock released!");
               }
           }
 
@@ -286,7 +286,7 @@ public class XMPPService extends GenericService {
           if (wifiLock != null) {
               if (wifiLock.isHeld()) {
                   wifiLock.release();
-                  Log.i("ServiceAlarmBroadcastReceiver", "WiFi Lock released!");
+                  //Log.i("ServiceAlarmBroadcastReceiver", "WiFi Lock released!");
               }
           }
 
@@ -333,7 +333,7 @@ public class XMPPService extends GenericService {
 				
 				if (mSmackable != null){
 				//	return mSmackable.sendGroupMessage(message);
-				Log.i(TAG, "mSmackable.sendGroupMessage")	;
+				//Log.i(TAG, "mSmackable.sendGroupMessage")	;
 				mSmackable.sendGroupMessage(message, user);
 				}else{
 					SmackableImp.sendOfflineMessage(getContentResolver(),
@@ -362,12 +362,12 @@ public class XMPPService extends GenericService {
 			public boolean createGroup(String grpName,
 					List<Contact> members){
 				if(mSmackable != null && mSmackable.isAuthenticated()){
-				Log.i(TAG, "members   ----" +members.get(0).getName());
+				//Log.i(TAG, "members   ----" +members.get(0).getName());
 				mSmackable.initMUC(grpName);
 				mSmackable.joinUsers(members);
 				return true;
 				}else{
-					Log.i(TAG, "not connected to network");
+					//Log.i(TAG, "not connected to network");
 					Intent intent = new Intent();
 					intent.setAction("GROUP_CREATED_ERROR");
 					mSmackable.getService().sendBroadcast(intent);
@@ -379,9 +379,9 @@ public class XMPPService extends GenericService {
 			@Override
 			public void joinGroup(String grpName, boolean isCreateGroup,
 					long date) throws RemoteException {
-				Log.i(TAG, "isCreateGroup is " +isCreateGroup);
+				//Log.i(TAG, "isCreateGroup is " +isCreateGroup);
 				if(!isCreateGroup){
-					Log.i(TAG, "joining group " +grpName);
+					//Log.i(TAG, "joining group " +grpName);
 					mSmackable.joinGroup(grpName, date);
 					
 				}
@@ -390,7 +390,7 @@ public class XMPPService extends GenericService {
 
 			@Override
 			public void leaveGroup(String grpName) throws RemoteException {
-				Log.i(TAG, "leaving group " +grpName);
+				//Log.i(TAG, "leaving group " +grpName);
 				mSmackable.leaveGroup(grpName);
 				
 			}
@@ -419,12 +419,12 @@ public class XMPPService extends GenericService {
 		mServiceChatConnection = new IXMPPChatService.Stub() {
 			
 			public void registerChatCallback(IXMPPChatCallback chatCallback){
-				Log.i(TAG, "Registering chat callback");
+				//Log.i(TAG, "Registering chat callback");
 				chatCallbacks.register(chatCallback);
 			}
 			
 			public void unregisterChatCallback(IXMPPChatCallback chatCallback){
-				Log.i(TAG, "Unregistering chat callback");
+				//Log.i(TAG, "Unregistering chat callback");
 				chatCallbacks.unregister(chatCallback);
 			}
 
@@ -463,7 +463,7 @@ public class XMPPService extends GenericService {
 
 			public void registerRosterCallback(IXMPPRosterCallback callback)
 					throws RemoteException {
-				Log.i(TAG, "Registering callback "+callback);
+				//Log.i(TAG, "Registering callback "+callback);
 				if (callback != null)
 					mRosterCallbacks.register(callback);
 			}
@@ -489,7 +489,7 @@ public class XMPPService extends GenericService {
 
 			public void setStatusFromConfig()
 					throws RemoteException {
-				Log.i(TAG, "mconfig val "+mConfig.statusMessage);
+				//Log.i(TAG, "mconfig val "+mConfig.statusMessage);
 				if (mSmackable != null) { // this should always be true, but stil...
 					mSmackable.setStatusFromConfig();
 					updateServiceNotification();
@@ -599,7 +599,7 @@ public class XMPPService extends GenericService {
 			cs = mSmackable.getConnectionState();
 		}
 
-		Log.i(TAG, "Broadcasting "+cs);
+		//Log.i(TAG, "Broadcasting "+cs);
 		// HACK to trigger show-offline when XEP-0198 reconnect is going on
 //		getContentResolver().notifyChange(RosterProvider.CONTENT_URI, null);
 //		getContentResolver().notifyChange(RosterProvider.GROUPS_URI, null);
@@ -660,12 +660,12 @@ public class XMPPService extends GenericService {
 	
 	private void broadcastChatState(int state, String from) {
 		final int broadCastItems = chatCallbacks.beginBroadcast();
-		Log.i(TAG, "Chat callbacks = "+broadCastItems);
+		//Log.i(TAG, "Chat callbacks = "+broadCastItems);
 		for (int i = 0; i < broadCastItems; i++) {
 			try {
 				chatCallbacks.getBroadcastItem(i).chatStateChanged(state, from);
 			} catch (RemoteException e) {
-				Log.i(TAG, "caught RemoteException: " + e.getMessage());
+				//Log.i(TAG, "caught RemoteException: " + e.getMessage());
 			}
 		}
 		chatCallbacks.finishBroadcast();
@@ -700,7 +700,7 @@ public class XMPPService extends GenericService {
 	// called from Smackable when connection broke down
 	private void connectionFailed(String reason) {
 		logInfo("connectionFailed: " + reason);
-		Log.i(TAG, "network connected? " + networkConnected() + " authenticated? " + mSmackable.isAuthenticated());
+		//Log.i(TAG, "network connected? " + networkConnected() + " authenticated? " + mSmackable.isAuthenticated());
 		//mLastConnectionError = reason;
 		if (!networkConnected()) {
 			mReconnectInfo = getString(R.string.conn_no_network);
@@ -751,7 +751,7 @@ public class XMPPService extends GenericService {
 		try {
 			mSmackable = new SmackableImp(mConfig, getContentResolver(), this);
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 
 		mSmackable.registerCallback(new XMPPServiceCallback() {
@@ -791,7 +791,7 @@ public class XMPPService extends GenericService {
 
 			@Override
 			public void chatStateChanged(int state, String from) {
-				Log.i(TAG, "state = "+state + " from = "+from );
+				//Log.i(TAG, "state = "+state + " from = "+from );
 				broadcastChatState(state, from);
 			}
 		});
@@ -803,7 +803,7 @@ public class XMPPService extends GenericService {
 		    @Override
 		    public void run() {
 		    	boolean rnig = mSmackable.isRunning();
-		    	Log.i(TAG, "Running status = "+rnig);
+		    	//Log.i(TAG, "Running status = "+rnig);
 		    	if(lastRunningStatus!=rnig){
 		    		if(rnig){
 		    			EmotApplication.setValue(PreferenceConstants.STATUS_MODE, StatusMode.available.name());

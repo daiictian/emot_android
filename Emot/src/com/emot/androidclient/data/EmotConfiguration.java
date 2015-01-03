@@ -87,7 +87,7 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 	}
 
 	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-		Log.i(TAG, "onSharedPreferenceChanged(): " + key);
+		//Log.i(TAG, "onSharedPreferenceChanged(): " + key);
 		loadPrefs();
 		if (RECONNECT_PREFS.contains(key))
 			reconnect_required = true;
@@ -96,7 +96,7 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 	}
 
 	private void splitAndSetJabberID(String jid) {
-		Log.i(TAG, "jabber id = "+jid);
+		//Log.i(TAG, "jabber id = "+jid);
 		String[] res = jid.split("@");
 		this.userName = res[0];
 		this.server = res[1];
@@ -109,7 +109,7 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 			if (this.customServer.length() == 0)
 				this.customServer = GMAIL_SERVER;
 		}
-		Log.i(TAG, "username = "+userName);
+		//Log.i(TAG, "username = "+userName);
 	}
 
 	private int validatePriority(int jabPriority) {
@@ -125,7 +125,7 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		
 		SharedPreferences prefs = EmotApplication.getPrefs();
-		Log.i(TAG, "load prefs called!!! " + prefs.getString(PreferenceConstants.STATUS_MESSAGE, ""));
+		//Log.i(TAG, "load prefs called!!! " + prefs.getString(PreferenceConstants.STATUS_MESSAGE, ""));
 		this.jid_configured = false;
 
 		this.isLEDNotify = prefs.getBoolean(PreferenceConstants.LEDNOTIFY,
@@ -174,9 +174,9 @@ public class EmotConfiguration implements OnSharedPreferenceChangeListener {
 			splitAndSetJabberID(XMPPHelper.verifyJabberID(jabberID));
 			this.jid_configured = true;
 		} catch (EmotXMPPAdressMalformedException e) {
-			Log.e(TAG, "Exception in getPreferences(): " + e);
+			//Log.e(TAG, "Exception in getPreferences(): " + e);
 		}
-		Log.i(TAG, "status message = "+statusMessage + " config obj "+config_instance);
+		//Log.i(TAG, "status message = "+statusMessage + " config obj "+config_instance);
 		
 	}
 

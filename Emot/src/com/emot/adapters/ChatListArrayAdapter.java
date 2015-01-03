@@ -50,7 +50,7 @@ public class ChatListArrayAdapter extends ArrayAdapter<ChatMessage> {
 		View v = convertView;  
 
 		CompleteListViewHolder viewHolder;  
-		//Log.i("ChatListArrayAdapter", "convertView " +convertView);
+		////Log.i("ChatListArrayAdapter", "convertView " +convertView);
 		//mMessageContainer.setGravity(Gravity.RIGHT);
 		mChatMessage = mList.get(position);
 
@@ -83,13 +83,13 @@ public class ChatListArrayAdapter extends ArrayAdapter<ChatMessage> {
 		viewHolder = new CompleteListViewHolder(v);
 		v.setTag(viewHolder); 
 		if(mChatMessage.isRight() ){
-			//Log.i(TAG, "IS RIGHT = "+mChatMessage.getmMessage());
+			////Log.i(TAG, "IS RIGHT = "+mChatMessage.getmMessage());
 			viewHolder.chatBoxLeft.setVisibility(View.GONE);
 			viewHolder.chatBoxRight.setVisibility(View.VISIBLE);
 			viewHolder.mChatTextRight.setText(mChatMessage.getmMessage());
 			viewHolder.mDateTimeRight.setText(mChatMessage.getmTime());
 		}else{
-			Log.i(TAG, "IS NOT RIGHT = "+mChatMessage.getmMessage());
+			//Log.i(TAG, "IS NOT RIGHT = "+mChatMessage.getmMessage());
 			viewHolder.chatBoxRight.setVisibility(View.GONE);
 			viewHolder.chatBoxLeft.setVisibility(View.VISIBLE);
 			viewHolder.mChatTextLeft.setText(mChatMessage.getmMessage(), TextView.BufferType.SPANNABLE);
@@ -102,13 +102,13 @@ public class ChatListArrayAdapter extends ArrayAdapter<ChatMessage> {
 		//  viewHolder = (CompleteListViewHolder) v.getTag();  
 		// }
 		//  if(!mChatMessage.isRight() ){
-		//Log.i("ChatListArrayAdapter", mChatMessage.getmTime() +"Left Aigned");
+		////Log.i("ChatListArrayAdapter", mChatMessage.getmTime() +"Left Aigned");
 
 		//   viewHolder.mChatTextRight.setText(mChatMessage.getmMessage());
 		//    viewHolder.mDateTimeRight.setText(mChatMessage.getmTime());
 		// viewHolder.mDateTime.setGravity(Gravity.RIGHT);
 		//  }else{
-		//Log.i("ChatListArrayAdapter", mChatMessage.getmMessage() + "Right Aigned");
+		////Log.i("ChatListArrayAdapter", mChatMessage.getmMessage() + "Right Aigned");
 
 
 
