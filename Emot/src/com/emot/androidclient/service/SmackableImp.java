@@ -989,31 +989,31 @@ public class SmackableImp implements Smackable {
 
 			//joinGroups();
 			//sendOfflineMessages();
-				//				scheduledExecutorService.schedule(new Runnable() {
-				//
-				//							@Override
-				//							public void run() {
-				//								if(mXMPPConnection != null && !mXMPPConnection.isAuthenticated() && !sStopService){
-				//
-				//								}else if(sStopService){
-				//									
-				//									scheduledExecutorService.shutdown();
-				//								}else{
-				//									
-				//									try {
-				//										sStopService = true;
-				//										
-				//										mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
-				//									} catch (XMPPException e) {
-				//										sStopService = false;
-				//										// TODO Auto-generated catch block
-				//										e.printStackTrace();
-				//									}
-				//								}
-				//
-				//							}
-				//						}, 5, TimeUnit.SECONDS);
-							//initMUC("myroom");
+			//				scheduledExecutorService.schedule(new Runnable() {
+			//
+			//							@Override
+			//							public void run() {
+			//								if(mXMPPConnection != null && !mXMPPConnection.isAuthenticated() && !sStopService){
+			//
+			//								}else if(sStopService){
+			//									
+			//									scheduledExecutorService.shutdown();
+			//								}else{
+			//									
+			//									try {
+			//										sStopService = true;
+			//										
+			//										mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
+			//									} catch (XMPPException e) {
+			//										sStopService = false;
+			//										// TODO Auto-generated catch block
+			//										e.printStackTrace();
+			//									}
+			//								}
+			//
+			//							}
+			//						}, 5, TimeUnit.SECONDS);
+			//initMUC("myroom");
 
 			Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 			Log.d(TAG, "SM: can resume = " + mStreamHandler.isResumePossible() + " needbind=" + need_bind);
@@ -1023,7 +1023,7 @@ public class SmackableImp implements Smackable {
 			}else{
 				EmotApplication.setValue(PreferenceConstants.STATUS_MODE, StatusMode.away.name());
 			}
-			
+
 			if (need_bind) {
 				mStreamHandler.notifyInitialLogin();
 				setStatusFromConfig();
@@ -1286,7 +1286,7 @@ public class SmackableImp implements Smackable {
 
 		return false;
 	}
-
+	private String acknowledgedPacketID;
 	public void sendNotacknowledgedMessages(String jid) {
 		try{
 			Log.i(TAG, " -- sending notacknowledgedMessages to "+jid+" -- ");
@@ -1311,6 +1311,7 @@ public class SmackableImp implements Smackable {
 				String toJID = cursor.getString(JID_COL);
 				String message = cursor.getString(MSG_COL);
 				String packetID = cursor.getString(PACKETID_COL);
+
 				String msgType = cursor.getString(MSG_TYPE);
 				long ts = cursor.getLong(TS_COL);
 				Log.i(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
@@ -1767,7 +1768,7 @@ public class SmackableImp implements Smackable {
 							if (msg.getType() == Message.Type.error) {
 								if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
 									Log.i(TAG, "message failed !!!");
-									mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
+									//mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
 									sendFailedMessages();
 								}
 								return; // we do not want to add errors as "incoming messages"
@@ -1784,13 +1785,14 @@ public class SmackableImp implements Smackable {
 							if (msg.getType() == Message.Type.error)
 								is_new = ChatConstants.DS_FAILED;
 							if(msg.getType() == Message.Type.chat ){
-								addChatMessageToDB(direction, fromJID, "",chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
-								if (direction == ChatConstants.INCOMING)
+
+								boolean isPacketPresent = addChatMessageToDB(direction, fromJID, "",chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
+								if (direction == ChatConstants.INCOMING && !isPacketPresent)
 									mServiceCallBack.newMessage(fromJID,chatMessage, (cc != null), false, getBareGJID(from));
-							}else if(msg.getType() == Message.Type.groupchat){
+							}else if(msg.getType() == Message.Type.groupchat ){
 								EmotApplication.setLongValue("historySince", ts);
-								addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, null);
-								if (direction == ChatConstants.INCOMING)
+								boolean isPacketPresent = addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, null);
+								if (direction == ChatConstants.INCOMING && !isPacketPresent)
 									mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), true, getBareGJID(from));	
 							}
 						}
@@ -1801,7 +1803,7 @@ public class SmackableImp implements Smackable {
 						// display error inline
 						if (msg.getType() == Message.Type.error) {
 							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
-								mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
+								//mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
 								//sendFailedMessages();
 							}
 							return; // we do not want to add errors as "incoming messages"
@@ -1820,17 +1822,19 @@ public class SmackableImp implements Smackable {
 
 						//addChatMessageToDB(direction, fromJID, chatMessage, is_new, ts, msg.getPacketID());
 						if (direction == ChatConstants.INCOMING){
-							if(msg.getType() == Message.Type.chat && !msg.getBody().contains("you have been tagged")){
-								addChatMessageToDB(direction, fromJID, "",chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
-								mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), false, getBareGJID(from));
-							}else if(msg.getType() == Message.Type.groupchat ||  msg.getBody().contains("you have been tagged")){
+							if(msg.getType() == Message.Type.chat ){
+								boolean isPacketPresent = addChatMessageToDB(direction, fromJID, "",chatMessage, is_new, ts, msg.getPacketID(), CHATTYPE, null);
+								if(!isPacketPresent){
+									mServiceCallBack.newMessage(fromJID, chatMessage, (cc != null), false, getBareGJID(from));
+								}
+							}else if(msg.getType() == Message.Type.groupchat ){
 
 								Log.i(TAG, "Message from group member " +getBareGJID(from));
 								EmotApplication.setLongValue("historySince", ts);
-								addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, getBareGJID(from));
-
-								mServiceCallBack.newMessage(getBareJID(fromJID), chatMessage, (cc != null), true, getBareGJID(from));
-
+								boolean isPacketPresent = addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, getBareGJID(from));
+								if(!isPacketPresent){
+									mServiceCallBack.newMessage(getBareJID(fromJID), chatMessage, (cc != null), true, getBareGJID(from));
+								}
 							}else{
 								Log.i(TAG, "Unknown message type");
 							}
@@ -1874,8 +1878,9 @@ public class SmackableImp implements Smackable {
 		mXMPPConnection.addPacketListener(mPresenceListener, new PacketTypeFilter(Presence.class));
 	}
 
-	private void addChatMessageToDB(int direction, String JID, String grpSubject,
+	private boolean addChatMessageToDB(int direction, String JID, String grpSubject,
 			String message, int delivery_status, long ts, String packetID, String chatType, String messageSenderinGroup) {
+
 		if(direction == ChatConstants.INCOMING){
 			Cursor oldChat = mContentResolver.query(
 					ChatProvider.CONTENT_URI, 
@@ -1886,7 +1891,7 @@ public class SmackableImp implements Smackable {
 					);
 			if(oldChat.getCount()>0){
 				Log.i(TAG, "Packet ID already present");
-				return;
+				return true;
 			}
 		}
 
@@ -1903,6 +1908,7 @@ public class SmackableImp implements Smackable {
 		values.put(ChatConstants.MESSAGE_SENDER_IN_GROUP, messageSenderinGroup);
 
 		mContentResolver.insert(ChatProvider.CONTENT_URI, values);
+		return false;
 	}
 
 	private String getDateTime() {
@@ -2068,7 +2074,7 @@ public class SmackableImp implements Smackable {
 
 
 		new Thread(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				try{
@@ -2116,7 +2122,7 @@ public class SmackableImp implements Smackable {
 				}
 			}
 		}).start();
-		
+
 	}
 
 	public class UpdateAvatarTask extends AsyncTask<Void, Void, Boolean>{

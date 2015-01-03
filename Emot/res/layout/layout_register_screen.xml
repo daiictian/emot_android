@@ -84,6 +84,14 @@
             android:text="@string/send"
             style="@style/btnStyleOrange"
             android:layout_marginTop="20dp" />
+        
+        <Button
+            android:id="@+id/Retry"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            
+            style="@style/btnStyleOrange"
+            android:layout_marginTop="20dp" />
     </LinearLayout>
 
 </LinearLayout>
