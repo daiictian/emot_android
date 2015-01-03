@@ -95,6 +95,7 @@ public class Registration extends ActionBarActivity {
 	protected void onDestroy() {
 		Log.i(TAG, "Activity destroy called !!!");
 		super.onDestroy();
+		unregisterReceiver(receiver);
 		unbindXMPPService();
 	}
 
@@ -159,6 +160,8 @@ public class Registration extends ActionBarActivity {
 		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL(EmoticonDBHelper.SQL_CREATE_TABLE_EMOT);
 		//		EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase().execSQL("insert into emots select * from emoticons");
 	}
+	
+	
 
 	public String getSHA(Context context) {
 		String sign=null;

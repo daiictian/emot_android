@@ -97,9 +97,9 @@ public class LastChatScreen extends ActionBarActivity {
 	        case R.id.action_search:
 	            startActivity(new Intent(LastChatScreen.this, ContactScreen.class));
 	            return true;
-	        case R.id.action_settings:
-	        	startActivity(new Intent(LastChatScreen.this, CreateGroup.class));
-	        	return true;
+//	        case R.id.action_settings:
+//	        	startActivity(new Intent(LastChatScreen.this, CreateGroup.class));
+//	        	return true;
 	        
 	        default:
 	            return super.onOptionsItemSelected(item);

@@ -246,6 +246,9 @@ public class ChatScreen extends ActionBarActivity {
 			messageToCopyList.clear();
 			
 			return true;
+		case R.id.action_settings:
+			startActivity(new Intent(this, UpdateProfileScreen.class));
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -748,8 +751,11 @@ public class ChatScreen extends ActionBarActivity {
 							R.drawable.double_tick));
 					break;
 				case ChatConstants.DS_FAILED:
+//					mChatTickLeft.setImageDrawable(getResources().getDrawable(
+//							R.drawable.fail_tick));
+					//Keeping Single tick for case of failed to fool user
 					mChatTickLeft.setImageDrawable(getResources().getDrawable(
-							R.drawable.fail_tick));
+							R.drawable.single_tick));
 					break;
 				}
 			} else {

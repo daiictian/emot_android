@@ -58,14 +58,15 @@
     <string name="selectParticipant">Select Participant</string>
     <string name="submit">SUBMIT</string>
     <string name="invite">INVITE FRIENDS</string>
-    <string name="invite_text">Hi there! I am using emot. Lets you chat through emoticons. To experience the awesomeness download the app from here.</string>
+    <string name="invite_text">Hi there! I am using emot. Lets you chat through smiley suggestions. Download the app from here.</string>
     <string name="createGroup">CREATE GROUP</string>
     <string name="send">SEND</string>
     <string name="next">NEXT</string>
     <string name="title_activity_create_group">CreateGroup</string>
 	<string name="participants">Group Members</string>
 	<string name="blank_chat_hi"> Hello there !  </string>
-	<string name="seem_new">Welcome to emot. You seem new here. Start chatting with anyone on your contact list to experience the awesomeness...</string>
+	<string name="seem_new">Welcome to emot. You seem new here. Start chatting with anyone on your contact list. By the way do checkout our smiley suggestions as you chat :)</string>
     <string name="done"> DONE  </string>
     <string name="default_status"> Whats up !</string>
+    <string name="update_profile">Update Profile</string>
 </resources>

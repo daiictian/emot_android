@@ -82,8 +82,8 @@ public abstract class GenericService extends Service {
 			boolean showNotification, boolean silent_notification, boolean is_error, boolean grpchat, String messageSenderInGrp) {
 		if (!showNotification) {
 			if (is_error)
-				shortToastNotify(getString(R.string.notification_error) + " " + message);
-			// only play sound and return
+				//shortToastNotify(getString(R.string.notification_error) + " " + message);
+				// only play sound and return
 			try {
 				if (!silent_notification && !Uri.EMPTY.equals(mConfig.notifySound))
 					RingtoneManager.getRingtone(getApplicationContext(), mConfig.notifySound).play();
