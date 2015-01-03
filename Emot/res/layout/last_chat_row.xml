@@ -50,7 +50,8 @@
             android:lines="1"
             android:text="chat"
             android:textColor="@drawable/list_item_text_selector"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:singleLine="true" />
     </LinearLayout>
     <LinearLayout
         android:layout_width="wrap_content"

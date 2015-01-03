@@ -18,6 +18,9 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -196,7 +199,23 @@ public class Registration extends ActionBarActivity {
 
 			@Override
 			public void onClick(View v) {
+				ActivityManager am = (ActivityManager) getSystemService(Activity.ACTIVITY_SERVICE);
+				try{
+				List<RunningServiceInfo> rsi = am.getRunningServices(20);
+				if(rsi != null){
+				for(RunningServiceInfo a: rsi){
+					ComponentName n = a.service;
+					Log.i(TAG, "Killing process " + n.getPackageName());
+					am.killBackgroundProcesses(n.getPackageName());
+				}
+				}
+				}catch(Exception e){
+					
+				}
+			    
 				pd.show();
+				
+			    
 				mMobileNumber = mEnterMobile.getText().toString().replaceAll("[^\\d.]", "");
 				if(isNumberValid(mEnterMobile.getText().toString(), EmotApplication.getValue(PreferenceConstants.COUNTRY_CODE, ""))){
 					String url = WebServiceConstants.HTTP + "://"+ 
@@ -267,6 +286,7 @@ public class Registration extends ActionBarActivity {
 			@Override
 			public void onClick(View v) {
 				pd.show();
+				
 				String vCode = mEnterVerificationCode.getText().toString();	
 				String url = WebServiceConstants.HTTP + "://"+ 
 						WebServiceConstants.SERVER_IP
