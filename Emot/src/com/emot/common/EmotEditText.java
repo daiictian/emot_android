@@ -12,8 +12,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
-import android.support.v4.view.ViewPager.LayoutParams;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
@@ -31,13 +29,13 @@ import com.emot.model.Emot;
 import com.emot.model.EmotApplication;
 import com.emot.persistence.DBContract;
 import com.emot.persistence.EmoticonDBHelper;
-import com.emot.screens.ChatScreen;
 import com.emot.screens.R;
 
 public class EmotEditText extends EditText {
 
 	private static final String TAG = EmotEditText.class.getSimpleName();
-	private UpdateEmotSuggestions updateEmotTask;
+
+	private static final String COLON_REPLACEMENT = "zyx";
 
 	//Suggestion views
 	
@@ -48,7 +46,7 @@ public class EmotEditText extends EditText {
 	private View toggleLastEmot;
 	private boolean recent_emot_clicked = false;
 	
-	private HashMap<String, Boolean> suggestedEmots = new HashMap<String, Boolean>();
+	private HashMap<String, View> suggestedEmots = new HashMap<String, View>();
 	Stack<Integer> lastEmotIndex = new Stack<Integer>();
 
 	public EmotEditText(Context context) {
@@ -247,31 +245,8 @@ public class EmotEditText extends EditText {
 							Log.i(TAG, "emot img "+emotImg);
 							Log.i(TAG, "Emot hash is "+hash);
 							Bitmap emotBmp = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, hash);
-							final Emot emot = new Emot(hash, emotBmp);
-							ImageView view = new ImageView(EmotApplication.getAppContext());
-							view.setId(0);
-							RelativeLayout.LayoutParams params = getEmotParams();
-							view.setLayoutParams(params);
-							view.setImageBitmap(emot.getEmotImg());
-							view.setDrawingCacheEnabled(true);
-							view.setOnClickListener(new OnClickListener() {
-
-								@Override
-								public void onClick(View v) {
-									Log.i(TAG, "Image clicked !!!");
-									recent_emot_clicked = true;
-									EmotEditText.this.addEmot(emot);
-									ContentValues values = new ContentValues();
-									int time = (int) (System.currentTimeMillis());
-									values.put(DBContract.EmotsDBEntry.LAST_USED, time);
-									EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
-											DBContract.EmotsDBEntry.TABLE_NAME, 
-											values, 
-											DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
-											null
-									);
-								}
-							});
+							Emot emot = new Emot(hash, emotBmp);
+							View view = getEmotSuggestView(emot);
 							emotRecentLayout.addView(view);
 						}
 						cr.close();
@@ -318,28 +293,30 @@ public class EmotEditText extends EditText {
 		}
 		Log.i(TAG, "text = "+txt + " length="+txt.length());
 		
+		int findFrom = 0;
 		if(!lastEmotIndex.isEmpty() && lastSpace<lastEmotIndex.peek()){
 			if(txt.length()-1<lastEmotIndex.peek()){
 				return;
 			}
 			Log.i(TAG, "lastEmotIndex = "+lastEmotIndex.peek());
-			lastWord = txt.substring(lastEmotIndex.peek());
+			findFrom = lastEmotIndex.peek() + 1;
 		}else{
-			lastWord = txt.substring(lastSpace);
+			if(lastSpace==0){
+				findFrom = lastSpace;
+			}else{
+				findFrom = lastSpace + 1;
+			}
+			
 		}
+		lastWord = txt.substring(findFrom);
 		Log.i(TAG, "lastWord = "+lastWord);
 		
-		//Start emoticon suggestiononly if word length greater than 3
-		if(lastWord.length()>2){
-			if(updateEmotTask!=null){
-				updateEmotTask.cancel(true);
-			}
-			//updateEmotTask = new UpdateEmotSuggestions(lastWord);
-			//updateEmotTask.execute();
-			
-			
+		//Start emoticon suggestion only if word length greater than 3
+		if(lastWord.length()>2 || (lastWord.length()>1 && lastWord.startsWith(":"))){
 			//Applying different technique for stupid android phones
-			new Thread(new UpdateRunnable(lastWord)).start();
+			String newLastWord = lastWord.replaceAll(":", COLON_REPLACEMENT);
+			new Thread(new UpdateRunnable(newLastWord)).start();
+			
 		}
 		
 		//Log.i(TAG, "Text changed 222" + s.toString());
@@ -353,13 +330,14 @@ public class EmotEditText extends EditText {
 		recent_emot_clicked = false;
 	}
 	
-	public class UpdateRunnable implements Runnable{
+	private class UpdateRunnable implements Runnable{
 		private String lastWord;
 		public UpdateRunnable(String lastWord){
 			this.lastWord = lastWord;
 		}
 		
 		public void run() {
+			Log.i(TAG, "Matching last word : "+lastWord);
 			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 					DBContract.EmotsDBEntry.TABLE_NAME, 
 					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH, DBContract.EmotsDBEntry.EMOT_IMG_LARGE}, 
@@ -375,18 +353,13 @@ public class EmotEditText extends EditText {
 				Log.i(TAG, "Emot hash is "+hash);
 				Bitmap emotBmp = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, hash);
 				Emot emot = new Emot(hash, emotBmp);
-				
-				
-				
-					Log.i(TAG, "Is instance of chatscreen");
-					context.runOnUiThread(new UiUpdateRunnable(emot));
-				
-				
+				Log.i(TAG, "Is instance of chatscreen");
+				context.runOnUiThread(new UiUpdateRunnable(emot));
 			}
 			cr.close();
 		}
 		
-		public class UiUpdateRunnable implements Runnable{
+		private class UiUpdateRunnable implements Runnable{
 
 			private Emot emot;
 			public UiUpdateRunnable(Emot emot){
@@ -396,33 +369,18 @@ public class EmotEditText extends EditText {
 			@Override
 			public void run() {
 
-				//final Emot emot = values[0];
-				ImageView view = new ImageView(EmotApplication.getAppContext());
-				view.setId(0);
-				RelativeLayout.LayoutParams params = getEmotParams();
-				view.setLayoutParams(params);
-				view.setImageBitmap(emot.getEmotImg());
-				view.setDrawingCacheEnabled(true);
-				view.setOnClickListener(new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						Log.i(TAG, "Image clicked !!!");
-						EmotEditText.this.addEmot(emot);
-						ContentValues values = new ContentValues();
-						int time = (int) (System.currentTimeMillis());
-						values.put(DBContract.EmotsDBEntry.LAST_USED, time);
-						EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
-								DBContract.EmotsDBEntry.TABLE_NAME, 
-								values, 
-								DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
-								null
-						);
-					}
-				});
+				View view = getEmotSuggestView(emot);
+				
 				if(!suggestedEmots.containsKey(emot.getEmotHash())){
 					EmotEditText.this.emotSuggestionLayout.addView(view, 0);
-					suggestedEmots.put(emot.getEmotHash(), true);
+					suggestedEmots.put(emot.getEmotHash(), view);
+					Log.i(TAG, "adding view = "+view);
+				}else{
+					View oldView = suggestedEmots.get(emot.getEmotHash());
+					Log.i(TAG, "old view = "+oldView);
+					EmotEditText.this.emotSuggestionLayout.removeView(oldView);
+					EmotEditText.this.emotSuggestionLayout.addView(view, 0);
+					suggestedEmots.put(emot.getEmotHash(), view);
 				}
 				Log.i(TAG, "Emoticon added");
 			
@@ -431,74 +389,32 @@ public class EmotEditText extends EditText {
 		}
 	}
 	
-	public class UpdateEmotSuggestions extends AsyncTask<Void, Emot, Void>{
-		private String text;
+	private View getEmotSuggestView(final Emot emot){
+		View emotView = context.getLayoutInflater().inflate(R.layout.emot_suggestion_view, null);
 
-		public UpdateEmotSuggestions(String s){
-			this.text = s;
-		}
+		ImageView iView = (ImageView)emotView.findViewById(R.id.icon_emot);
+		iView.setImageBitmap(emot.getEmotImg());
+		iView.setDrawingCacheEnabled(true);
+		emotView.setOnClickListener(new OnClickListener() {
 
-		@Override
-		protected Void doInBackground(Void... params) {
-			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
-					DBContract.EmotsDBEntry.TABLE_NAME, 
-					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_HASH, DBContract.EmotsDBEntry.EMOT_IMG_LARGE}, 
-					DBContract.EmotsDBEntry.TAGS+" match '"+text+"*';", 
-					null, null, null, null, null
-			);
-			while (cr.moveToNext())
-			{
-				String hash = cr.getString(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_HASH));
-				byte[] emotImg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG));
-				byte[] emotImgLrg = cr.getBlob(cr.getColumnIndex(DBContract.EmotsDBEntry.EMOT_IMG_LARGE));
-				Log.i(TAG, "emot img "+emotImg);
-				Log.i(TAG, "Emot hash is "+hash);
-				Bitmap emotBmp = EmoticonDBHelper.getEmot(emotImg, emotImgLrg, hash);
-				Emot emot = new Emot(hash, emotBmp);
-				publishProgress(emot);
+			@Override
+			public void onClick(View v) {
+				Log.i(TAG, "Image clicked !!!");
+				recent_emot_clicked = true;
+				EmotEditText.this.addEmot(emot);
+				ContentValues values = new ContentValues();
+				int time = (int) (System.currentTimeMillis());
+				values.put(DBContract.EmotsDBEntry.LAST_USED, time);
+				EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
+						DBContract.EmotsDBEntry.TABLE_NAME, 
+						values, 
+						DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
+						null
+				);
 			}
-			cr.close();
-			return null;
-		}
+		});
 		
-		@Override
-		protected void onProgressUpdate(Emot... values) {
-			final Emot emot = values[0];
-			ImageView view = new ImageView(EmotApplication.getAppContext());
-			view.setId(0);
-			RelativeLayout.LayoutParams params = getEmotParams();
-			view.setLayoutParams(params);
-			view.setImageBitmap(emot.getEmotImg());
-			view.setDrawingCacheEnabled(true);
-			view.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					Log.i(TAG, "Image clicked !!!");
-					EmotEditText.this.addEmot(emot);
-					ContentValues values = new ContentValues();
-					int time = (int) (System.currentTimeMillis());
-					values.put(DBContract.EmotsDBEntry.LAST_USED, time);
-					EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().update(
-							DBContract.EmotsDBEntry.TABLE_NAME, 
-							values, 
-							DBContract.EmotsDBEntry.EMOT_HASH+"='"+emot.getEmotHash()+"'", 
-							null
-					);
-				}
-			});
-			if(!suggestedEmots.containsKey(emot.getEmotHash())){
-				EmotEditText.this.emotSuggestionLayout.addView(view, 0);
-				suggestedEmots.put(emot.getEmotHash(), true);
-			}
-		}
-
-	}
-	
-	private RelativeLayout.LayoutParams getEmotParams(){
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		params.setMargins(40, 0, 40, 0);
-		return params;
+		return emotView;
 	}
 
 }

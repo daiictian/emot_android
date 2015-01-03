@@ -69,4 +69,6 @@
     <string name="done"> DONE  </string>
     <string name="default_status"> Whats up !</string>
     <string name="update_profile">Update Profile</string>
+    <string name="enter_chat_text">Enter text here</string>
+    
 </resources>

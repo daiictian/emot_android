@@ -174,7 +174,7 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 			//Set to some default if not found
 			if(emot_img == null){
 				Log.i(TAG, "Emoticon not found !!!");
-				emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_user_image);
+				emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.ic_question);
 			}
 			emotCache.put(emot_hash, emot_img);
 		}else{
