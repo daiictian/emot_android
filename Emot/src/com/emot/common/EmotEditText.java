@@ -279,7 +279,7 @@ public class EmotEditText extends EditText {
 						
 					scrollEmotRecentLayout.setVisibility(View.VISIBLE);
 					scrollEmotSuggestionLayout.setVisibility(View.GONE);
-					toggleLastEmot.setBackgroundColor(EmotApplication.getAppContext().getResources().getColor(R.color.dark_grey));
+					toggleLastEmot.setBackgroundColor(EmotApplication.getAppContext().getResources().getColor(R.color.list_row_pressed_bg));
 				}
 				
 			}
