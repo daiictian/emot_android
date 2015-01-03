@@ -122,7 +122,7 @@ public class ChatScreen extends ActionBarActivity {
 	// @Override
 	// protected void onPostExecute(Void result) {
 	//
-	// Log.i(TAG, "chats = "+chatList.size());
+	// //Log.i(TAG, "chats = "+chatList.size());
 	// //chatView.setSelection(chatList.size()-1);
 	// }
 	//
@@ -153,7 +153,7 @@ public class ChatScreen extends ActionBarActivity {
 	// datetime =
 	// result.getString(result.getColumnIndex(DBContract.EmotHistoryEntry.DATETIME));
 	// result.moveToNext();
-	// Log.i(TAG, "chat from DB is " +chat);
+	// //Log.i(TAG, "chat from DB is " +chat);
 	// ChatMessage newChat = null;
 	// if(location.equals("left")){
 	// newChat = new ChatMessage(chat,datetime, false);
@@ -186,7 +186,7 @@ public class ChatScreen extends ActionBarActivity {
 	}
 	
 	private void registerXMPPService() {
-		Log.i(TAG, "called startXMPPService()");
+		//Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
 		Uri chatURI = Uri.parse(chatFriend);
 		mServiceIntent.setData(chatURI);
@@ -195,7 +195,7 @@ public class ChatScreen extends ActionBarActivity {
 		mServiceConnection = new ServiceConnection() {
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				Log.i(TAG, "called onServiceConnected()");
+				//Log.i(TAG, "called onServiceConnected()");
 				mServiceAdapter = new XMPPChatServiceAdapter(
 						IXMPPChatService.Stub.asInterface(service), chatFriend);
 
@@ -204,7 +204,7 @@ public class ChatScreen extends ActionBarActivity {
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
-				Log.i(TAG, "called onServiceDisconnected()");
+				//Log.i(TAG, "called onServiceDisconnected()");
 			}
 
 		};
@@ -215,7 +215,7 @@ public class ChatScreen extends ActionBarActivity {
 			unbindService(mServiceConnection);
 			mServiceAdapter.unregisterUICallback(chatCallback);
 		} catch (IllegalArgumentException e) {
-			Log.e(TAG, "Service wasn't bound!");
+			//Log.e(TAG, "Service wasn't bound!");
 		}
 	}
 
@@ -228,7 +228,7 @@ public class ChatScreen extends ActionBarActivity {
 		// Handle presses on the action bar items
 		switch (item.getItemId()) {
 		case android.R.id.home:
-			Log.i(TAG, "back pressed");
+			//Log.i(TAG, "back pressed");
 			this.finish();
 			return true;
 		case R.id.action_copy_text:
@@ -265,7 +265,7 @@ public class ChatScreen extends ActionBarActivity {
 				.getStringExtra(ChatScreen.INTENT_CHAT_FRIEND);
 		setAliasFromDB();
 
-		Log.i(TAG, "chatFriend is " + chatFriend);
+		//Log.i(TAG, "chatFriend is " + chatFriend);
 		if (chatFriend == null) {
 			Toast.makeText(EmotApplication.getAppContext(),
 					"Incorrect username", Toast.LENGTH_LONG).show();
@@ -319,7 +319,7 @@ public class ChatScreen extends ActionBarActivity {
 		
 			@Override
 			public void chatStateChanged(int state, String from) throws RemoteException {
-				Log.i(TAG, "new chat state = "+state + " from = "+from + " composing val = "+ChatState.composing.ordinal());
+				//Log.i(TAG, "new chat state = "+state + " from = "+from + " composing val = "+ChatState.composing.ordinal());
 				if(state == ChatState.composing.ordinal() && chatFriend.equals(from)){
 					lastSeen = TYPING_STATUS;
 				}else if(state == ChatState.gone.ordinal() && chatFriend.equals(from)){
@@ -350,7 +350,7 @@ public class ChatScreen extends ActionBarActivity {
 		chatEntry.addTextChangedListener(new TextWatcher() {
 
 			public void afterTextChanged(Editable s) {
-				Log.i(TAG, "Sys time: "+System.currentTimeMillis() + " last time: "+lastTypingState);
+				//Log.i(TAG, "Sys time: "+System.currentTimeMillis() + " last time: "+lastTypingState);
 				if(System.currentTimeMillis() - lastTypingState > TYPE_PAUSE_DIFF){
 					lastTypingState = System.currentTimeMillis();
 					mServiceAdapter.sendChatState(chatFriend, ChatState.composing.toString());
@@ -364,15 +364,15 @@ public class ChatScreen extends ActionBarActivity {
 							}, TYPE_PAUSE_DIFF);
 
 				}
-				Log.i(TAG, "text changed after");
+				//Log.i(TAG, "text changed after");
 			}
 
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-				Log.i(TAG, "text changed before");
+				//Log.i(TAG, "text changed before");
 			}
 
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				Log.i(TAG, "text changed");
+				//Log.i(TAG, "text changed");
 			}
 		});
 		
@@ -386,7 +386,7 @@ public class ChatScreen extends ActionBarActivity {
 
 		// ContentValues cvs = new ContentValues();
 		// String imgHash = EmotApplication.randomId();
-		// Log.i(TAG, "Image hash  = "+ imgHash);
+		// //Log.i(TAG, "Image hash  = "+ imgHash);
 		// cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
 		// cvs.put(DBContract.EmotsDBEntry.TAGS, "asin yes no what sad");
 		// cvs.put(DBContract.EmotsDBEntry.EMOT_IMG,
@@ -396,7 +396,7 @@ public class ChatScreen extends ActionBarActivity {
 		//
 		// cvs = new ContentValues();
 		// imgHash = EmotApplication.randomId();
-		// Log.i(TAG, "Image hash  = "+ imgHash);
+		// //Log.i(TAG, "Image hash  = "+ imgHash);
 		// cvs.put(DBContract.EmotsDBEntry.EMOT_HASH, imgHash);
 		// cvs.put(DBContract.EmotsDBEntry.TAGS, "hello happy angry");
 		// cvs.put(DBContract.EmotsDBEntry.EMOT_IMG,
@@ -469,7 +469,7 @@ public class ChatScreen extends ActionBarActivity {
 				Cursor cursor = (Cursor)parent.getItemAtPosition(position);
 
 				currentlySelectedView = view;
-				Log.i(TAG, "Current view is " +parent.getChildAt(position));
+				//Log.i(TAG, "Current view is " +parent.getChildAt(position));
 				String message = "";
 				currPosition = position;
 				if(!selectedRow.contains(currPosition)){
@@ -491,7 +491,7 @@ public class ChatScreen extends ActionBarActivity {
 					currentlySelectedView.setBackgroundColor(color.darkgreen);
 
 				}else{
-					Log.i(TAG, "Deselecting");
+					//Log.i(TAG, "Deselecting");
 					currentlySelectedView.setBackgroundColor(0x00000000);
 					messageToCopyList.remove(currPosition);
 					selectedRow.remove(currPosition);
@@ -536,7 +536,7 @@ public class ChatScreen extends ActionBarActivity {
 				.getContentResolver()
 				.query(RosterProvider.CONTENT_URI, projection, selection, null,
 						null);
-		Log.i(TAG, "users found length = " + cursor.getCount());
+		//Log.i(TAG, "users found length = " + cursor.getCount());
 		byte[] avatar = null;
 		while (cursor.moveToNext()) {
 			int mode = cursor
@@ -554,8 +554,8 @@ public class ChatScreen extends ActionBarActivity {
 				lastSeen = "";
 			}
 			chatAlias = name;
-			Log.i(TAG, "chat alias : " + chatAlias);
-			Log.i(TAG, "last seen : " + lastSeen);
+			//Log.i(TAG, "chat alias : " + chatAlias);
+			//Log.i(TAG, "last seen : " + lastSeen);
 			
 			//Seting avatar image
 			avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
@@ -574,7 +574,7 @@ public class ChatScreen extends ActionBarActivity {
 	}
 	
 	public void setFriendStatusDB(){
-		Log.i(TAG, "Setting friend status from DB");
+		//Log.i(TAG, "Setting friend status from DB");
 		String selection = RosterProvider.RosterConstants.JID + "='" + chatFriend + "'";
 		String[] projection = new String[] {
 				RosterProvider.RosterConstants.LAST_SEEN,
@@ -584,7 +584,7 @@ public class ChatScreen extends ActionBarActivity {
 				.getContentResolver()
 				.query(RosterProvider.CONTENT_URI, projection, selection, null,
 						null);
-		Log.i(TAG, "users found length = " + cursor.getCount());
+		//Log.i(TAG, "users found length = " + cursor.getCount());
 		while (cursor.moveToNext()) {
 			int mode = cursor
 					.getInt(cursor
@@ -600,8 +600,8 @@ public class ChatScreen extends ActionBarActivity {
 			} else {
 				getSupportActionBar().setSubtitle("");
 			}
-			Log.i(TAG, "chat alias : " + chatAlias);
-			Log.i(TAG, "last seen : " + lastSeen);
+			//Log.i(TAG, "chat alias : " + chatAlias);
+			//Log.i(TAG, "last seen : " + lastSeen);
 		}
 		cursor.close();
 	}
@@ -624,7 +624,7 @@ public class ChatScreen extends ActionBarActivity {
 		Uri rowuri = Uri.parse("content://" +
 				"" + ChatProvider.AUTHORITY + "/"
 				+ ChatProvider.TABLE_NAME + "/" + id);
-		Log.d(TAG, "markAsRead: " + rowuri);
+		//Log.d(TAG, "markAsRead: " + rowuri);
 		ContentValues values = new ContentValues();
 		values.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
 		getContentResolver().update(rowuri, values, null, null);
@@ -729,7 +729,7 @@ public class ChatScreen extends ActionBarActivity {
 
 		void populateFrom(String date, boolean from_me, String from,
 				String message, int delivery_status) {
-			// Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " +
+			// //Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " +
 			// message + ")");
 
 			if (from_me) {

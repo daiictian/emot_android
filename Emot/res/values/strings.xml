@@ -44,7 +44,7 @@
     <string name="emots">Emots</string>
     <string name="enterMobileNumber">Please enter your mobile number</string>
     <string name="enterVerificationCode">Number</string>
-    <string name="ask_verification_code">Please enter last ten digits of the number you received missed call from</string>
+    <string name="ask_verification_code">Please enter last 5 digits of the number you received missed call from. We will prefill this in case you are using this device.</string>
     <string name="enterGroupName">Please enter group name</string>
     <string name="edit">edit</string>
     <string name="save">SAVE</string>

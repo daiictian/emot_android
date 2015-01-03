@@ -110,7 +110,7 @@ public class GroupChatScreen extends ActionBarActivity {
 			return;
 		if (hasFocus){
 			bindXMPPService();
-			Log.i(TAG, "binding XMPP service");
+			//Log.i(TAG, "binding XMPP service");
 		}
 		else
 			unbindXMPPService();
@@ -146,10 +146,10 @@ public class GroupChatScreen extends ActionBarActivity {
 		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		if(!isCreateGrp){
 			grpSubject = EmotApplication.getValue(grpName, "default");
-			Log.i(TAG, "grpSubject is " +grpSubject);
+			//Log.i(TAG, "grpSubject is " +grpSubject);
 			}
 			setAliasFromDB();
-			Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
+			//Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
 			userTitle.setText(grpSubject);
 			//chatEntry.addTextChangedListener(groupMessageWatcher);
 			ab.setTitle(chatAlias);
@@ -190,7 +190,7 @@ public class GroupChatScreen extends ActionBarActivity {
 	private String currentGrpSubject;
 	private List<String> currentGrpMembers;
 	private void registerXMPPService() {
-		Log.i(TAG, "called startXMPPService()");
+		//Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
 		Uri chatURI = Uri.parse(grpSubject);
 		mServiceIntent.setData(chatURI);
@@ -204,7 +204,7 @@ public class GroupChatScreen extends ActionBarActivity {
 
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				Log.i(TAG, "called onServiceConnected()");
+				//Log.i(TAG, "called onServiceConnected()");
 				mServiceAdapter = new XMPPGroupChatServiceAdapter(
 						IXMPPGroupChatService.Stub.asInterface(service), grpName);
 
@@ -227,7 +227,7 @@ public class GroupChatScreen extends ActionBarActivity {
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
-				Log.i(TAG, "called onServiceDisconnected()");
+				//Log.i(TAG, "called onServiceDisconnected()");
 			}
 
 		};
@@ -237,7 +237,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		try {
 			unbindService(mServiceConnection);
 		} catch (IllegalArgumentException e) {
-			Log.e(TAG, "Service wasn't bound!");
+			//Log.e(TAG, "Service wasn't bound!");
 		}
 	}
 
@@ -250,11 +250,11 @@ public class GroupChatScreen extends ActionBarActivity {
 		// Handle presses on the action bar items
 		switch (item.getItemId()) {
 		case android.R.id.home:
-			Log.i(TAG, "back pressed");
+			//Log.i(TAG, "back pressed");
 			this.finish();
 			return true;
 		case R.id.leave_group:
-			Log.i(TAG, "leaving the group");
+			//Log.i(TAG, "leaving the group");
 			mServiceAdapter.leaveGroup(grpName);
 			return true;
 		case R.id.action_copy_text:
@@ -344,8 +344,8 @@ public class GroupChatScreen extends ActionBarActivity {
 		isCreateGrp = incomingIntent.getBooleanExtra("creategroup?", false);
 		
 		grpchatmembers =  incomingIntent.getParcelableArrayListExtra("groupmembers");
-		Log.i(TAG, "group chat members are " +grpchatmembers);
-		Log.i(TAG, "groupName is " + grpName);
+		//Log.i(TAG, "group chat members are " +grpchatmembers);
+		//Log.i(TAG, "groupName is " + grpName);
 		
 
 		setContentView(R.layout.activity_chat_screen);
@@ -369,10 +369,10 @@ public class GroupChatScreen extends ActionBarActivity {
 		EmotApplication.getAppContext().getSharedPreferences("emot_prefs", Context.MODE_MULTI_PROCESS);
 		if(!isCreateGrp){
 			grpSubject = EmotApplication.getValue(grpName, "default");
-			Log.i(TAG, "grpSubject is " +grpSubject);
+			//Log.i(TAG, "grpSubject is " +grpSubject);
 			}
 			setAliasFromDB();
-			Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
+			//Log.i(TAG, "grpSubject in grpchat screen is " +grpSubject);
 			userTitle.setText(grpSubject);
 			//chatEntry.addTextChangedListener(groupMessageWatcher);
 			ab.setTitle(chatAlias);
@@ -415,7 +415,7 @@ public class GroupChatScreen extends ActionBarActivity {
 				Cursor cursor = (Cursor)parent.getItemAtPosition(position);
 
 				currentlySelectedView = view;
-				Log.i(TAG, "Current view is " +parent.getChildAt(position));
+				//Log.i(TAG, "Current view is " +parent.getChildAt(position));
 				String message = "";
 
 				if(!selectedRow.contains(position)){
@@ -428,7 +428,7 @@ public class GroupChatScreen extends ActionBarActivity {
 					currentlySelectedView.setBackgroundColor(color.darkgreen);
 
 				}else{
-					Log.i(TAG, "Deselecting");
+					//Log.i(TAG, "Deselecting");
 					currentlySelectedView.setBackgroundColor(0x00000000);
 					selectedRow.remove(position);
 				}
@@ -456,7 +456,7 @@ public class GroupChatScreen extends ActionBarActivity {
 		occupantTag = occupantTag.trim();
 		occupantTag =  occupantTag + s;
 
-		Log.i(TAG, "ocupant tag is " +occupantTag);
+		//Log.i(TAG, "ocupant tag is " +occupantTag);
 
 	}
 
@@ -486,7 +486,7 @@ public class GroupChatScreen extends ActionBarActivity {
 				.getContentResolver()
 				.query(RosterProvider.CONTENT_URI, projection, selection, null,
 						null);
-		Log.i(TAG, "users found length = " + cursor.getCount());
+		//Log.i(TAG, "users found length = " + cursor.getCount());
 		while (cursor.moveToNext()) {
 			int mode = cursor
 					.getInt(cursor
@@ -503,8 +503,8 @@ public class GroupChatScreen extends ActionBarActivity {
 				lastSeen = "away";
 			}
 			chatAlias = name;
-			Log.i(TAG, "chat alias : " + chatAlias);
-			Log.i(TAG, "last seen : " + lastSeen);
+			//Log.i(TAG, "chat alias : " + chatAlias);
+			//Log.i(TAG, "last seen : " + lastSeen);
 		}
 		cursor.close();
 	}
@@ -525,7 +525,7 @@ public class GroupChatScreen extends ActionBarActivity {
 	private void markAsRead(int id) {
 		Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY + "/"
 				+ ChatProvider.TABLE_NAME + "/" + id);
-		Log.d(TAG, "markAsRead: " + rowuri);
+		//Log.d(TAG, "markAsRead: " + rowuri);
 		ContentValues values = new ContentValues();
 		values.put(ChatConstants.DELIVERY_STATUS, ChatConstants.DS_SENT_OR_READ);
 		getContentResolver().update(rowuri, values, null, null);
@@ -555,7 +555,7 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 				if(mProgressDialog != null){
 					mProgressDialog.dismiss();
 				}
-			Log.i(TAG, "grpID received is  " +intent.getStringExtra("groupID"));
+			//Log.i(TAG, "grpID received is  " +intent.getStringExtra("groupID"));
 			grpName = intent.getStringExtra("groupID");
 			currentGrpSubject = intent.getStringExtra("grpSubject");
 			setChatWindowAdapter() ;
@@ -571,7 +571,7 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 			
 			if(intent.getAction().equals("GroupSubjectChanged")){
 				
-			Log.i(TAG, "grpID received is  " +intent.getStringExtra("newSubject"));
+			//Log.i(TAG, "grpID received is  " +intent.getStringExtra("newSubject"));
 			String newSubject = intent.getStringExtra("newSubject");
 			String grpID = intent.getStringExtra("grpID");
 			if(grpID.equals(grpName)){
@@ -644,9 +644,9 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 			mList.add(message);
 			boolean from_me =false;
 			String msgSender = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE_SENDER_IN_GROUP));
-			Log.i(TAG, "Message Sender in Group is " +msgSender);
+			//Log.i(TAG, "Message Sender in Group is " +msgSender);
 			if(msgSender.equals(EmotConfiguration.getConfig().userName + "@conference.emot-net")){
-				Log.i(TAG, "Comparing if sender is same as reciever");
+				//Log.i(TAG, "Comparing if sender is same as reciever");
 				from_me = true;	
 			}
 
@@ -722,7 +722,7 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 
 		void populateFrom(String date, boolean from_me, String from,
 				String message, int delivery_status) {
-			// Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " +
+			// //Log.i(TAG, "populateFrom(" + from_me + ", " + from + ", " +
 			// message + ")");
 
 			if (from_me) {
@@ -755,7 +755,7 @@ private BroadcastReceiver mGroupFailedReceiver = new BroadcastReceiver() {
 				String nd = EmotUtils.getTimeSimple(date);
 				mDateTimeRight.setText(nd);
 				mChatTextRight.setText(message);
-				Log.i(TAG, "mGrpmeber is " +mGrpMember);
+				//Log.i(TAG, "mGrpmeber is " +mGrpMember);
 				mGrpMember.setText(from);
 				switch (delivery_status) {
 				case ChatConstants.DS_NEW:

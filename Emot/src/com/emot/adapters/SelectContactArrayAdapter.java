@@ -52,7 +52,7 @@ public class SelectContactArrayAdapter extends ArrayAdapter<Contact> implements 
 				
 				
 				contacts.get(position).setSelected(cb.isChecked());
-				Log.i(TAG, "Contact selected " +contacts.get(position).getName());
+				//Log.i(TAG, "Contact selected " +contacts.get(position).getName());
 				
 			}
 		});
@@ -62,7 +62,7 @@ public class SelectContactArrayAdapter extends ArrayAdapter<Contact> implements 
 		Bitmap bitmap = null;
 		if(contacts.get(position).getAvatar()!=null){
 			bitmap = BitmapFactory.decodeByteArray(contacts.get(position).getAvatar() , 0, contacts.get(position).getAvatar().length);
-			//Log.i(TAG, "Bitmap  = "+bitmap);
+			////Log.i(TAG, "Bitmap  = "+bitmap);
 		}
 		if(bitmap==null){
 			bitmap = BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.blank_user_image);
@@ -75,7 +75,7 @@ public class SelectContactArrayAdapter extends ArrayAdapter<Contact> implements 
 
 	@Override
 	public Filter getFilter() {
-		Log.i(TAG, "get filter called !!!");
+		//Log.i(TAG, "get filter called !!!");
 		Filter filter = new Filter() {
 
 			@SuppressWarnings("unchecked")
@@ -88,7 +88,7 @@ public class SelectContactArrayAdapter extends ArrayAdapter<Contact> implements 
 
 			@Override
 			protected FilterResults performFiltering(CharSequence constraint) {
-				Log.i(TAG, "Filtering through : "+constraint);
+				//Log.i(TAG, "Filtering through : "+constraint);
 				if(ocontacts==null){
 					ocontacts = new ArrayList<Contact>(contacts);
 				}
@@ -104,7 +104,7 @@ public class SelectContactArrayAdapter extends ArrayAdapter<Contact> implements 
 
 				results.count = filtered_results.size();
 				results.values = filtered_results;
-				Log.e("VALUES", results.values.toString());
+				//Log.e("VALUES", results.values.toString());
 
 				return results;
 			}

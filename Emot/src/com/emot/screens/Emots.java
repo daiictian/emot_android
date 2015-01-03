@@ -35,7 +35,7 @@ public class Emots extends Activity {
 			currentEmotsList = new ArrayList<CurrentEmot>();
 			currentEmotsList = result;
 			currentEmotsAdapter = new CurrentEmotsAdapter(Emots.this, currentEmotsList);
-			Log.i("Emots", currentEmotsList.get(0).getUserLastEmot());
+			//Log.i("Emots", currentEmotsList.get(0).getUserLastEmot());
 			emotsList.setAdapter(currentEmotsAdapter);
 			currentEmotsAdapter.notifyDataSetChanged();
 			

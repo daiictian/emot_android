@@ -44,7 +44,7 @@ public class GroupChatListArrayAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {  
 		View v = convertView;  
 		ListViewHolder viewHolder;  
-		Log.i("GroupChatListArrayAdapter", "convertView " +convertView);
+		//Log.i("GroupChatListArrayAdapter", "convertView " +convertView);
 		//mMessageContainer.setGravity(Gravity.RIGHT);
 		mChatMessage = mList.get(position);
 
@@ -72,13 +72,13 @@ public class GroupChatListArrayAdapter extends BaseAdapter {
 			//  viewHolder = (CompleteListViewHolder) v.getTag();  
 			// }
 		//  if(!mChatMessage.isRight() ){
-		Log.i("GroupChatListArrayAdapter", mChatMessage.getmTime() +"Left Aigned");
+		//Log.i("GroupChatListArrayAdapter", mChatMessage.getmTime() +"Left Aigned");
 
 		//   viewHolder.mChatTextRight.setText(mChatMessage.getmMessage());
 		//    viewHolder.mDateTimeRight.setText(mChatMessage.getmTime());
 		// viewHolder.mDateTime.setGravity(Gravity.RIGHT);
 		//  }else{
-		Log.i("GroupChatListArrayAdapter", mChatMessage.getmMessage() + "Right Aigned");
+		//Log.i("GroupChatListArrayAdapter", mChatMessage.getmMessage() + "Right Aigned");
 
 
 

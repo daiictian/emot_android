@@ -188,7 +188,7 @@ public class ChatProvider extends ContentProvider {
 
 	private static void infoLog(String data) {
 		if (LogConstants.LOG_INFO) {
-			Log.i(TAG, data);
+			//Log.i(TAG, data);
 		}
 	}
 

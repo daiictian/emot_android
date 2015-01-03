@@ -74,7 +74,7 @@ public class GroupInfo extends Activity{
 		mChangeSubject = (Button)findViewById(R.id.changeSubjectButton);
 		currentGrpID = getIntent().getStringExtra("grpID");
 		currentMembers = getIntent().getStringArrayListExtra("currentMembers");
-		Log.i(TAG, "currentMembers are " +currentMembers);
+		//Log.i(TAG, "currentMembers are " +currentMembers);
 		contacts = new ArrayList<Contact>();
 		contactAdapter = new ContactArrayAdapter(EmotApplication.getAppContext(), R.layout.contact_row, contacts);
 		currentList.setAdapter(contactAdapter);
@@ -103,7 +103,7 @@ public class GroupInfo extends Activity{
 			public void onClick(View v) {
 				Intent intent = new Intent();
 				intent.setAction("GROUP_SUBJECT_CHANGED");
-				Log.i(TAG, "grpID in groupInfo is " +currentGrpID);
+				//Log.i(TAG, "grpID in groupInfo is " +currentGrpID);
 				
 				intent.putExtra("newGrpSubject", enterNewGroupSubject.getText().toString());
 				intent.putExtra("grpID", currentGrpID);
@@ -115,7 +115,7 @@ public class GroupInfo extends Activity{
 	
 	
 	public void refreshContacts(){
-		Log.i(TAG, "Refreshing contacts !!!!");
+		//Log.i(TAG, "Refreshing contacts !!!!");
 		showContactsThread = new ShowContacts();
 		showContactsThread.execute();
 	}
@@ -140,7 +140,7 @@ public class GroupInfo extends Activity{
 			try{
 				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
 				
-				Log.i(TAG, "contacts found  = "+cr.getCount());
+				//Log.i(TAG, "contacts found  = "+cr.getCount());
 				while (cr.moveToNext()) {
 					if(currentMembers.contains((String)cr.getString(cr.getColumnIndex(RosterConstants.JID)))){
 				    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
@@ -150,10 +150,10 @@ public class GroupInfo extends Activity{
 					}
 				}
 				cr.close();
-				Log.i(TAG, "time 2");
+				//Log.i(TAG, "time 2");
 				return true;
 			}catch(Exception e){
-				e.printStackTrace();
+				//e.printStackTrace();
 				return false;
 			}
 
@@ -163,7 +163,7 @@ public class GroupInfo extends Activity{
 			
 			contacts.add(contact[0]);
 			contactAdapter.notifyDataSetChanged();
-			Log.i(TAG, "Adding contact ...");
+			//Log.i(TAG, "Adding contact ...");
 			return;
 		}
 

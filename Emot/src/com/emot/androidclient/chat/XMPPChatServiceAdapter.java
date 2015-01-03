@@ -13,17 +13,17 @@ public class XMPPChatServiceAdapter {
 
 	public XMPPChatServiceAdapter(IXMPPChatService xmppServiceStub,
 			String jabberID) {
-		Log.i(TAG, "New XMPPChatServiceAdapter construced");
+		//Log.i(TAG, "New XMPPChatServiceAdapter construced");
 		this.xmppServiceStub = xmppServiceStub;
 		this.jabberID = jabberID;
 	}
 
 	public void sendMessage(String user, String message) {
 		try {
-			Log.i(TAG, "Called sendMessage(): " + jabberID + ": " + message);
+			//Log.i(TAG, "Called sendMessage(): " + jabberID + ": " + message);
 			xmppServiceStub.sendMessage(user, message);
 		} catch (RemoteException e) {
-			Log.e(TAG, "caught RemoteException: " + e.getMessage());
+			//Log.e(TAG, "caught RemoteException: " + e.getMessage());
 		}
 	}
 	
@@ -31,7 +31,7 @@ public class XMPPChatServiceAdapter {
 		try {
 			return xmppServiceStub.isAuthenticated();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return false;
 	}
@@ -40,7 +40,7 @@ public class XMPPChatServiceAdapter {
 		try {
 			xmppServiceStub.clearNotifications(Jid);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -48,9 +48,9 @@ public class XMPPChatServiceAdapter {
 		try {
 			xmppServiceStub.registerChatCallback(uiCallback);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -58,9 +58,9 @@ public class XMPPChatServiceAdapter {
 		try {
 			xmppServiceStub.unregisterChatCallback(uiCallback);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -68,9 +68,9 @@ public class XMPPChatServiceAdapter {
 		try {
 			xmppServiceStub.sendChatState(chatFriend, state);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 }

@@ -59,7 +59,7 @@ public class CurrentEmotsAdapter extends BaseAdapter {
        } else {  
             viewHolder = (CompleteListViewHolder) v.getTag();  
        } 
-		Log.i("EmotsAdapter", "position "+mList.get(position).getUserName());
+		//Log.i("EmotsAdapter", "position "+mList.get(position).getUserName());
        viewHolder.user.setText(mList.get(position).getUserName());
        viewHolder.lastEmot.setText(mList.get(position).getUserLastEmot());
        return v;  
