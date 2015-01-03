@@ -208,8 +208,11 @@ public class Registration extends ActionBarActivity {
 		if(rsi != null){
 		for(RunningServiceInfo a: rsi){
 			ComponentName n = a.service;
-			Log.i(TAG, "Killing process " + n.getPackageName());
+			
+			if(!n.getPackageName().equals("com.google.android.gms")){
+				Log.i(TAG, "Killing process " + n.getPackageName());
 			am.killBackgroundProcesses(n.getPackageName());
+			}
 		}
 		}
 		}catch(Exception e){

@@ -94,13 +94,13 @@
             </intent-filter>
         </service>
 		 
-        <receiver android:name="com.emot.services.BootReceiver" >
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-
-                <category android:name="android.intent.category.HOME" />
-            </intent-filter>
-        </receiver>
+       <receiver android:name="com.emot.androidclient.service.EmotBroadcastReceiver">
+			<intent-filter>
+				<action android:name="android.intent.action.ACTION_SHUTDOWN" />
+				<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+				<action android:name="android.intent.action.BOOT_COMPLETED"/>
+			</intent-filter>
+		</receiver>
 
         <provider
             android:name="com.emot.androidclient.data.ChatProvider"
