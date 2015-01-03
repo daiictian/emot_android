@@ -36,8 +36,7 @@ public class EmotBroadcastReceiver extends BroadcastReceiver {
 			Log.d(TAG, "System shutdown, stopping emot service.");
 			Intent xmppServiceIntent = new Intent(context, XMPPService.class);
 			context.stopService(xmppServiceIntent);
-		} else
-		if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+		} else if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
 			boolean connstartup = PreferenceManager.getDefaultSharedPreferences(context)
 				.getBoolean(PreferenceConstants.CONN_STARTUP, false);
 			if (!connstartup) // ignore event, we are not running
@@ -78,6 +77,11 @@ public class EmotBroadcastReceiver extends BroadcastReceiver {
 			} else
 				return;
 			context.startService(xmppServiceIntent);
+		}else if(intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)){
+			Intent i = new Intent(context, XMPPService.class);
+			Log.d(TAG, "We got booted "  );
+			context.startService(i);
+			
 		}
 	}
 
