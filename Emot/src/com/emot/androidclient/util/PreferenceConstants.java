@@ -32,4 +32,5 @@ public class PreferenceConstants {
 	public static final String COUNTRY_CODE = "country_code";
 	public static final String COUNTRY_PHONE_CODE = "country_phone_code";
 	public static final String EMOTICON_SIZE = "emoticon_size";
+	public static final String LAST_STATUS_JID = "last_status_";
 }

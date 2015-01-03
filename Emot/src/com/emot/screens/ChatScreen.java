@@ -281,6 +281,7 @@ public class ChatScreen extends ActionBarActivity {
 
 		chatEntry = (EmotEditText) findViewById(R.id.editTextStatus);
 		chatEntry.setEmotSuggestBox(emotSuggestion);
+		chatEntry.setContext(ChatScreen.this);
 		userTitle.setText(chatFriend);
 
 		ab.setTitle(chatAlias);

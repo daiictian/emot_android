@@ -1923,9 +1923,11 @@ public class SmackableImp implements Smackable {
 		values.put(RosterConstants.STATUS_MODE, currentStatus);
 		//Log.i(TAG, "Presence = " + presence);
 
-		if(currentStatus != StatusMode.available.ordinal()){
+		int last_status = EmotApplication.getValue(PreferenceConstants.LAST_STATUS_JID+entry.getUser(), -1);
+		if(currentStatus != StatusMode.available.ordinal() && last_status!=currentStatus){
 			Log.i(TAG, "AWAY STATUS");
 			values.put(RosterConstants.LAST_SEEN, getDateTime());
+			EmotApplication.setValue(PreferenceConstants.LAST_STATUS_JID+entry.getUser(), currentStatus);
 		}
 		if (presence.getType() == Presence.Type.error) {
 			values.put(RosterConstants.STATUS_MESSAGE, presence.getError().toString());
