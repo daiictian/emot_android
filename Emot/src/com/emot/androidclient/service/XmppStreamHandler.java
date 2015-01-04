@@ -24,7 +24,7 @@ import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
 import org.xmlpull.v1.XmlPullParser;
 
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 public class XmppStreamHandler {
 	private static final String TAG = XmppStreamHandler.class.getSimpleName();
@@ -88,7 +88,7 @@ public class XmppStreamHandler {
 	}
 
 	public void notifyInitialLogin() {
-		//Log.d(TAG, "notifyInitialLogin(): " + isSmAvailable);
+		Log.d(TAG, "notifyInitialLogin(): " + isSmAvailable);
 		if (isSmAvailable) {
 			sendEnablePacket();
 		}
@@ -96,20 +96,20 @@ public class XmppStreamHandler {
 
 	private void sendEnablePacket() {
 		if (isOutgoingSmEnabled) {
-			//Log.d(TAG, "duplicate sendEnablePacket()");
+			Log.d(TAG, "duplicate sendEnablePacket()");
 			return;
 		}
 		if (sessionId != null) {
 			isOutgoingSmEnabled = true;
 			outgoingStanzasSinceAckRequest = 0;
 			// TODO binding
-			//Log.d(TAG, "sendResume(): " + sessionId);
+			Log.d(TAG, "sendResume(): " + sessionId);
 			StreamHandlingPacket resumePacket = new StreamHandlingPacket("resume", URN_SM_2);
 			resumePacket.addAttribute("h", String.valueOf(previousIncomingStanzaCount));
 			resumePacket.addAttribute("previd", sessionId);
 			mConnection.sendPacket(resumePacket);
 		} else {
-			//Log.d(TAG, "sendEnable()");
+			Log.d(TAG, "sendEnable()");
 			outgoingStanzaCount = 0;
 			outgoingStanzasSinceAckRequest = 0;
 			outgoingQueue = new ConcurrentLinkedQueue<Packet>();
@@ -143,13 +143,13 @@ public class XmppStreamHandler {
 			public void reconnectionSuccessful() {
 				synchronized (XmppStreamHandler.this) {
 					if (isResumePossible() && !isSmAvailable) {
-						//Log.d(TAG, "reconnected, waiting for SM packet to arrive...");
+						Log.d(TAG, "reconnected, waiting for SM packet to arrive...");
 						try {
 							XmppStreamHandler.this.wait(30000); // HACK: wait for SM packet to arrive
 						} catch (InterruptedException e) {}
 					}
 				}
-				//Log.d(TAG, "reconnection: " + isSmAvailable);
+				Log.d(TAG, "reconnection: " + isSmAvailable);
 				if (isSmAvailable) {
 					sendEnablePacket();
 				} else if (isResumePossible()) {
@@ -166,7 +166,7 @@ public class XmppStreamHandler {
 			}
 
 			public void connectionClosedOnError(Exception e) {
-				//Log.d(TAG, "connectionClosedOnError: " + e.getLocalizedMessage());
+				Log.d(TAG, "connectionClosedOnError: " + e.getLocalizedMessage());
 				if (e instanceof XMPPException &&
 					((XMPPException)e).getStreamError() != null) {
 					// Non-resumable stream error
@@ -178,7 +178,7 @@ public class XmppStreamHandler {
 			}
 
 			public void connectionClosed() {
-				//Log.d(TAG, "connectionClosed.");
+				Log.d(TAG, "connectionClosed.");
 				previousIncomingStanzaCount = -1;
 				close();
 			}
@@ -188,7 +188,7 @@ public class XmppStreamHandler {
 			public void processPacket(Packet packet) {
 				// Ignore our own request for acks - they are not counted
 				if (!isStanza(packet)) {
-					if (debugStanzas) //Log.d(TAG, "send non-stanza " + packet.toXML());
+					if (debugStanzas) Log.d(TAG, "send non-stanza " + packet.toXML());
 					return;
 				}
 
@@ -196,7 +196,7 @@ public class XmppStreamHandler {
 					outgoingStanzaCount++;
 					outgoingQueue.add(packet);
 
-					if (debugStanzas) //Log.d(TAG, "adding " + outgoingStanzaCount + " : " + packet.toXML());
+					if (debugStanzas) Log.d(TAG, "adding " + outgoingStanzaCount + " : " + packet.toXML());
 
 					outgoingStanzasSinceAckRequest++;
 					// Don't let the queue grow beyond max size.  Request acks and drop old packets
@@ -206,12 +206,12 @@ public class XmppStreamHandler {
 					}
 
 					if (outgoingQueue.size() > maxOutgoingQueueSize) {
-						//Log.e(TAG, "not receiving acks?  outgoing queue full");
+						Log.e(TAG, "not receiving acks?  outgoing queue full");
 						outgoingQueue.remove();
 					}
 				} else {
 					if (debugStanzas){
-						//Log.d(TAG, "sending " + packet.toXML());
+						Log.d(TAG, "sending " + packet.toXML());
 					} 
 				}
 			}
@@ -226,11 +226,11 @@ public class XmppStreamHandler {
 				if (isSmEnabled && isStanza(packet)) {
 					incomingStanzaCount++;
 					if (debugStanzas) {
-						//Log.d(TAG, "recv " + incomingStanzaCount + " : " + packet.toXML());
+						Log.d(TAG, "recv " + incomingStanzaCount + " : " + packet.toXML());
 					}
 				} else {
 					if (debugStanzas) {
-						//Log.d(TAG, "recv " + packet.toXML());
+						Log.d(TAG, "recv " + packet.toXML());
 					}
 				}
 
@@ -238,7 +238,7 @@ public class XmppStreamHandler {
 					StreamHandlingPacket shPacket = (StreamHandlingPacket) packet;
 					String name = shPacket.getElementName();
 					if ("sm".equals(name)) {
-						//Log.d(TAG, "SM available!");
+						Log.d(TAG, "SM available!");
 						synchronized(XmppStreamHandler.this) {
 							isSmAvailable = true;
 							XmppStreamHandler.this.notify();
@@ -250,9 +250,9 @@ public class XmppStreamHandler {
 					} else if ("a".equals(name)) {
 						long ackCount = Long.valueOf(shPacket.getAttribute("h"));
 						removeOutgoingAcked(ackCount);
-						//Log.d(TAG, outgoingQueue.size() + " in outgoing queue after ack");
+						Log.d(TAG, outgoingQueue.size() + " in outgoing queue after ack");
 					} else if ("enabled".equals(name)) {
-						//Log.d(TAG, "SM enabled: " + shPacket.getAttribute("id"));
+						Log.d(TAG, "SM enabled: " + shPacket.getAttribute("id"));
 						incomingStanzaCount = 0;
 						isSmEnabled = true;
 						mConnection.getRoster().setOfflineOnError(false);
@@ -262,12 +262,12 @@ public class XmppStreamHandler {
 						}
 						synchronized(XmppStreamHandler.this) { XmppStreamHandler.this.notify(); }
 					} else if ("resumed".equals(name)) {
-						//Log.d(TAG, "SM resumed: " + sessionId);
+						Log.d(TAG, "SM resumed: " + sessionId);
 						incomingStanzaCount = previousIncomingStanzaCount;
 						long resumeStanzaCount = Long.valueOf(shPacket.getAttribute("h"));
 						// Removed acked packets
 						removeOutgoingAcked(resumeStanzaCount);
-						//Log.d(TAG, outgoingQueue.size() + " in outgoing queue after resume");
+						Log.d(TAG, outgoingQueue.size() + " in outgoing queue after resume");
 
 						// Resend any unacked packets
 						for (Packet resendPacket : outgoingQueue) {
@@ -280,7 +280,7 @@ public class XmppStreamHandler {
 						synchronized(XmppStreamHandler.this) { XmppStreamHandler.this.notify(); }
 					} else if ("failed".equals(name)) {
 						// Failed, shutdown and the parent will retry
-						//Log.d(TAG, "SM failed! :(");
+						Log.d(TAG, "SM failed! :(");
 						mConnection.getRoster().setOfflineOnError(true);
 						mConnection.getRoster().setOfflinePresences();
 						sessionId = null;
@@ -302,7 +302,7 @@ public class XmppStreamHandler {
 
 	private void removeOutgoingAcked(long ackCount) {
 		if (ackCount > outgoingStanzaCount) {
-			//Log.e(TAG, "got ack of " + ackCount + " but only sent " + outgoingStanzaCount);
+			Log.e(TAG, "got ack of " + ackCount + " but only sent " + outgoingStanzaCount);
 			// Reset the outgoing count here in a feeble attempt to re-sync.  All bets
 			// are off.
 			outgoingStanzaCount = ackCount;
@@ -408,7 +408,7 @@ public class XmppStreamHandler {
 
 	public void queue(Packet packet) {
 		if (outgoingQueue.size() >= maxOutgoingQueueSize) {
-			//Log.e(TAG, "outgoing queue full");
+			Log.e(TAG, "outgoing queue full");
 			return;
 		}
 		outgoingStanzaCount++;
@@ -451,7 +451,7 @@ public class XmppStreamHandler {
                         org.jivesoftware.smack.packet.Presence.Type.unavailable));
 
             } catch (Exception e) {
-                //Log.e(TAG, "error on shutdown()", e);
+                Log.e(TAG, "error on shutdown() : "+ e.getMessage());
             }
         }
 	public void causeException(Exception e) {

@@ -16,7 +16,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 import com.emot.androidclient.util.LogConstants;
 
@@ -49,7 +49,7 @@ public class RosterProvider extends ContentProvider {
 
 	private Runnable mNotifyChange = new Runnable() {
 		public void run() {
-			//Log.d(TAG, "notifying change");
+			Log.d(TAG, "notifying change");
 			getContext().getContentResolver().notifyChange(CONTENT_URI, null);
 			getContext().getContentResolver().notifyChange(GROUPS_URI, null);
 		}
@@ -241,7 +241,7 @@ public class RosterProvider extends ContentProvider {
 
 	private static void infoLog(String data) {
 		if (LogConstants.LOG_INFO) {
-			//Log.i(TAG, data);
+			Log.i(TAG, data);
 		}
 	}
 

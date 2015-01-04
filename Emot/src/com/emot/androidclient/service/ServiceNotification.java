@@ -2,7 +2,7 @@ package com.emot.androidclient.service;
 
 import android.app.Notification;
 import android.app.Service;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 // Code to make a Service stay in the foreground from
 // http://devtcg.blogspot.com/2009/12/gracefully-supporting-multiple-android.html
@@ -43,11 +43,11 @@ abstract class ServiceNotification {
 			private static final EclairAndBeyond sInstance = new EclairAndBeyond();
 		}
 		public void showNotification(Service context, int id, Notification n) {
-			//Log.d("EclairAndBeyond", "showNotification " + id + " " + n);
+			Log.d("EclairAndBeyond", "showNotification " + id + " " + n);
 			context.startForeground(id, n);
 		}
 		public void hideNotification(Service context, int id) {
-			//Log.d("EclairAndBeyond", "hideNotification");
+			Log.d("EclairAndBeyond", "hideNotification");
 			context.stopForeground(true);
 		}
 	}

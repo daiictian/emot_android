@@ -15,7 +15,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SearchView.OnQueryTextListener;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -108,15 +108,15 @@ public class ContactScreen extends ActionBarActivity{
 	}
 	
 	public void refreshContacts(){
-		//Log.i(TAG, "Refreshing contacts !!!!");
+		Log.i(TAG, "Refreshing contacts !!!!");
 		//showContactsThread = new ShowContacts();
 		//showContactsThread.execute();
 		
 		
 		try{
-			//Log.i(TAG, "Starting Query ...");
+			Log.i(TAG, "Starting Query ...");
 			Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
-			//Log.i(TAG, "contacts found  = "+cr.getCount());
+			Log.i(TAG, "contacts found  = "+cr.getCount());
 			while (cr.moveToNext()) {
 			    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
 			    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
@@ -125,7 +125,7 @@ public class ContactScreen extends ActionBarActivity{
 			}
 			cr.close();
 			contactAdapter.notifyDataSetChanged();
-			//Log.i(TAG, "time 2");
+			Log.i(TAG, "time 2");
 		}catch(Exception e){
 			//e.printStackTrace();
 		}
@@ -156,7 +156,7 @@ public class ContactScreen extends ActionBarActivity{
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    // Inflate the menu items for use in the action bar
-		//Log.i(TAG, "Action bar creating menu");
+		Log.i(TAG, "Action bar creating menu");
 	    MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.menu_actions, menu);
 	    SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
@@ -165,14 +165,14 @@ public class ContactScreen extends ActionBarActivity{
         search.setOnQueryTextListener(new OnQueryTextListener() { 
             @Override 
             public boolean onQueryTextChange(String query) {
-            	//Log.i(TAG, "Sstring change : "+query);
+            	Log.i(TAG, "Sstring change : "+query);
             	contactAdapter.getFilter().filter(query);
                 return true; 
             }
 
 			@Override
 			public boolean onQueryTextSubmit(String arg0) {
-				//Log.i(TAG, "Sstring submit : "+arg0);
+				Log.i(TAG, "Sstring submit : "+arg0);
 				contactAdapter.getFilter().filter(arg0);
 				return true;
 			} 
@@ -190,7 +190,7 @@ public class ContactScreen extends ActionBarActivity{
 	            startActivity(new Intent(ContactScreen.this, UpdateProfileScreen.class));
 	            return true;
 	        case android.R.id.home:
-	        	//Log.i(TAG, "back pressed");
+	        	Log.i(TAG, "back pressed");
 	            this.finish();
 	            return true;
 	        default:
@@ -205,9 +205,9 @@ public class ContactScreen extends ActionBarActivity{
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			try{
-				//Log.i(TAG, "Starting Query ...");
+				Log.i(TAG, "Starting Query ...");
 				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
-				//Log.i(TAG, "contacts found  = "+cr.getCount());
+				Log.i(TAG, "contacts found  = "+cr.getCount());
 				while (cr.moveToNext()) {
 				    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
 				    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
@@ -215,7 +215,7 @@ public class ContactScreen extends ActionBarActivity{
 				    publishProgress(contact);
 				}
 				cr.close();
-				//Log.i(TAG, "time 2");
+				Log.i(TAG, "time 2");
 				return true;
 			}catch(Exception e){
 				//e.printStackTrace();
@@ -227,7 +227,7 @@ public class ContactScreen extends ActionBarActivity{
 		protected void onProgressUpdate(Contact... contact){
 			contacts.add(contact[0]);
 			contactAdapter.notifyDataSetChanged();
-			//Log.i(TAG, "Adding contact ...");
+			Log.i(TAG, "Adding contact ...");
 			return;
 		}
 
@@ -240,7 +240,7 @@ public class ContactScreen extends ActionBarActivity{
 
 
 	private void registerXMPPService() {
-		//Log.i(TAG, "called startXMPPService()");
+		Log.i(TAG, "called startXMPPService()");
 		mConfig = EmotConfiguration.getConfig();
 		xmppServiceIntent = new Intent(this, XMPPService.class);
 		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
@@ -248,11 +248,11 @@ public class ContactScreen extends ActionBarActivity{
 		xmppServiceConnection = new ServiceConnection() {
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				//Log.i(TAG, "called onServiceConnected()");
+				Log.i(TAG, "called onServiceConnected()");
 				serviceAdapter = new XMPPRosterServiceAdapter(
 						IXMPPRosterService.Stub.asInterface(service));
 				//serviceAdapter.registerUICallback(rosterCallback);
-				//Log.i(TAG, "getConnectionState(): " + serviceAdapter.getConnectionState());
+				Log.i(TAG, "getConnectionState(): " + serviceAdapter.getConnectionState());
 				ConnectionState cs = serviceAdapter.getConnectionState();
 				//				updateConnectionState(cs);
 				//				updateRoster();
@@ -260,11 +260,11 @@ public class ContactScreen extends ActionBarActivity{
 				// when returning from prefs to main activity, apply new config
 				if (mConfig.reconnect_required && cs == ConnectionState.ONLINE) {
 					// login config changed, force reconnection
-					//Log.i(TAG, "--------- RECONNECTING CONTACTSCREEN ----------");
+					Log.i(TAG, "--------- RECONNECTING CONTACTSCREEN ----------");
 					serviceAdapter.disconnect();
 					serviceAdapter.connect();
 				} else if (mConfig.presence_required && isConnected()){
-					//Log.i(TAG, "--------- SETTING STATUS CONTACTSCREEN ----------");
+					Log.i(TAG, "--------- SETTING STATUS CONTACTSCREEN ----------");
 					serviceAdapter.setStatusFromConfig();
 				}
 				//updateContacts();
@@ -274,7 +274,7 @@ public class ContactScreen extends ActionBarActivity{
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
-				//Log.i(TAG, "called onServiceDisconnected()");
+				Log.i(TAG, "called onServiceDisconnected()");
 			}
 		};
 	}
@@ -283,7 +283,7 @@ public class ContactScreen extends ActionBarActivity{
 		try {
 			unbindService(xmppServiceConnection);
 		} catch (IllegalArgumentException e) {
-			//Log.e(TAG, "Service wasn't bound!");
+			Log.e(TAG, "Service wasn't bound!");
 		}
 	}
 

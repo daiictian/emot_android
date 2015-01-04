@@ -15,7 +15,7 @@ import android.net.Uri;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Vibrator;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.widget.Toast;
 
 import com.emot.androidclient.data.EmotConfiguration;
@@ -52,7 +52,7 @@ public abstract class GenericService extends Service {
 	@Override
 	public void onCreate() {
 		
-		//Log.i(TAG, "called onCreate()");
+		Log.i(TAG, "called onCreate()");
 		super.onCreate();
 		mConfig = EmotConfiguration.getConfig();
 		mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -63,13 +63,13 @@ public abstract class GenericService extends Service {
 
 	@Override
 	public void onDestroy() {
-		//Log.i(TAG, "called onDestroy()");
+		Log.i(TAG, "called onDestroy()");
 		super.onDestroy();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		//Log.i(TAG, "called onStartCommand()");
+		Log.i(TAG, "called onStartCommand()");
 		return START_STICKY;
 	}
 
@@ -135,7 +135,7 @@ public abstract class GenericService extends Service {
 	
 	private void setNotification(String fromJid, String fromUserId, String message, boolean is_error, boolean grpchat, String msgSenderinGrp) {
 		message = EmotUtils.replaceTag(message);
-		//Log.i(TAG, "New message = "+message);
+		Log.i(TAG, "New message = "+message);
 		int mNotificationCounter = 0;
 		if (notificationCount.containsKey(fromJid)) {
 			mNotificationCounter = notificationCount.get(fromJid);
@@ -179,7 +179,7 @@ public abstract class GenericService extends Service {
 		Uri userNameUri = Uri.parse(fromJid);
 		if(!grpchat){
 		mNotificationIntent.setData(userNameUri);
-		//Log.i(TAG, "Notificaiton from user = "+fromUserId);
+		Log.i(TAG, "Notificaiton from user = "+fromUserId);
 		mNotificationIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, fromJid);
 		mNotificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		
@@ -193,7 +193,7 @@ public abstract class GenericService extends Service {
 		mNotification.flags = Notification.FLAG_AUTO_CANCEL;
 		}else{
 			mGrpNotificationIntent.setData(userNameUri);
-			//Log.i(TAG, "Notificaiton from user = "+fromUserId);
+			Log.i(TAG, "Notificaiton from user = "+fromUserId);
 			mGrpNotificationIntent.putExtra("grpName", fromJid);
 			mGrpNotificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			
@@ -233,13 +233,13 @@ public abstract class GenericService extends Service {
 
 	protected void logError(String data) {
 		if (LogConstants.LOG_ERROR) {
-			//Log.e(TAG, data);
+			Log.e(TAG, data);
 		}
 	}
 
 	protected void logInfo(String data) {
 		if (LogConstants.LOG_INFO) {
-			//Log.i(TAG, data);
+			Log.i(TAG, data);
 		}
 	}
 

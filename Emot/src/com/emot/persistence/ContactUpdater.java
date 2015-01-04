@@ -21,7 +21,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 import com.emot.androidclient.XMPPRosterServiceAdapter;
 import com.emot.androidclient.data.RosterProvider;
@@ -78,18 +78,18 @@ public class ContactUpdater {
 		@Override
 		protected void onPostExecute(JSONArray numbers) {
 			if(numbers!=null && numbers.length()>0){
-				//Log.i(TAG, "Calling API ... "+numbers.toString());
+				Log.i(TAG, "Calling API ... "+numbers.toString());
 				URL cUrl;
 				try{
 					cUrl = new URL(WebServiceConstants.HTTP + "://"+ 
 							WebServiceConstants.SERVER_IP
 							+WebServiceConstants.PATH_API+WebServiceConstants.OP_GETCONTACT);
-					//Log.i(TAG, "URL "+cUrl);
+					Log.i(TAG, "URL "+cUrl);
 				}catch(MalformedURLException e){
 					//e.printStackTrace();
 					return;
 				}
-				//Log.i(TAG, "Looking for numbers : "+numbers.toString());
+				Log.i(TAG, "Looking for numbers : "+numbers.toString());
 				ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
 				params.add(new BasicNameValuePair("appid", EmotApplication.getValue(PreferenceConstants.USER_APPID, "")));
 				params.add(new BasicNameValuePair("number_list", numbers.toString()));
@@ -99,7 +99,7 @@ public class ContactUpdater {
 					public void onTaskComplete(String result) {
 						//Put this in database
 						//result = "[{\"hbjh\"}]";
-						////Log.i(TAG, "Result "+result.toString());
+						//Log.i(TAG, "Result "+result.toString());
 
 						SQLiteDatabase db = EmotDBHelper.getInstance(EmotApplication.getAppContext()).getWritableDatabase();
 						try {
@@ -110,12 +110,12 @@ public class ContactUpdater {
 						}finally{
 							db.close();
 						}
-						//Log.i(TAG, "Db ran ... ");
+						Log.i(TAG, "Db ran ... ");
 					}
 
 					@Override
 					public void onTaskError(String error) {
-						//Log.i(TAG, "Error while getting numbers"+error);
+						Log.i(TAG, "Error while getting numbers"+error);
 					}
 				});
 				contactCall.execute();
@@ -141,6 +141,11 @@ public class ContactUpdater {
 					ph = EmotApplication.getValue(PreferenceConstants.COUNTRY_PHONE_CODE, "") + ph;
 				}
 				String mobile = ph.replaceAll("[^\\d.]", "");
+				String prev_name = cntcts.get(mobile);
+				//Log.i(TAG, "mobile = "+mobile + " prev_name = "+prev_name + " name = "+name);
+				if(prev_name!=null && !prev_name.trim().equals("")){
+					name = prev_name;
+				}
 				cntcts.put(mobile,  name);
 			}
 			return cntcts;
@@ -163,7 +168,7 @@ public class ContactUpdater {
 				return null;
 			}
 //			while (ContactUpdater.serviceAdapter==null || !ContactUpdater.serviceAdapter.isAuthenticated()){
-//				//Log.i(TAG, "Wait for connection to establish");
+//				Log.i(TAG, "Wait for connection to establish");
 //				try {
 //					Thread.sleep(5000);
 //				} catch (InterruptedException e) {
@@ -187,22 +192,22 @@ public class ContactUpdater {
 						cvs.put(RosterProvider.RosterConstants.STATUS_MODE, "");
 						cvs.put(RosterProvider.RosterConstants.GROUP, "");
 						EmotApplication.getAppContext().getContentResolver().insert(RosterProvider.CONTENT_URI, cvs);
-						//Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
+						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
 					}
 					
 //					Cursor cr = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, new String[] {RosterProvider.RosterConstants.JID} , RosterProvider.RosterConstants.JID+" = '"+emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN+"'", null, null);
 //					if(cr.getCount()==0){
 //						EmotApplication.getAppContext().getContentResolver().insert(RosterProvider.CONTENT_URI, cvs);
 //						//updateProfileBitmap(emotter.getString("profile_image"), emotter.getString("mobile"));
-//						//Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
+//						Log.i(TAG, "Putting in DB "+emotter.getString("mobile"));
 //					}else{
-//						//Log.i(TAG, "Already in DB "+emotter.getString("mobile"));
+//						Log.i(TAG, "Already in DB "+emotter.getString("mobile"));
 //					}
 					
 					
-					//Log.i(TAG, "Service adapter value = "+ContactUpdater.serviceAdapter);
+					Log.i(TAG, "Service adapter value = "+ContactUpdater.serviceAdapter);
 					if(ContactUpdater.serviceAdapter!=null && ContactUpdater.serviceAdapter.isAuthenticated()){
-						//Log.i(TAG, "Adding roster "+emotter.getString("mobile"));
+						Log.i(TAG, "Adding roster "+emotter.getString("mobile"));
 						ContactUpdater.serviceAdapter.addRosterItem(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN, contacts.get(emotter.getString("mobile")), null);
 						ContactUpdater.serviceAdapter.sendPresenceRequest(emotter.getString("mobile")+"@"+WebServiceConstants.CHAT_DOMAIN, "subscribe");
 					}

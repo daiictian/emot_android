@@ -12,7 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -95,14 +95,14 @@ public class CreateGroup extends ActionBarActivity {
 			
 			@Override
 			public boolean onQueryTextSubmit(String query) {
-				//Log.i(TAG, "Sstring change : "+query);
+				Log.i(TAG, "Sstring change : "+query);
             	contactAdapter.getFilter().filter(query);
                 return true; 
 			}
 			
 			@Override
 			public boolean onQueryTextChange(String arg0) {
-				//Log.i(TAG, "Sstring submit : "+arg0);
+				Log.i(TAG, "Sstring submit : "+arg0);
 				contactAdapter.getFilter().filter(arg0);
 				return true;
 			}
@@ -133,7 +133,7 @@ public class CreateGroup extends ActionBarActivity {
 				
 				for(int i=0; i < contacts.size(); i++){
 					if(contacts.get(i).isSelected()){
-						//Log.i(TAG, "selected contacts is " + contacts.get(i).getName());
+						Log.i(TAG, "selected contacts is " + contacts.get(i).getName());
 						selectedContacts.add(contacts.get(i));
 						
 					}
@@ -162,7 +162,7 @@ public class CreateGroup extends ActionBarActivity {
 	
 	
 	public void refreshContacts(){
-		//Log.i(TAG, "Refreshing contacts !!!!");
+		Log.i(TAG, "Refreshing contacts !!!!");
 //		showContactsThread = new ShowContacts();
 //		showContactsThread.execute();
 		
@@ -170,7 +170,7 @@ public class CreateGroup extends ActionBarActivity {
 		//Doing this on UI thread
 		Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
 		
-		//Log.i(TAG, "contacts found  = "+cr.getCount());
+		Log.i(TAG, "contacts found  = "+cr.getCount());
 		while (cr.moveToNext()) {
 		    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
 		    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
@@ -209,7 +209,7 @@ public class CreateGroup extends ActionBarActivity {
 			try{
 				Cursor cr = getContentResolver().query(RosterProvider.CONTENT_URI, CONTACT_PROJECTION, null, null, null);
 				
-				//Log.i(TAG, "contacts found  = "+cr.getCount());
+				Log.i(TAG, "contacts found  = "+cr.getCount());
 				while (cr.moveToNext()) {
 				    Contact contact = new Contact(cr.getString(cr.getColumnIndex(RosterConstants.ALIAS)), cr.getString(cr.getColumnIndex(RosterConstants.JID)));
 				    contact.setStatus(cr.getString(cr.getColumnIndex(RosterConstants.STATUS_MESSAGE)));
@@ -217,7 +217,7 @@ public class CreateGroup extends ActionBarActivity {
 				    publishProgress(contact);
 				}
 				cr.close();
-				//Log.i(TAG, "time 2");
+				Log.i(TAG, "time 2");
 				return true;
 			}catch(Exception e){
 				//e.printStackTrace();
@@ -229,7 +229,7 @@ public class CreateGroup extends ActionBarActivity {
 		protected void onProgressUpdate(Contact... contact){
 			contacts.add(contact[0]);
 			contactAdapter.notifyDataSetChanged();
-			//Log.i(TAG, "Adding contact ...");
+			Log.i(TAG, "Adding contact ...");
 			return;
 		}
 

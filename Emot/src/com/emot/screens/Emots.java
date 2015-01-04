@@ -7,7 +7,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -35,7 +35,7 @@ public class Emots extends Activity {
 			currentEmotsList = new ArrayList<CurrentEmot>();
 			currentEmotsList = result;
 			currentEmotsAdapter = new CurrentEmotsAdapter(Emots.this, currentEmotsList);
-			//Log.i("Emots", currentEmotsList.get(0).getUserLastEmot());
+			Log.i("Emots", currentEmotsList.get(0).getUserLastEmot());
 			emotsList.setAdapter(currentEmotsAdapter);
 			currentEmotsAdapter.notifyDataSetChanged();
 			

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,7 +48,7 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> implements Filter
 		Bitmap bitmap = null;
 		if(contacts.get(position).getAvatar()!=null){
 			bitmap = BitmapFactory.decodeByteArray(contacts.get(position).getAvatar() , 0, contacts.get(position).getAvatar().length);
-			////Log.i(TAG, "Bitmap  = "+bitmap);
+			//Log.i(TAG, "Bitmap  = "+bitmap);
 		}
 		if(bitmap==null){
 			bitmap = BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.blank_user_image);
@@ -61,7 +61,7 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> implements Filter
 
 	@Override
 	public Filter getFilter() {
-		//Log.i(TAG, "get filter called !!!");
+		Log.i(TAG, "get filter called !!!");
 		Filter filter = new Filter() {
 
 			@SuppressWarnings("unchecked")
@@ -74,7 +74,7 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> implements Filter
 
 			@Override
 			protected FilterResults performFiltering(CharSequence constraint) {
-				//Log.i(TAG, "Filtering through : "+constraint);
+				Log.i(TAG, "Filtering through : "+constraint);
 				if(ocontacts==null){
 					ocontacts = new ArrayList<Contact>(contacts);
 				}
@@ -90,7 +90,7 @@ public class ContactArrayAdapter extends ArrayAdapter<Contact> implements Filter
 
 				results.count = filtered_results.size();
 				results.values = filtered_results;
-				//Log.e("VALUES", results.values.toString());
+				Log.e("VALUES", results.values.toString());
 
 				return results;
 			}

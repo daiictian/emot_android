@@ -9,8 +9,10 @@
         android:id="@+id/listview_contact"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:divider="@color/light_grey"
         android:listSelector="@drawable/list_selector_flatcolor"
+        android:layout_above="@+id/buttonInvite"
         android:dividerHeight="1dp" >
     </ListView>
 

@@ -15,7 +15,7 @@ import android.os.IBinder;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -76,7 +76,7 @@ public class LastChatScreen extends ActionBarActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    // Inflate the menu items for use in the action bar
-		//Log.i(TAG, "Action bar creating menu");
+		Log.i(TAG, "Action bar creating menu");
 	    MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.menu_actions_lastchat, menu);
 	    return super.onCreateOptionsMenu(menu);
@@ -91,7 +91,7 @@ public class LastChatScreen extends ActionBarActivity {
 	            startActivity(new Intent(LastChatScreen.this, UpdateProfileScreen.class));
 	            return true;
 	        case android.R.id.home:
-	        	//Log.i(TAG, "back pressed");
+	        	Log.i(TAG, "back pressed");
 	            this.finish();
 	            return true;
 	        case R.id.action_search:
@@ -121,7 +121,7 @@ public class LastChatScreen extends ActionBarActivity {
 	}
 	
 	private void setAdapter(){
-		//Log.i(TAG, "Starting Adapter set ...");
+		Log.i(TAG, "Starting Adapter set ...");
 		String[] projection = new String[] {
 				ChatProvider.ChatConstants._ID,
 				ChatProvider.ChatConstants.JID,
@@ -134,7 +134,7 @@ public class LastChatScreen extends ActionBarActivity {
 		};
 		int[] projection_to = new int[] { R.id.textLastChatUser, R.id.textLastChatItem };
 		String selection =  ChatProvider.ChatConstants.JID + " != '"+EmotConfiguration.getConfig().jabberID+"'" + ")  GROUP BY ("+ ChatProvider.ChatConstants.JID;
-		////Log.i(TAG, "selection is " + selection);
+		//Log.i(TAG, "selection is " + selection);
 		String[] groupby = new String[]{ChatProvider.ChatConstants.JID};
 		Cursor cursor = getContentResolver().query(
 				ChatProvider.CONTENT_URI, 
@@ -146,7 +146,7 @@ public class LastChatScreen extends ActionBarActivity {
 			viewEmpty.setVisibility(View.GONE);
 			listLastChat.setVisibility(View.VISIBLE);
 		}
-		////Log.i(TAG, "cursor count "+cursor.getCount());
+		//Log.i(TAG, "cursor count "+cursor.getCount());
 		final ListAdapter adapter = new LastChatAdapter(cursor, projection, projection_to);
 		listLastChat.setAdapter(adapter);
 		listLastChat.setOnItemClickListener(new OnItemClickListener() {
@@ -157,7 +157,7 @@ public class LastChatScreen extends ActionBarActivity {
 	            String jid = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.JID));
 	            String grpSubject = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.GRP_SUBJECT));
 	            String type = cur.getString(cur.getColumnIndex(ChatProvider.ChatConstants.CHAT_TYPE));
-	            ////Log.i(TAG, "jid of room or freind is " + jid);
+	            //Log.i(TAG, "jid of room or freind is " + jid);
 	            if(type.equals("chat")){
 		            Intent chatIntent = new Intent(LastChatScreen.this, ChatScreen.class);
 					chatIntent.putExtra(ChatScreen.INTENT_CHAT_FRIEND, jid);
@@ -166,7 +166,7 @@ public class LastChatScreen extends ActionBarActivity {
 	            	Intent chatIntent = new Intent(LastChatScreen.this, GroupChatScreen.class);
 					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_NAME, jid);
 					chatIntent.putExtra(GroupChatScreen.INTENT_GRPCHAT_SUBJECT, grpSubject);
-					////Log.i(TAG, "starting grpchat screen with grpSubject " +grpSubject);
+					//Log.i(TAG, "starting grpchat screen with grpSubject " +grpSubject);
 					startActivity(chatIntent);	
 	            }
 				//cur.close();
@@ -178,26 +178,26 @@ public class LastChatScreen extends ActionBarActivity {
 				int action = MotionEventCompat.getActionMasked(event);
 				switch(action) {
 					case (MotionEvent.ACTION_DOWN) :
-			            //Log.i(TAG,"Action was DOWN");
+			            Log.i(TAG,"Action was DOWN");
 			            return false;
 			        case (MotionEvent.ACTION_MOVE) :
-			            //Log.i(TAG,"Action was MOVE");
+			            Log.i(TAG,"Action was MOVE");
 			            return false;
 			        case (MotionEvent.ACTION_UP) :
-			            //Log.i(TAG,"Action was UP");
+			            Log.i(TAG,"Action was UP");
 			            return false;
 			        case (MotionEvent.ACTION_CANCEL) :
-			            //Log.i(TAG,"Action was CANCEL");
+			            Log.i(TAG,"Action was CANCEL");
 			            return false;
 			        case (MotionEvent.ACTION_OUTSIDE) :
-			            //Log.i(TAG,"Movement occurred outside bounds of current screen element");
+			            Log.i(TAG,"Movement occurred outside bounds of current screen element");
 			            return false;      
 			        default : 
 			            return false;
 				}
 			}
 		});
-		//Log.i(TAG, "Adapter set !!");
+		Log.i(TAG, "Adapter set !!");
 	}
 	
 	class LastChatAdapter extends SimpleCursorAdapter{
@@ -229,7 +229,7 @@ public class LastChatScreen extends ActionBarActivity {
 			}
 			String message = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.MESSAGE));
 			long time = cursor.getLong(cursor.getColumnIndex(ChatProvider.ChatConstants.DATE));
-			//Log.i(TAG, "Time is " +time);
+			Log.i(TAG, "Time is " +time);
 			String status = cursor.getString(cursor.getColumnIndex(ChatProvider.ChatConstants.DELIVERY_STATUS));
 			boolean isNew = false;
 			if(status.equals(ChatConstants.DS_NEW)){
@@ -266,7 +266,7 @@ public class LastChatScreen extends ActionBarActivity {
 		try {
 			unbindService(xmppServiceConnection);
 		} catch (IllegalArgumentException e) {
-			//Log.e(TAG, "Service wasn't bound!");
+			Log.e(TAG, "Service wasn't bound!");
 		}
 	}
 
@@ -275,7 +275,7 @@ public class LastChatScreen extends ActionBarActivity {
 	}
 	
 	private void registerXMPPService() {
-		//Log.i(TAG, "called startXMPPService()");
+		Log.i(TAG, "called startXMPPService()");
 		mConfig = EmotConfiguration.getConfig();
 		xmppServiceIntent = new Intent(this, XMPPService.class);
 		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
@@ -283,11 +283,11 @@ public class LastChatScreen extends ActionBarActivity {
 		xmppServiceConnection = new ServiceConnection() {
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				//Log.i(TAG, "called onServiceConnected()");
+				Log.i(TAG, "called onServiceConnected()");
 				serviceAdapter = new XMPPRosterServiceAdapter(
 						IXMPPRosterService.Stub.asInterface(service));
 				//serviceAdapter.registerUICallback(rosterCallback);
-				//Log.i(TAG, "getConnectionState(): "+ serviceAdapter.getConnectionState());
+				Log.i(TAG, "getConnectionState(): "+ serviceAdapter.getConnectionState());
 				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
 				ConnectionState cs = serviceAdapter.getConnectionState();
 				//				updateConnectionState(cs);
@@ -296,14 +296,14 @@ public class LastChatScreen extends ActionBarActivity {
 				// when returning from prefs to main activity, apply new config
 				if (mConfig.reconnect_required && cs == ConnectionState.ONLINE) {
 					// login config changed, force reconnection
-					//Log.i(TAG, "--------- RECONNECTING LASTCHATSCREEN----------");
+					Log.i(TAG, "--------- RECONNECTING LASTCHATSCREEN----------");
 					serviceAdapter.disconnect();
 					serviceAdapter.connect();
 				} else if (mConfig.presence_required && isConnected()){
-					//Log.i(TAG, "--------- SETTING STATUS LASTCHATSCREEN ----------");
+					Log.i(TAG, "--------- SETTING STATUS LASTCHATSCREEN ----------");
 					serviceAdapter.setStatusFromConfig();
 				}else if(!isConnected()){
-					//Log.i(TAG, "--------- TRYING TO CONNECT ----------");
+					Log.i(TAG, "--------- TRYING TO CONNECT ----------");
 					serviceAdapter.connect();
 				}
 				updateContacts();
@@ -312,7 +312,7 @@ public class LastChatScreen extends ActionBarActivity {
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
-				//Log.i(TAG, "called onServiceDisconnected()");
+				Log.i(TAG, "called onServiceDisconnected()");
 			}
 		};
 	}
@@ -352,13 +352,13 @@ public class LastChatScreen extends ActionBarActivity {
 					selection, 
 					null, 
 					null);
-			////Log.i(TAG, "users found length = "+cursor.getCount());
+			//Log.i(TAG, "users found length = "+cursor.getCount());
 			if(cursor.getCount()>0){
 				while(cursor.moveToNext()){
 					alias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
-					////Log.i(TAG, "chat alias : "+alias);
+					//Log.i(TAG, "chat alias : "+alias);
 					avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
-					////Log.i(TAG, "avatar : "+avatar);
+					//Log.i(TAG, "avatar : "+avatar);
 					
 				}
 			}
@@ -378,7 +378,7 @@ public class LastChatScreen extends ActionBarActivity {
         	
 			
 			lastchat.setText(last_chat);
-			//Log.i(TAG, "time is again " +time);
+			Log.i(TAG, "time is again " +time);
 			mTime.setText(time);
 			if(isNew){
 				lastchat.setTextColor(EmotApplication.getAppContext().getResources().getColor(R.color.green));
@@ -398,13 +398,13 @@ public class LastChatScreen extends ActionBarActivity {
 				String selection = RosterProvider.RosterConstants.JID + "='" + jid + "'";
 				String[] projection = new String[] {RosterProvider.RosterConstants.ALIAS, RosterProvider.RosterConstants.AVATAR};
 				Cursor cursor = EmotApplication.getAppContext().getContentResolver().query(RosterProvider.CONTENT_URI, projection, selection, null, null);
-				////Log.i(TAG, "users found length = "+cursor.getCount());
+				//Log.i(TAG, "users found length = "+cursor.getCount());
 				if(cursor.getCount()>0){
 					while(cursor.moveToNext()){
 						alias = cursor.getString(cursor.getColumnIndex(RosterProvider.RosterConstants.ALIAS));
-						////Log.i(TAG, "chat alias : "+alias);
+						//Log.i(TAG, "chat alias : "+alias);
 						avatar = cursor.getBlob(cursor.getColumnIndex(RosterConstants.AVATAR));
-						////Log.i(TAG, "avatar : "+avatar);
+						//Log.i(TAG, "avatar : "+avatar);
 						
 					}
 				}
@@ -431,17 +431,17 @@ public class LastChatScreen extends ActionBarActivity {
 	
 	public void updateContacts(){
 		//Update Contacts
-		////Log.i(TAG, "Updating contacts !!!!");
+		//Log.i(TAG, "Updating contacts !!!!");
 		ContactUpdater.updateContacts(new TaskCompletedRunnable() {
 
 			@Override
 			public void onTaskComplete(String result) {
-				//Log.i(TAG, "Contacts updated succesfully ..");
+				Log.i(TAG, "Contacts updated succesfully ..");
 			}
 
 			@Override
 			public void onTaskError(String error) {
-				//Log.i(TAG, "Contacts update failed .. "+error);
+				Log.i(TAG, "Contacts update failed .. "+error);
 			}
 		}, serviceAdapter);
 	}
