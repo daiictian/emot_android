@@ -58,7 +58,7 @@
     <string name="selectParticipant">Select Participant</string>
     <string name="submit">SUBMIT</string>
     <string name="invite">INVITE FRIENDS</string>
-    <string name="invite_text">Hi there! I am using emot. Lets you chat through smiley suggestions. Download the app from here.</string>
+    <string name="invite_text">Hi there! I am using emot. Lets you chat through smiley suggestions. Download the app from here: http://tinyurl.com/p2rdtkz</string>
     <string name="createGroup">CREATE GROUP</string>
     <string name="send">SEND</string>
     <string name="retry">Retrying in</string>
