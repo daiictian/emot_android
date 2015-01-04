@@ -4,7 +4,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +59,7 @@ public class CurrentEmotsAdapter extends BaseAdapter {
        } else {  
             viewHolder = (CompleteListViewHolder) v.getTag();  
        } 
-		//Log.i("EmotsAdapter", "position "+mList.get(position).getUserName());
+		Log.i("EmotsAdapter", "position "+mList.get(position).getUserName());
        viewHolder.user.setText(mList.get(position).getUserName());
        viewHolder.lastEmot.setText(mList.get(position).getUserLastEmot());
        return v;  

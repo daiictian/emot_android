@@ -20,7 +20,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 public class EmoticonDBHelper extends SQLiteOpenHelper {
 
@@ -55,7 +55,7 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 		if(emoticonHelperInstance == null){
 			emoticonHelperInstance = new EmoticonDBHelper(context);
 		}
-		//Log.i(TAG, "In Instance get!!!");
+		Log.i(TAG, "In Instance get!!!");
 		return emoticonHelperInstance;
 
 
@@ -95,29 +95,29 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 		//db.execSQL("create table emoticons (_id INTEGER PRIMARY KEY autoincrement, emot_hash varchar(20), emot_img BLOB, tags TEXT)");
 		boolean dbExist = checkDataBase();
 		if(dbExist){
-			//Log.i(TAG, "DATABASE EXISTS");
+			Log.i(TAG, "DATABASE EXISTS");
 			//do nothing - database already exist
 		}else{
-			//Log.i(TAG, "DATABASE DOES NOT EXISTS");
+			Log.i(TAG, "DATABASE DOES NOT EXISTS");
 			try {
 				copyDataBase();
-				//Log.i(TAG, "Copied database successfully !!!");
+				Log.i(TAG, "Copied database successfully !!!");
 			} catch (IOException e) {
-				//Log.i(TAG, "Error copying database");
+				Log.i(TAG, "Error copying database");
 				//e.printStackTrace();
 			}
 		}
 	}
 
 	private boolean checkDataBase(){
-		//Log.i(TAG, "Checking DBBBB");
+		Log.i(TAG, "Checking DBBBB");
 		SQLiteDatabase checkDB = null;
 		try{
 			String dbPath = DATABASE_PATH + DATABASE_NAME;
 			checkDB = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY);
 		}catch(Exception e){
 			//database does't exist yet.
-			//Log.i(TAG, "Exception caught !!!");
+			Log.i(TAG, "Exception caught !!!");
 			//e.printStackTrace();
 		}
 		if(checkDB != null){
@@ -138,7 +138,7 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 	
 	public static Bitmap getEmot(byte[] emotImg, byte[] emotImgLrg, String emot_hash){
 		if(emotImg==null){
-			//Log.i(TAG, "Pulling image from large");
+			Log.i(TAG, "Pulling image from large");
 			emotImg = EmotUtils.resizeEmoticon(emotImgLrg);
 			ContentValues values = new ContentValues();
 			values.put(DBContract.EmotsDBEntry.EMOT_IMG, emotImg);
@@ -149,7 +149,7 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 					null
 			);
 		}else{
-			//Log.i(TAG, "Pulling image from small");
+			Log.i(TAG, "Pulling image from small");
 		}
 		return BitmapFactory.decodeByteArray(emotImg , 0, emotImg.length);
 	}
@@ -157,7 +157,7 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 	public static Bitmap getEmotImg(String emot_hash){
 		Bitmap emot_img = emotCache.get(emot_hash);
 		if(emot_img==null){
-			//Log.i(TAG, "emot image from DB");
+			Log.i(TAG, "emot image from DB");
 			Cursor cr = EmoticonDBHelper.getInstance(EmotApplication.getAppContext()).getReadableDatabase().query(
 					DBContract.EmotsDBEntry.TABLE_NAME, 
 					new String[] {DBContract.EmotsDBEntry.EMOT_IMG, DBContract.EmotsDBEntry.EMOT_IMG_LARGE} , 
@@ -173,12 +173,12 @@ public class EmoticonDBHelper extends SQLiteOpenHelper {
 			cr.close();
 			//Set to some default if not found
 			if(emot_img == null){
-				//Log.i(TAG, "Emoticon not found !!!");
+				Log.i(TAG, "Emoticon not found !!!");
 				emot_img = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.ic_question);
 			}
 			emotCache.put(emot_hash, emot_img);
 		}else{
-			//Log.i(TAG, "emot image from hash");
+			Log.i(TAG, "emot image from hash");
 		}
 		return emot_img;
 	}

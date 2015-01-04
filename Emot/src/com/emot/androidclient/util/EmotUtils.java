@@ -13,7 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 import com.emot.constants.ApplicationConstants;
 import com.emot.model.EmotApplication;
@@ -56,7 +56,7 @@ public class EmotUtils {
 		    }else
 		        return DateFormat.format("MMMM dd yyyy, h:mm aa", smsTime).toString();
 		} catch (ParseException e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			return "";
 		}
 	}
@@ -78,7 +78,7 @@ public class EmotUtils {
 			DisplayMetrics metrics = EmotApplication.getAppContext().getResources().getDisplayMetrics();
 			int width = metrics.widthPixels;
 			int height = metrics.heightPixels;
-			//Log.i(TAG, "width = "+width + " height = "+height);
+			Log.i(TAG, "width = "+width + " height = "+height);
 			size = width/DIVISION_FACTOR;
 			EmotApplication.setValue(PreferenceConstants.EMOTICON_SIZE, size);
 		}

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 public class EmotDBHelper extends SQLiteOpenHelper{
 
@@ -54,7 +54,7 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		if(emotDBHelperInstance == null){
 			emotDBHelperInstance = new EmotDBHelper(context);
 		}
-		//Log.d(TAG, "In Instance get!!!");
+		Log.d(TAG, "In Instance get!!!");
 		return emotDBHelperInstance;
 		
 	
@@ -72,19 +72,19 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		
 		//db.execSQL(CREATE_EMOT_TABLE);
 		
-		//Log.d(TAG, "starttime ... ");
+		Log.d(TAG, "starttime ... ");
 		//Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
-		//Log.d(TAG, "querytime ... "+cursor.getCount());
+		Log.d(TAG, "querytime ... "+cursor.getCount());
 		int i = 0;
 		if (cursor != null) {
 			while (cursor.moveToNext()) {
-	    		////Log.d(TAG, cursor.getString(0));
+	    		//Log.d(TAG, cursor.getString(0));
 	    		i++;
 	    	}
 		}
 		//cursor.close();
-		//Log.d(TAG, "endtime ... " + i);
-		//Log.d(TAG, "Ran queries ...");
+		Log.d(TAG, "endtime ... " + i);
+		Log.d(TAG, "Ran queries ...");
 		//cursor.close();
 		return cursor;
 		
@@ -101,14 +101,14 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		
 		//db.execSQL(CREATE_EMOT_TABLE);
 		
-		//Log.d(TAG, "starttime ... ");
+		Log.d(TAG, "starttime ... ");
 		//Cursor cursor = db.rawQuery("SELECT * FROM emots WHERE tags MATCH 'apple OR bat';", null);
-		//Log.d(TAG, "querytime ... "+cursor.getCount());
+		Log.d(TAG, "querytime ... "+cursor.getCount());
 		
 		
 		//cursor.close();
 		
-		//Log.d(TAG, "Ran queries ...");
+		Log.d(TAG, "Ran queries ...");
 		
 		return cursor;
 		
@@ -124,9 +124,9 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		contentValues.put(DBContract.EmotHistoryEntry.EMOT_LOCATION, location);
 		long i = db.insert(DBContract.EmotHistoryEntry.TABLE_NAME, null, contentValues);
 		if(i < 0){
-			//Log.i(TAG,"Could not insert chat");
+			Log.i(TAG,"Could not insert chat");
 		}else{
-			//Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
+			Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
 		}
 
 	}
@@ -141,9 +141,9 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		contentValues.put(DBContract.GroupEmotHistoryEntry.EMOT_LOCATION, location);
 		long i = db.insert(DBContract.GroupEmotHistoryEntry.TABLE_NAME, null, contentValues);
 		if(i < 0){
-			//Log.i(TAG,"Could not insert chat");
+			Log.i(TAG,"Could not insert chat");
 		}else{
-			//Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
+			Log.i(TAG,"Chat inserted successfully "+contentValues.get(DBContract.EmotHistoryEntry.EMOTS));
 		}
 
 	}
@@ -158,9 +158,9 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 		SQLiteDatabase db = this.getWritableDatabase();
 		long i = db.insert(tableName, null, contentValues);
 		if(i < 0){
-			//Log.i(TAG,"Could not insert records into table "+tableName);
+			Log.i(TAG,"Could not insert records into table "+tableName);
 		}else{
-			//Log.i(TAG,"Records inserted successfully into table "+tableName);
+			Log.i(TAG,"Records inserted successfully into table "+tableName);
 		}
 	}
 
@@ -168,7 +168,7 @@ public class EmotDBHelper extends SQLiteOpenHelper{
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(SQL_CREATE_TABLE_EMOTHISTORY);
 		//db.execSQL(SQL_CREATE_TABLE_CONTACTDETAILS);
-		//Log.d(TAG, "Tables created !!!");
+		Log.d(TAG, "Tables created !!!");
 		db.execSQL(SQL_CREATE_TABLE_GROUPEMOTHISTORY);
 		
         

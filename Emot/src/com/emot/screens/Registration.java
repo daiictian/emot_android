@@ -39,7 +39,7 @@ import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -99,7 +99,7 @@ public class Registration extends ActionBarActivity {
 
 	@Override
 	protected void onDestroy() {
-		//Log.i(TAG, "Activity destroy called !!!");
+		Log.i(TAG, "Activity destroy called !!!");
 		super.onDestroy();
 		if(pd != null){
 			pd.dismiss();
@@ -123,8 +123,13 @@ public class Registration extends ActionBarActivity {
 				//get caller's number
 				Bundle bundle = intent.getExtras();
 				String callerPhoneNumber= bundle.getString("incoming_number").replaceAll("[^\\d.]", "");
+				Log.i(TAG, "number = "+callerPhoneNumber.substring(callerPhoneNumber.length()-10, callerPhoneNumber.length()-5));
+				if(!callerPhoneNumber.substring(callerPhoneNumber.length()-10, callerPhoneNumber.length()-5).equals(OTP_STARTING_DIGITS)){
+					
+					return;
+				}
 				callerPhoneNumber = callerPhoneNumber.substring(callerPhoneNumber.length()-5, callerPhoneNumber.length());
-				////Log.i(TAG, "Received call from "+callerPhoneNumber);
+				//Log.i(TAG, "Received call from "+callerPhoneNumber);
 
 				if(viewVerificationBlock!=null && mEnterVerificationCode!=null && viewVerificationBlock.getVisibility()==View.VISIBLE){
 					mEnterVerificationCode.setText(callerPhoneNumber);
@@ -140,7 +145,7 @@ public class Registration extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
-		//Log.i(TAG, getSHA(EmotApplication.getAppContext()));
+		Log.i(TAG, getSHA(EmotApplication.getAppContext()));
 
 		if(EmotApplication.getValue(PreferenceConstants.USER_APPID, null)!=null){
 			startActivity(new Intent(this, LastChatScreen.class));
@@ -152,7 +157,7 @@ public class Registration extends ActionBarActivity {
 			Locale obj = new Locale("", countryCode);
 			mCountryCode.put(obj.getDisplayCountry(), obj.getCountry());
 			mCountryCallingCodeMap.put(obj.getCountry(), phoneUtil.getCountryCodeForRegion(obj.getCountry()));
-			////Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
+			//Log.i(TAG, obj.getDisplayCountry()+"  -  "+obj.getCountry()+"  -  "+phoneUtil.getCountryCodeForRegion(obj.getCountry()));
 		}
 		setContentView(R.layout.layout_register_screen);
 		createUICallback();
@@ -211,7 +216,7 @@ public class Registration extends ActionBarActivity {
 			ComponentName n = a.service;
 			
 			if(!n.getPackageName().equals("com.google.android.gms")){
-				//Log.i(TAG, "Killing process " + n.getPackageName());
+				Log.i(TAG, "Killing process " + n.getPackageName());
 			    am.killBackgroundProcesses(n.getPackageName());
 			}
 		}
@@ -258,14 +263,14 @@ public class Registration extends ActionBarActivity {
 					+WebServiceConstants.GET_QUERY+WebServiceConstants.DEVICE_TYPE+
 					"="+mMobileNumber;
 			URL wsURL = null;
-			//Log.d(TAG, "wsurl is  " +wsURL);
+			Log.d(TAG, "wsurl is  " +wsURL);
 			try {
 				wsURL = new URL(url);
 			} catch (MalformedURLException e) {
 
 				//e.printStackTrace();
 			}
-			//Log.d(TAG, "wsurl is  " +wsURL);
+			Log.d(TAG, "wsurl is  " +wsURL);
 			TaskCompletedRunnable taskCompletedRunnable = new TaskCompletedRunnable() {
 
 				@Override
@@ -277,19 +282,19 @@ public class Registration extends ActionBarActivity {
 					/////
 					retryCounter = new RetryCounter(30000, 1000);
 					retryCounter.start();
-					//Log.i("Registration", "callback called");
+					Log.i("Registration", "callback called");
 					try {
 						JSONObject resultJson = new JSONObject(result);
 
-						//Log.i("TAG", "callback called");
+						Log.i("TAG", "callback called");
 						String status = resultJson.getString("status");
 						if(status.equals("true")){
-							//Log.i("Registration", "status us true");
+							Log.i("Registration", "status us true");
 							//Toast.makeText(Registration.this, "You have been registered successfully", Toast.LENGTH_LONG).show();
 						}else{
 							Toast.makeText(Registration.this, "Error in Registration", Toast.LENGTH_LONG).show();
-							//Log.i(TAG, "registration status is " +status);
-							//Log.d(TAG, "message from server " + resultJson.getString("message"));
+							Log.i(TAG, "registration status is " +status);
+							Log.d(TAG, "message from server " + resultJson.getString("message"));
 
 						}
 					}
@@ -343,7 +348,7 @@ public class Registration extends ActionBarActivity {
 						+WebServiceConstants.PATH_API+WebServiceConstants.OP_REGISTER;
 
 				URL wsURL = null;
-				//Log.d(TAG, "wsurl is  " +wsURL);
+				Log.d(TAG, "wsurl is  " +wsURL);
 				try {
 					wsURL = new URL(url);
 				} catch (MalformedURLException e) {
@@ -368,7 +373,7 @@ public class Registration extends ActionBarActivity {
 					@Override
 					public void onTaskComplete(String result) {
 						try {
-							//Log.i(TAG, result);
+							Log.i(TAG, result);
 							JSONObject resultJson = new JSONObject(result);
 							String status = resultJson.getString("status");
 							if(status.equals("success")){
@@ -398,7 +403,7 @@ public class Registration extends ActionBarActivity {
 					@Override
 					public void onTaskError(String error) {
 						pd.cancel();
-						//Log.i(TAG, "Error "+error);
+						Log.i(TAG, "Error "+error);
 						Toast.makeText(Registration.this, error, Toast.LENGTH_LONG).show();
 					}
 
@@ -418,7 +423,7 @@ public class Registration extends ActionBarActivity {
 				mEnterMobile.setText("+"+countryCode+"-");
 				EmotApplication.setValue(PreferenceConstants.COUNTRY_PHONE_CODE, countryCode);
 				EmotApplication.setValue(PreferenceConstants.COUNTRY_CODE, mCountryCode.get(mCountrySelector.getText().toString()));
-				//Log.i(TAG, "ph code = "+mCountryCode.get(mCountrySelector.getText().toString()) + " c code="+countryCode);
+				Log.i(TAG, "ph code = "+mCountryCode.get(mCountrySelector.getText().toString()) + " c code="+countryCode);
 				mEnterMobile.requestFocus();
 				mEnterMobile.setSelection(mEnterMobile.getText().length());
 			}
@@ -485,9 +490,9 @@ public class Registration extends ActionBarActivity {
 		rosterCallback = new IXMPPRosterCallback.Stub() {
 			@Override
 			public void connectionStateChanged(final int connectionstate) throws RemoteException {
-				//Log.i(TAG, "Connection state changed to "+connectionstate);
+				Log.i(TAG, "Connection state changed to "+connectionstate);
 				if(connectionstate == ConnectionState.ONLINE.ordinal()){
-					//Log.i(TAG, " ---- Connected ----");
+					Log.i(TAG, " ---- Connected ----");
 					serviceAdapter.unregisterUICallback(rosterCallback);
 					openContactScreen();
 				}
@@ -510,20 +515,20 @@ public class Registration extends ActionBarActivity {
 	}
 
 	private void registerXMPPService() {
-		//Log.i(TAG, "called startXMPPService()");
+		Log.i(TAG, "called startXMPPService()");
 		mConfig = EmotConfiguration.getConfig();
-		//Log.i(TAG, "USERNAME = "+mConfig.jabberID + " password = "+mConfig.password);
+		Log.i(TAG, "USERNAME = "+mConfig.jabberID + " password = "+mConfig.password);
 		xmppServiceIntent = new Intent(this, XMPPService.class);
 		xmppServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		xmppServiceConnection = new ServiceConnection() {
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				//Log.i(TAG, "called onServiceConnected()");
+				Log.i(TAG, "called onServiceConnected()");
 				serviceAdapter = new XMPPRosterServiceAdapter(
 						IXMPPRosterService.Stub.asInterface(service));
 				serviceAdapter.registerUICallback(rosterCallback);
-				//Log.i(TAG, "getConnectionState(): " + serviceAdapter.getConnectionState());
+				Log.i(TAG, "getConnectionState(): " + serviceAdapter.getConnectionState());
 				//invalidateOptionsMenu();	// to load the action bar contents on time for access to icons/progressbar
 				//ConnectionState cs = serviceAdapter.getConnectionState();
 
@@ -532,7 +537,7 @@ public class Registration extends ActionBarActivity {
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
-				//Log.i(TAG, "called onServiceDisconnected()");
+				Log.i(TAG, "called onServiceDisconnected()");
 				pd.cancel();
 				Toast.makeText(Registration.this, "Sorry we encountered error while registering. Please try again later", Toast.LENGTH_LONG).show();
 			}
@@ -568,7 +573,7 @@ public class Registration extends ActionBarActivity {
 		try {
 			unbindService(xmppServiceConnection);
 		} catch (IllegalArgumentException e) {
-			//Log.e(TAG, "Service wasn't bound!");
+			Log.e(TAG, "Service wasn't bound!");
 		}
 	}
 

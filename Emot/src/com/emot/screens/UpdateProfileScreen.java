@@ -21,7 +21,7 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
@@ -88,7 +88,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO Auto-generated method stub
-				//Log.e("Selected Item", String.valueOf(which));
+				Log.e("Selected Item", String.valueOf(which));
 				if (which == 0) {
 					callCamera();
 				}
@@ -105,13 +105,13 @@ public class UpdateProfileScreen extends ActionBarActivity {
 				dialog.show();
 			}
 		});
-		//Log.i(TAG, "on create of update profile screen");
+		Log.i(TAG, "on create of update profile screen");
 		registerXMPPService();
 		
 		editStatus.setOnEditorActionListener(new OnEditorActionListener() {
 	        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 	            if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
-	                //Log.i(TAG,"Enter pressed");
+	                Log.i(TAG,"Enter pressed");
 	                saveButton.performClick();
 	                InputMethodManager imm = (InputMethodManager)getSystemService(
 	                	      Context.INPUT_METHOD_SERVICE);
@@ -137,20 +137,20 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	}
 
 	private void registerXMPPService() {
-		//Log.i(TAG, "called startXMPPService()");
+		Log.i(TAG, "called startXMPPService()");
 		mServiceIntent = new Intent(this, XMPPService.class);
 		mServiceIntent.setAction("com.emot.services.XMPPSERVICE");
 
 		mServiceConnection = new ServiceConnection() {
 
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				//Log.i(TAG, "called onServiceConnected()");
+				Log.i(TAG, "called onServiceConnected()");
 				mServiceAdapter = new XMPPRosterServiceAdapter(IXMPPRosterService.Stub.asInterface(service));
 				
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
-				//Log.i(TAG, "called onServiceDisconnected()");
+				Log.i(TAG, "called onServiceDisconnected()");
 			}
 
 		};
@@ -160,7 +160,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		try {
 			unbindService(mServiceConnection);
 		} catch (IllegalArgumentException e) {
-			//Log.e(TAG, "Service wasn't bound!");
+			Log.e(TAG, "Service wasn't bound!");
 		}
 	}
 
@@ -188,7 +188,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 //			public void onTaskComplete(String result) {
 //				pd.cancel();
 //				if(result.equals("success")){
-//					//Log.i(TAG, "Status being set is ");
+//					Log.i(TAG, "Status being set is ");
 //				}else{
 //					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG).show();
 //				}
@@ -216,7 +216,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	    // Handle presses on the action bar items
 	    switch (item.getItemId()) {
 	        case android.R.id.home:
-	        	//Log.i(TAG, "back pressed");
+	        	Log.i(TAG, "back pressed");
 	            this.finish();
 	            return true;
 	        default:
@@ -226,7 +226,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		//Log.i(TAG, "On activity result "+ resultCode + " result code " +RESULT_OK);
+		Log.i(TAG, "On activity result "+ resultCode + " result code " +RESULT_OK);
 		if (resultCode != RESULT_OK)
 			return;
 
@@ -235,7 +235,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 			@Override
 			public void onTaskComplete(String result) {
 				if(result.equals("success")){
-					//Log.i(TAG, "Status being set is ");
+					Log.i(TAG, "Status being set is ");
 				}else{
 					Toast.makeText(EmotApplication.getAppContext(), "Oops, we encountered some error while updating your pic. Please try again later.", Toast.LENGTH_LONG).show();
 				}
@@ -261,13 +261,13 @@ public class UpdateProfileScreen extends ActionBarActivity {
 					ByteArrayOutputStream stream = new ByteArrayOutputStream();
 					yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 					byte imageInByte[] = stream.toByteArray();
-					//Log.i("output before conversion", imageInByte.toString());
+					Log.i("output before conversion", imageInByte.toString());
 					
 					Editor c = EmotApplication.getPrefs().edit();
 					c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
 					c.commit();
 					EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
-					//Log.i(TAG, "11 mservice adapter value = "+mServiceAdapter);
+					Log.i(TAG, "11 mservice adapter value = "+mServiceAdapter);
 					imageAvatar.setImageBitmap(yourImage);
 					updateAvatar();
 				}
@@ -284,13 +284,13 @@ public class UpdateProfileScreen extends ActionBarActivity {
 					ByteArrayOutputStream stream = new ByteArrayOutputStream();
 					yourImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
 					byte imageInByte[] = stream.toByteArray();
-					//Log.i("output before conversion", imageInByte.toString());
+					Log.i("output before conversion", imageInByte.toString());
 					
 					Editor c = EmotApplication.getPrefs().edit();
 					c.putBoolean(PreferenceConstants.AVATAR_UPDATED, false);
 					c.commit();
 					EmotApplication.setValue(PreferenceConstants.USER_AVATAR, StringUtils.encodeBase64(imageInByte));
-					//Log.i(TAG, "mservice adapter value = "+mServiceAdapter);
+					Log.i(TAG, "mservice adapter value = "+mServiceAdapter);
 					imageAvatar.setImageBitmap(yourImage);
 					updateAvatar();
 				}
@@ -304,7 +304,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 		    @Override
 		    public void run()
 		    {
-		    	//Log.i(TAG, "updating avatar through task...");
+		    	Log.i(TAG, "updating avatar through task...");
 		        mServiceAdapter.setAvatar();
 		    }
 		 };
@@ -334,7 +334,7 @@ public class UpdateProfileScreen extends ActionBarActivity {
 	public static Bitmap getAvatar(){
 		String img = EmotApplication.getValue(PreferenceConstants.USER_AVATAR, null);
 		Bitmap bitmap;
-		//Log.i(TAG, "img is "+img);
+		Log.i(TAG, "img is "+img);
 		if(img==null){
 			bitmap = BitmapFactory.decodeResource(EmotApplication.getAppContext().getResources(), R.drawable.blank_profile);
 		}else{

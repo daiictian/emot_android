@@ -94,7 +94,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 import android.widget.Toast;
 
 import com.emot.androidclient.data.ChatProvider;
@@ -160,7 +160,7 @@ public class SmackableImp implements Smackable {
 	//	{
 	//	     @Override 
 	//	     public void run() {
-	//	    	  //Log.i(TAG, "trying for unacknowledged message");
+	//	    	  Log.i(TAG, "trying for unacknowledged message");
 	//	          sendNotacknowledgedMessages();
 	//	          mHandler.postDelayed(mHandlerTask, INTERVAL);
 	//	     }
@@ -296,7 +296,7 @@ public class SmackableImp implements Smackable {
 
 	// this code runs a DNS resolver, might be blocking
 	private synchronized void initXMPPConnection() {
-		//Log.i(TAG, "server = "+mConfig.server + " customserver = "+mConfig.customServer + " user = "+mConfig.userName + " ssl = "+mConfig.require_ssl + " resource = " + mConfig.ressource + " password = "+mConfig.password);
+		Log.i(TAG, "server = "+mConfig.server + " customserver = "+mConfig.customServer + " user = "+mConfig.userName + " ssl = "+mConfig.require_ssl + " resource = " + mConfig.ressource + " password = "+mConfig.password);
 		// allow custom server / custom port to override SRV record
 		if (mConfig.customServer.length() > 0)
 			mXMPPConfig = new ConnectionConfiguration(mConfig.customServer,
@@ -320,7 +320,7 @@ public class SmackableImp implements Smackable {
 		//			this.mXMPPConfig.setHostnameVerifier(mtm.wrapHostnameVerifier(
 		//						new org.apache.http.conn.ssl.StrictHostnameVerifier()));
 		//		} catch (java.security.GeneralSecurityException e) {
-		//			debugLog("initialize MemorizingTrustManager: " + e);
+		//			Log.d(TAG, "initialize MemorizingTrustManager: " + e);
 		//		}
 
 		this.mXMPPConnection = new XmppStreamHandler.ExtXMPPConnection(mXMPPConfig);
@@ -331,7 +331,7 @@ public class SmackableImp implements Smackable {
 			}
 		});
 		mConfig.reconnect_required = false;
-		//Log.i(TAG, "Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
+		Log.i(TAG, "Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 		initServiceDiscovery();
 	}
 
@@ -378,15 +378,15 @@ public class SmackableImp implements Smackable {
 
 
 
-		//Log.i(TAG, "Login successful");
+		Log.i(TAG, "Login successful");
 
 		String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
 		if(rooms != null){
 			final String roomstoJoin[] = rooms.split(",");
 			//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
-			//Log.i(TAG, "rooms to join " + roomstoJoin);
+			Log.i(TAG, "rooms to join " + roomstoJoin);
 			//						List<String> roomstoJoin2 = EmotApplication.getRooms();
-			//Log.i(TAG, "rooms to join size " +roomstoJoin.length);
+			Log.i(TAG, "rooms to join size " +roomstoJoin.length);
 			//sStopService = false;
 			for(int i = 0; i < roomstoJoin.length; i++){
 				mJoined.put(roomstoJoin[i], false);
@@ -396,7 +396,7 @@ public class SmackableImp implements Smackable {
 				count++;
 				if(roomstoJoin[i] != null && !roomstoJoin[i].equals("")){
 					mGroupChat2 = new MultiUserChat(mXMPPConnection, roomstoJoin[i]);
-					//Log.i(TAG, "joining room " +roomstoJoin[i]);
+					Log.i(TAG, "joining room " +roomstoJoin[i]);
 					final DiscussionHistory dh = new DiscussionHistory();
 					long since = EmotApplication.getLongValue("historySince", -1);
 					SimpleDateFormat dateFormater = new SimpleDateFormat(
@@ -409,7 +409,7 @@ public class SmackableImp implements Smackable {
 
 						mGroupChat2.join(mConfig.userName + "@conference.emot-net","",dh, timeout);
 						mJoined.put(roomstoJoin[i], true);
-						//Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
+						Log.i(TAG, "joining room " + mGroupChat2.getRoom() + "count " +count);
 
 
 					} catch (XMPPException e) {
@@ -434,11 +434,11 @@ public class SmackableImp implements Smackable {
 			if (mConnectingThread == null) {
 				mConnectingThread = new_thread;
 			} else try {
-				//Log.d(TAG, "updateConnectingThread: old thread is still running, killing it.");
+				Log.d(TAG, "updateConnectingThread: old thread is still running, killing it.");
 				mConnectingThread.interrupt();
 				mConnectingThread.join(50);
 			} catch (InterruptedException e) {
-				//Log.d(TAG, "updateConnectingThread: failed to join(): " + e);
+				Log.d(TAG, "updateConnectingThread: failed to join(): " + e);
 			} finally {
 				mConnectingThread = new_thread;
 			}
@@ -464,7 +464,7 @@ public class SmackableImp implements Smackable {
 	@Override
 	public synchronized void requestConnectionState(ConnectionState new_state, final boolean create_account) {
 
-		//Log.i(TAG, "requestConnState: " + mState + " -> " + new_state + (create_account ? " create_account!" : ""));
+		Log.i(TAG, "requestConnState: " + mState + " -> " + new_state + (create_account ? " create_account!" : ""));
 		mRequestedState = new_state;
 		if (new_state == mState)
 			return;
@@ -488,7 +488,7 @@ public class SmackableImp implements Smackable {
 					public void run() {
 						updateConnectingThread(this);
 						try {
-							//Log.w(TAG, "Connnnnnnnnnecting");
+							Log.w(TAG, "Connnnnnnnnnecting");
 							doConnect(create_account);
 						} catch (IllegalArgumentException e) {
 							// this might happen when DNS resolution in ConnectionConfiguration fails
@@ -590,7 +590,7 @@ public class SmackableImp implements Smackable {
 				//											
 				//										updateConnectingThread(this);
 				//										
-				//											//Log.i(TAG, "Connnnnnnnnnecting");
+				//											Log.i(TAG, "Connnnnnnnnnecting");
 				//											doConnect(create_account);
 				//											
 				//										} catch (IllegalArgumentException e) {
@@ -628,7 +628,7 @@ public class SmackableImp implements Smackable {
 	private synchronized void updateConnectionState(ConnectionState new_state) {
 		if (new_state == ConnectionState.ONLINE || new_state == ConnectionState.CONNECTING)
 			mLastError = null;
-		//Log.d(TAG, "updateConnectionState: " + mState + " -> " + new_state + " (" + mLastError + ")");
+		Log.d(TAG, "updateConnectionState: " + mState + " -> " + new_state + " (" + mLastError + ")");
 		if (new_state == mState)
 			return;
 		mState = new_state;
@@ -647,7 +647,7 @@ public class SmackableImp implements Smackable {
 				EntityCapsManager.setPersistentCache(new SimpleDirectoryPersistentCache(capsCacheDir));
 			}
 		} catch (java.io.IOException e) {
-			//Log.e(TAG, "Could not init Entity Caps cache: " + e.getLocalizedMessage());
+			Log.e(TAG, "Could not init Entity Caps cache: " + e.getLocalizedMessage());
 		} catch(Exception e){
 			//e.printStackTrace();
 		}
@@ -666,7 +666,7 @@ public class SmackableImp implements Smackable {
 		dm.enableAutoReceipts();
 		dm.addReceiptReceivedListener(new ReceiptReceivedListener() { // DOES NOT WORK IN CARBONS
 			public void onReceiptReceived(String fromJid, String toJid, String receiptId) {
-				//Log.d(TAG, "got delivery receipt for " + receiptId);
+				Log.d(TAG, "got delivery receipt for " + receiptId);
 				changeMessageDeliveryStatus(receiptId, ChatConstants.DS_ACKED);
 			}});
 	}
@@ -677,7 +677,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void removeRosterItem(String user) throws EmotXMPPException {
-		debugLog("removeRosterItem(" + user + ")");
+		Log.d(TAG, "removeRosterItem(" + user + ")");
 
 		tryToRemoveRosterEntry(user);
 		mServiceCallBack.rosterChanged();
@@ -737,9 +737,9 @@ public class SmackableImp implements Smackable {
 		if(rooms != null){
 			final String roomstoJoin[] = rooms.split(",");
 			//						//EmotApplication.setValue(PreferenceConstants.ROOMS, rooms + "," + mGroupChat.getRoom());
-			//Log.i(TAG, "rooms to join " + roomstoJoin);
+			Log.i(TAG, "rooms to join " + roomstoJoin);
 			//						List<String> roomstoJoin2 = EmotApplication.getRooms();
-			//Log.i(TAG, "rooms to join size " +roomstoJoin.length);
+			Log.i(TAG, "rooms to join size " +roomstoJoin.length);
 			//sStopService = false;
 			for(int i = 0; i < roomstoJoin.length; i++){
 				mJoined.put(roomstoJoin[i], false);
@@ -757,7 +757,7 @@ public class SmackableImp implements Smackable {
 		//		}).start();
 	}
 	private void onDisconnected(Throwable reason) {
-		//Log.e(TAG, "onDisconnected: " + reason);
+		Log.e(TAG, "onDisconnected: " + reason);
 		sStopService = true;
 		reason.printStackTrace();
 		// iterate through to the deepest exception
@@ -784,23 +784,23 @@ public class SmackableImp implements Smackable {
 			intent.putExtra("grpSubject", pGroupName);
 
 			mService.sendBroadcast(intent);
-			//Log.i(TAG, "creating multi user chat2 " +mGroupChat);
+			Log.i(TAG, "creating multi user chat2 " +mGroupChat);
 			form = mGroupChat.getConfigurationForm();
 			Form submitForm = form.createAnswerForm(); 
 			Iterator<FormField> fields = form.getFields();
 			while(fields.hasNext()){
-				//Log.i(TAG, "while loop 1111111111111111");
+				Log.i(TAG, "while loop 1111111111111111");
 				FormField field = (FormField) fields.next();
 				if(!FormField.TYPE_HIDDEN.equals(field.getType()) && field.getVariable() != null){
 					submitForm.setDefaultAnswer(field.getVariable()); 
 				}
 			}
 			List<String> owners = new ArrayList<String>(); 
-			//Log.i(TAG, "creating multi user chat 3" +mGroupChat);
+			Log.i(TAG, "creating multi user chat 3" +mGroupChat);
 			owners.add("9379475511@emot-net");
 			//owners.add("test6@emot-net");
 			//submitForm.setAnswer("muc#owner", owners);
-			//Log.i(TAG, "creating multi user chat 4" +mGroupChat);
+			Log.i(TAG, "creating multi user chat 4" +mGroupChat);
 			try {
 				//mGroupChat.sendConfigurationForm(submitForm);
 				FormField field = new FormField("muc#roomconfig_persistentroom");
@@ -817,7 +817,7 @@ public class SmackableImp implements Smackable {
 
 
 			} catch (XMPPException e) {
-				//Log.i(TAG, "Exception " +e.getMessage());
+				Log.i(TAG, "Exception " +e.getMessage());
 				mService.sendBroadcast(new Intent("Group_Generated_Failed"));
 				//e.printStackTrace();
 			}
@@ -843,26 +843,26 @@ public class SmackableImp implements Smackable {
 				// MultiUserChat.decline(mXmppConnection, room, inviter,
 				// "Don't bother me right now");
 				try {
-					//Log.i("abc","Invitation Received for room " +room);
+					Log.i("abc","Invitation Received for room " +room);
 
 					mGroupChat2 = new MultiUserChat(connection, room);
 
 					mGroupChat2.join(mConfig.userName+"@conference.emot-net");
-					//Log.i(TAG, "Room subject for recieved room is " + mGroupChat2.getSubject());
+					Log.i(TAG, "Room subject for recieved room is " + mGroupChat2.getSubject());
 					mJoined.put(room, true);
 
 					String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
-					//Log.i(TAG, "rooms being saved into shared preferences " +rooms);
+					Log.i(TAG, "rooms being saved into shared preferences " +rooms);
 					if(rooms == null){
 						rooms = "";
 					}
 
 					EmotApplication.setValue(PreferenceConstants.ROOMS, (rooms + "," + mGroupChat2.getRoom()).trim());
-					//Log.e("abc","join room successfully");
+					Log.e("abc","join room successfully");
 					// muc.sendMessage("I joined this room!! Bravo!!");
 				} catch (XMPPException e) {
 					//e.printStackTrace();
-					//Log.e("abc","join room failed!");
+					Log.e("abc","join room failed!");
 				}
 			}
 		});
@@ -873,20 +873,20 @@ public class SmackableImp implements Smackable {
 		int size = members.size();
 		DiscussionHistory dh = new DiscussionHistory();
 
-		//Log.i(TAG, "joining user is " +members.get(0).getGJID());
+		Log.i(TAG, "joining user is " +members.get(0).getGJID());
 
 		try {
 			mGroupChat.join(mConfig.userName +"@conference.emot-net");
 			mJoined.put(mGroupChat.getRoom(), true);
 			for(int i=0; i< size; i++){
-				//Log.i(TAG, "joining user " + members.get(i).getGJID());
+				Log.i(TAG, "joining user " + members.get(i).getGJID());
 				mGroupChat.invite(members.get(i).getGJID(),"");
 
 			}
 
 
 			String rooms = EmotApplication.getValue(PreferenceConstants.ROOMS, null);
-			//Log.i(TAG, "rooms being saved into shared preferences " +rooms);
+			Log.i(TAG, "rooms being saved into shared preferences " +rooms);
 			if(rooms == null){
 				rooms = "";
 			}
@@ -894,7 +894,7 @@ public class SmackableImp implements Smackable {
 			//mGroupChat.invite("1234567890@emot-net/Smack", "");
 			//mGroupChat.invite("test6@emot-net/Smack", "");
 		} catch (Exception e) {
-			//Log.i(TAG, "Error while joining group chat");
+			Log.i(TAG, "Error while joining group chat");
 			//e.printStackTrace();
 		}	
 
@@ -913,7 +913,7 @@ public class SmackableImp implements Smackable {
 		while(pJoinedRooms.hasNext()){
 			final String room = pJoinedRooms.next();
 			if(room.trim().equals("")){
-				//Log.i(TAG, "No rooms to join");
+				Log.i(TAG, "No rooms to join");
 			}else{
 				//join the room to multi user chat object.
 			}
@@ -927,7 +927,7 @@ public class SmackableImp implements Smackable {
 				try {
 					mStreamHandler.quickShutdown(); // blocking shutdown prior to re-connection
 				} catch (Exception e) {
-					debugLog("conn.shutdown() failed: " + e);
+					Log.d(TAG, "conn.shutdown() failed: " + e);
 				}
 			}
 			registerRosterListener();
@@ -948,7 +948,7 @@ public class SmackableImp implements Smackable {
 				public void reconnectingIn(int seconds) { }
 				public void reconnectionFailed(Exception e) { }
 				public void reconnectionSuccessful() {
-					//Log.i(TAG, "Reconnection success full");
+					Log.i(TAG, "Reconnection success full");
 				}
 			};
 			mXMPPConnection.addConnectionListener(mConnectionListener);
@@ -970,15 +970,15 @@ public class SmackableImp implements Smackable {
 			});
 			mXMPPConnection.connect(need_bind);
 			// SMACK auto-logins if we were authenticated before
-			//Log.i(TAG, "Trying again "+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
+			Log.i(TAG, "Trying again "+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
 			if (!mXMPPConnection.isAuthenticated()) {
 				if (create_account) {
-					//Log.d(TAG, "creating new server account...");
+					Log.d(TAG, "creating new server account...");
 					AccountManager am = new AccountManager(mXMPPConnection);
 					am.createAccount(mConfig.userName, mConfig.password);
 				}
 
-				//Log.i(TAG, "user = "+mConfig.userName + " password = "+mConfig.password + " resource = "+mConfig.ressource);
+				Log.i(TAG, "user = "+mConfig.userName + " password = "+mConfig.password + " resource = "+mConfig.ressource);
 				SASLAuthentication.registerSASLMechanism("DIGEST-MD5", org.jivesoftware.smack.sasl.SASLDigestMD5Mechanism.class);
 				SASLAuthentication.supportSASLMechanism("DIGEST-MD5", 0);
 
@@ -1015,8 +1015,8 @@ public class SmackableImp implements Smackable {
 			//						}, 5, TimeUnit.SECONDS);
 			//initMUC("myroom");
 
-			//Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
-			//Log.d(TAG, "SM: can resume = " + mStreamHandler.isResumePossible() + " needbind=" + need_bind);
+			Log.i(TAG, "Trying again 222"+create_account+" .. Connected = "+mXMPPConnection.isConnected() + " authenticatec = "+mXMPPConnection.isAuthenticated());
+			Log.d(TAG, "SM: can resume = " + mStreamHandler.isResumePossible() + " needbind=" + need_bind);
 			//Setting status in starting
 			if(isRunning()){
 				EmotApplication.setValue(PreferenceConstants.STATUS_MODE, StatusMode.available.name());
@@ -1111,7 +1111,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void removeOldRosterEntries() {
-		//Log.d(TAG, "removeOldRosterEntries()");
+		Log.d(TAG, "removeOldRosterEntries()");
 		Collection<RosterEntry> rosterEntries = mRoster.getEntries();
 		StringBuilder exclusion = new StringBuilder(RosterConstants.JID + " NOT IN (");
 		boolean first = true;
@@ -1125,7 +1125,7 @@ public class SmackableImp implements Smackable {
 		}
 		exclusion.append(")");
 		int count = mContentResolver.delete(RosterProvider.CONTENT_URI, exclusion.toString(), null);
-		//Log.d(TAG, "deleted " + count + " old roster entries");
+		Log.d(TAG, "deleted " + count + " old roster entries");
 	}
 
 	// HACK: add an incoming subscription request as a fake roster entry
@@ -1140,7 +1140,7 @@ public class SmackableImp implements Smackable {
 		values.put(RosterConstants.STATUS_MESSAGE, request.getStatus());
 
 		Uri uri = mContentResolver.insert(RosterProvider.CONTENT_URI, values);
-		debugLog("handleIncomingSubscribe: faked " + uri);
+		Log.d(TAG, "handleIncomingSubscribe: faked " + uri);
 	}
 
 
@@ -1184,7 +1184,7 @@ public class SmackableImp implements Smackable {
 			String packetID = cursor.getString(PACKETID_COL);
 			String messageType = cursor.getString(MSG_TYPE);
 			long ts = cursor.getLong(TS_COL);
-			//Log.d(TAG, "sendOfflineMessages: " + toJID + " > " + message);
+			Log.d(TAG, "sendOfflineMessages: " + toJID + " > " + message);
 			Message newMessage =null;
 			if(messageType.equals(CHATTYPE)){
 				newMessage = new Message(toJID, Message.Type.chat);
@@ -1213,7 +1213,7 @@ public class SmackableImp implements Smackable {
 
 			}else{
 				if(mJoined.get(toJID)){
-					//Log.i(TAG, "sending message " +newMessage.getBody());
+					Log.i(TAG, "sending message " +newMessage.getBody());
 					mXMPPConnection.sendPacket(newMessage);
 					Uri rowuri = Uri.parse("content://" + ChatProvider.AUTHORITY
 							+ "/" + ChatProvider.TABLE_NAME + "/" + _id);
@@ -1221,7 +1221,7 @@ public class SmackableImp implements Smackable {
 							null, null);
 
 				}else{
-					//Log.i(TAG, "not joined in group " +toJID);
+					Log.i(TAG, "not joined in group " +toJID);
 				}
 			}// must be after marking delivered, otherwise it may override the SendFailListener
 		}
@@ -1229,7 +1229,7 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void sendFailedMessages() {
-		//Log.i(TAG, "-- Sending offline messages --");
+		Log.i(TAG, "-- Sending offline messages --");
 		Cursor cursor = mContentResolver.query(ChatProvider.CONTENT_URI,
 				SEND_FAILED_PROJECTION, SEND_FAILED_SELECTION,
 				null, null);
@@ -1246,7 +1246,7 @@ public class SmackableImp implements Smackable {
 			String message = cursor.getString(MSG_COL);
 			String packetID = cursor.getString(PACKETID_COL);
 			long ts = cursor.getLong(TS_COL);
-			//Log.d(TAG, "sendOfflineMessages: " + toJID + " > " + message);
+			Log.d(TAG, "sendOfflineMessages: " + toJID + " > " + message);
 			final Message newMessage = new Message(toJID, Message.Type.chat);
 			newMessage.setBody(message);
 			DelayInformation delay = new DelayInformation(new Date(ts));
@@ -1282,7 +1282,7 @@ public class SmackableImp implements Smackable {
 	private String acknowledgedPacketID;
 	public void sendNotacknowledgedMessages(String jid) {
 		try{
-			//Log.i(TAG, " -- sending notacknowledgedMessages to "+jid+" -- ");
+			Log.i(TAG, " -- sending notacknowledgedMessages to "+jid+" -- ");
 			Cursor cursor = mContentResolver.query(
 					ChatProvider.CONTENT_URI,
 					SEND_UNACKNOWLEDGED_PROJECTION, 
@@ -1290,7 +1290,7 @@ public class SmackableImp implements Smackable {
 					null, 
 					ChatProvider.ChatConstants.DATE + " ASC limit 50"
 					);
-			//Log.i(TAG, "msges found= "+cursor.getCount());
+			Log.i(TAG, "msges found= "+cursor.getCount());
 			final int      _ID_COL = cursor.getColumnIndexOrThrow(ChatConstants._ID);
 			final int      JID_COL = cursor.getColumnIndexOrThrow(ChatConstants.JID);
 			final int      MSG_COL = cursor.getColumnIndexOrThrow(ChatConstants.MESSAGE);
@@ -1307,7 +1307,7 @@ public class SmackableImp implements Smackable {
 
 				String msgType = cursor.getString(MSG_TYPE);
 				long ts = cursor.getLong(TS_COL);
-				//Log.i(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
+				Log.i(TAG, "sendnotacknowledgedMessages: " + toJID + " > " + message);
 				Message newMessage = null;
 				if(msgType.equals(CHATTYPE)){
 					newMessage = new Message(toJID, Message.Type.chat);
@@ -1356,14 +1356,14 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void sendReceipt(String toJID, String id) {
-		//Log.d(TAG, "sending XEP-0184 ack to " + toJID + " id=" + id);
+		Log.d(TAG, "sending XEP-0184 ack to " + toJID + " id=" + id);
 		final Message ack = new Message(toJID, Message.Type.normal);
 		ack.addExtension(new DeliveryReceipt(id));
 		mXMPPConnection.sendPacket(ack);
 	}
 
 	public void sendMessage(String toJID, String message) {
-		//Log.i(TAG, "Sending message");
+		Log.i(TAG, "Sending message");
 		final Message newMessage = new Message(toJID, Message.Type.chat);
 		newMessage.setBody(message);
 		newMessage.addExtension(new DeliveryReceiptRequest());
@@ -1387,14 +1387,14 @@ public class SmackableImp implements Smackable {
 	}
 
 	public void registerCallback(XMPPServiceCallback callBack) {
-		//Log.i(TAG, "Callback registering !!!");
+		Log.i(TAG, "Callback registering !!!");
 		this.mServiceCallBack = callBack;
 		mService.registerReceiver(mPingAlarmReceiver, new IntentFilter(PING_ALARM));
 		mService.registerReceiver(mPongTimeoutAlarmReceiver, new IntentFilter(PONG_TIMEOUT_ALARM));
 	}
 
 	public void unRegisterCallback() {
-		debugLog("unRegisterCallback()");
+		Log.d(TAG, "unRegisterCallback()");
 		// remove callbacks _before_ tossing old connection
 		try {
 			mXMPPConnection.getRoster().removeRosterListener(mRosterListener);
@@ -1408,7 +1408,7 @@ public class SmackableImp implements Smackable {
 			//e.printStackTrace();
 		}
 		requestConnectionState(ConnectionState.OFFLINE);
-		setStatusOffline();
+		//setStatusOffline();
 		mService.unregisterReceiver(mPingAlarmReceiver);
 		mService.unregisterReceiver(mPongTimeoutAlarmReceiver);
 		this.mServiceCallBack = null;
@@ -1424,18 +1424,18 @@ public class SmackableImp implements Smackable {
 
 	private void setStatusOffline() {
 		ContentValues values = new ContentValues();
-		values.put(RosterConstants.STATUS_MODE, StatusMode.offline.ordinal());
+		values.put(RosterConstants.STATUS_MODE, StatusMode.away.ordinal());
 		mContentResolver.update(RosterProvider.CONTENT_URI, values, null, null);
 	}
 
 	private void registerRosterListener() {
 		// flush roster on connecting.
-		//Log.i(TAG, "-------- Registerng all rosters --------");
+		Log.i(TAG, "-------- Registerng all rosters --------");
 		mRoster = mXMPPConnection.getRoster();
 		Collection<RosterEntry> rosters = mRoster.getEntries();
 		for(RosterEntry rstr: rosters){
 			Presence p = mRoster.getPresence(rstr.getUser());
-			//Log.i(TAG, "Roster status " + rstr.getStatus() + " Presence ="+p.getStatus());
+			Log.i(TAG, "Roster status " + rstr.getStatus() + " Presence ="+p.getStatus());
 		}
 
 		mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
@@ -1447,7 +1447,7 @@ public class SmackableImp implements Smackable {
 			private boolean first_roster = true;
 
 			public void entriesAdded(Collection<String> entries) {
-				//Log.i(TAG, "entriesAdded(" + entries + ")");
+				Log.i(TAG, "entriesAdded(" + entries + ")");
 
 				ContentValues[] cvs = new ContentValues[entries.size()];
 				int i = 0;
@@ -1462,11 +1462,11 @@ public class SmackableImp implements Smackable {
 					first_roster = false;
 					mServiceCallBack.rosterChanged();
 				}
-				debugLog("entriesAdded() done");
+				Log.d(TAG, "entriesAdded() done");
 			}
 
 			public void entriesDeleted(Collection<String> entries) {
-				debugLog("entriesDeleted(" + entries + ")");
+				Log.d(TAG, "entriesDeleted(" + entries + ")");
 
 				for (String entry : entries) {
 					deleteRosterEntryFromDB(entry);
@@ -1475,7 +1475,7 @@ public class SmackableImp implements Smackable {
 			}
 
 			public void entriesUpdated(Collection<String> entries) {
-				debugLog("entriesUpdated(" + entries + ")");
+				Log.d(TAG, "entriesUpdated(" + entries + ")");
 
 				for (String entry : entries) {
 					RosterEntry rosterEntry = mRoster.getEntry(entry);
@@ -1485,13 +1485,13 @@ public class SmackableImp implements Smackable {
 			}
 
 			public void presenceChanged(Presence presence) {
-				//Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): "+presence +" status"+ presence.getStatus());
+				Log.i(TAG, "presenceChanged(" + presence.getFrom() + "): "+presence +" status"+ presence.getStatus());
 
 
 				String jabberID = getBareJID(presence.getFrom());
 
 				RosterEntry rosterEntry = mRoster.getEntry(jabberID);
-				//Log.i(TAG, "Roster status = "+rosterEntry.getStatus() );
+				Log.i(TAG, "Roster status = "+rosterEntry.getStatus() );
 				if (rosterEntry != null) {
 					updateRosterEntryInDB(rosterEntry);
 					mServiceCallBack.rosterChanged();
@@ -1556,24 +1556,24 @@ public class SmackableImp implements Smackable {
 	 */
 	public void sendServerPing() {
 		if (mXMPPConnection == null || !mXMPPConnection.isAuthenticated()) {
-			//Log.i(TAG, "Ping: requested, but not connected to server.");
+			Log.i(TAG, "Ping: requested, but not connected to server.");
 			requestConnectionState(ConnectionState.ONLINE, false);
 			return;
 		}
 		if (mPingID != null) {
-			//Log.i(TAG, "Ping: requested, but still waiting for " + mPingID);
+			Log.i(TAG, "Ping: requested, but still waiting for " + mPingID);
 			return; // a ping is still on its way
 		}
 
 		if (mStreamHandler.isSmEnabled()) {
-			//Log.i(TAG, "Ping: sending SM request");
+			Log.i(TAG, "Ping: sending SM request");
 			mPingID = "" + mStreamHandler.requestAck();
 		} else {
 			Ping ping = new Ping();
 			ping.setType(Type.GET);
 			ping.setTo(mConfig.server);
 			mPingID = ping.getPacketID();
-			//Log.i(TAG, "Ping: sending ping " + mPingID);
+			Log.i(TAG, "Ping: sending ping " + mPingID);
 			mXMPPConnection.sendPacket(ping);
 		}
 
@@ -1582,13 +1582,13 @@ public class SmackableImp implements Smackable {
 	}
 
 	private void gotServerPong(String pongID) {
-		//Log.i(TAG, "pong ID : "+pongID + " ping ID : "+mPingID);
+		Log.i(TAG, "pong ID : "+pongID + " ping ID : "+mPingID);
 		long latency = System.currentTimeMillis() - mPingTimestamp;
 		if (pongID != null && pongID.equals(mPingID)){
-			//Log.i(TAG, String.format("Ping: server latency %1.3fs", latency/1000.));
+			Log.i(TAG, String.format("Ping: server latency %1.3fs", latency/1000.));
 		}
 		else{
-			//Log.i(TAG, String.format("Ping: server latency %1.3fs (estimated)", latency/1000.));
+			Log.i(TAG, String.format("Ping: server latency %1.3fs (estimated)", latency/1000.));
 		}
 			
 		mPingID = null;
@@ -1599,7 +1599,7 @@ public class SmackableImp implements Smackable {
 	private void registerPongTimeout(long wait_time, String id) {
 		mPingID = id;
 		mPingTimestamp = System.currentTimeMillis();
-		//Log.i(TAG, String.format("Ping: registering timeout for %s: %1.3fs", id, wait_time/1000.));
+		Log.i(TAG, String.format("Ping: registering timeout for %s: %1.3fs", id, wait_time/1000.));
 		mAlarmManager.set(AlarmManager.RTC_WAKEUP,
 				System.currentTimeMillis() + wait_time,
 				mPongTimeoutAlarmPendIntent);
@@ -1610,7 +1610,7 @@ public class SmackableImp implements Smackable {
 	 */
 	private class PongTimeoutAlarmReceiver extends BroadcastReceiver {
 		public void onReceive(Context ctx, Intent i) {
-			//Log.i(TAG, "Ping: timeout for " + mPingID);
+			Log.i(TAG, "Ping: timeout for " + mPingID);
 			onDisconnected("Ping timeout");
 		}
 	}
@@ -1620,7 +1620,7 @@ public class SmackableImp implements Smackable {
 	 */
 	private class PingAlarmReceiver extends BroadcastReceiver {
 		public void onReceive(Context ctx, Intent i) {
-			//Log.i(TAG, "Received PING broadcast");
+			Log.i(TAG, "Received PING broadcast");
 			sendServerPing();
 		}
 	}
@@ -1673,7 +1673,7 @@ public class SmackableImp implements Smackable {
 
 		mPacketListener = new PacketListener() {
 			public void processPacket(Packet packet) {
-				//Log.i(TAG, "packet is " +packet.toXML());
+				Log.i(TAG, "packet is " +packet.toXML());
 
 				try {
 
@@ -1683,7 +1683,7 @@ public class SmackableImp implements Smackable {
 						String from = msg.getFrom();
 						String fromJID = getBareJID(msg.getFrom());
 						if(msg.getSubject() != null){
-							//Log.i(TAG, "saving to SP " + fromJID + "= " + msg.getSubject());
+							Log.i(TAG, "saving to SP " + fromJID + "= " + msg.getSubject());
 							Intent intent = new Intent();
 							intent.putExtra("grpID", fromJID);
 							intent.putExtra("newSubject", msg.getSubject());
@@ -1694,23 +1694,23 @@ public class SmackableImp implements Smackable {
 							EmotApplication.setValue(fromJID, msg.getSubject());
 						}
 						grpSubject = EmotApplication.getValue(fromJID, "default");
-						//Log.i(TAG, "fromJID is " +fromJID);
-						//Log.i(TAG, "grpSubject is " +grpSubject +"mSmackable is " +this);
-						//Log.i(TAG, "message properties " + msg.getPropertyNames());
-						//Log.i(TAG, "message extensions " + msg.getExtensions());
-						//Log.i(TAG, "room nickname " +msg.getProperty("roomName"));
+						Log.i(TAG, "fromJID is " +fromJID);
+						Log.i(TAG, "grpSubject is " +grpSubject +"mSmackable is " +this);
+						Log.i(TAG, "message properties " + msg.getPropertyNames());
+						Log.i(TAG, "message extensions " + msg.getExtensions());
+						Log.i(TAG, "room nickname " +msg.getProperty("roomName"));
 						PacketExtension extension = msg.getExtension("http://jabber.org/protocol/chatstates");
-						//Log.i(TAG, "Extension  = "+extension +" composing  = "+ msg.getProperty("composing") + " propetries = "+msg.getPropertyNames().size());
+						Log.i(TAG, "Extension  = "+extension +" composing  = "+ msg.getProperty("composing") + " propetries = "+msg.getPropertyNames().size());
 
 						if (extension != null) {
 							String value = ChatState.valueOf(extension.getElementName()).name();
-							//Log.i(TAG, "Value = " + value);
+							Log.i(TAG, "Value = " + value);
 							mServiceCallBack.chatStateChanged(ChatState.valueOf(extension.getElementName()).ordinal(), fromJID);
 							if (value.equals("composing")) {
-								//Log.i(TAG, "COMPOSING MESSAGE " + value);
+								Log.i(TAG, "COMPOSING MESSAGE " + value);
 								//mServiceCallBack.messageComposing(msg.getFrom(), true);
 							} else {
-								//Log.i(TAG, "STOPPED COMPOSING MESSAGE "+ value);
+								Log.i(TAG, "STOPPED COMPOSING MESSAGE "+ value);
 								//mServiceCallBack.messageComposing(msg.getFrom(), false);
 							}
 						}
@@ -1719,7 +1719,7 @@ public class SmackableImp implements Smackable {
 
 
 
-						//Log.i(TAG, "Chat coming from" +fromJID);
+						Log.i(TAG, "Chat coming from" +fromJID);
 						int direction = ChatConstants.INCOMING;
 						Carbon cc = CarbonManager.getCarbon(msg);
 
@@ -1737,7 +1737,7 @@ public class SmackableImp implements Smackable {
 
 						// try to extract a carbon
 						if (cc != null) {
-							//Log.i(TAG, "carbon: " + cc.toXML());
+							Log.i(TAG, "carbon: " + cc.toXML());
 							msg = (Message)cc.getForwarded().getForwardedPacket();
 
 							// outgoing carbon: fromJID is actually chat peer's JID
@@ -1751,7 +1751,7 @@ public class SmackableImp implements Smackable {
 								DeliveryReceipt dr = (DeliveryReceipt)msg.getExtension(
 										DeliveryReceipt.ELEMENT, DeliveryReceipt.NAMESPACE);
 								if (dr != null) {
-									//Log.d(TAG, "got CC'ed delivery receipt for " + dr.getId());
+									Log.d(TAG, "got CC'ed delivery receipt for " + dr.getId());
 									changeMessageDeliveryStatus(dr.getId(), ChatConstants.DS_ACKED);
 								}
 							}
@@ -1761,7 +1761,7 @@ public class SmackableImp implements Smackable {
 							// display error inline
 							if (msg.getType() == Message.Type.error) {
 								if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
-									//Log.i(TAG, "message failed !!!");
+									Log.i(TAG, "message failed !!!");
 									//mServiceCallBack.messageError(fromJID, msg.getError().toString(), (cc != null));
 									sendFailedMessages();
 								}
@@ -1770,7 +1770,7 @@ public class SmackableImp implements Smackable {
 
 							// ignore empty messages
 							if (chatMessage == null) {
-								//Log.d(TAG, "empty message.");
+								Log.d(TAG, "empty message.");
 								return;
 							}
 
@@ -1793,7 +1793,7 @@ public class SmackableImp implements Smackable {
 
 						String chatMessage = msg.getBody();
 
-						//Log.i(TAG, "message received is "+msg.getBody() + "type is " + msg.getType());
+						Log.i(TAG, "message received is "+msg.getBody() + "type is " + msg.getType());
 						// display error inline
 						if (msg.getType() == Message.Type.error) {
 							if (changeMessageDeliveryStatus(msg.getPacketID(), ChatConstants.DS_FAILED)){
@@ -1805,7 +1805,7 @@ public class SmackableImp implements Smackable {
 
 						// ignore empty messages
 						if (chatMessage == null) {
-							//Log.d(TAG, "empty message.");
+							Log.d(TAG, "empty message.");
 							return;
 						}
 
@@ -1823,20 +1823,20 @@ public class SmackableImp implements Smackable {
 								}
 							}else if(msg.getType() == Message.Type.groupchat ){
 
-								//Log.i(TAG, "Message from group member " +getBareGJID(from));
+								Log.i(TAG, "Message from group member " +getBareGJID(from));
 								EmotApplication.setLongValue("historySince", ts);
 								boolean isPacketPresent = addChatMessageToDB(direction, fromJID, grpSubject,chatMessage, is_new, ts, msg.getPacketID(), GROUPCHATTYPE, getBareGJID(from));
 								if(!isPacketPresent){
 									mServiceCallBack.newMessage(getBareJID(fromJID), chatMessage, (cc != null), true, getBareGJID(from));
 								}
 							}else{
-								//Log.i(TAG, "Unknown message type");
+								Log.i(TAG, "Unknown message type");
 							}
 						}
 					}
 				} catch (Exception e) {
 					// SMACK silently discards exceptions dropped from processPacket :(
-					//Log.e(TAG, "failed to process packet:");
+					Log.e(TAG, "failed to process packet:");
 					//e.printStackTrace();
 				}
 			}
@@ -1863,7 +1863,7 @@ public class SmackableImp implements Smackable {
 					}
 				} catch (Exception e) {
 					// SMACK silently discards exceptions dropped from processPacket :(
-					//Log.e(TAG, "failed to process presence:");
+					Log.e(TAG, "failed to process presence:");
 					//e.printStackTrace();
 				}
 			}
@@ -1884,7 +1884,7 @@ public class SmackableImp implements Smackable {
 					null
 					);
 			if(oldChat.getCount()>0){
-				//Log.i(TAG, "Packet ID already present");
+				Log.i(TAG, "Packet ID already present");
 				return true;
 			}
 		}
@@ -1919,16 +1919,19 @@ public class SmackableImp implements Smackable {
 
 		Presence presence = mRoster.getPresence(entry.getUser());
 		int currentStatus = getStatusInt(presence);
-		//Log.i(TAG, "available ordinal val "+StatusMode.available.ordinal());
+		Log.i(TAG, "available ordinal val "+StatusMode.available.ordinal());
 		values.put(RosterConstants.STATUS_MODE, currentStatus);
-		////Log.i(TAG, "Presence = " + presence);
+		//Log.i(TAG, "Presence = " + presence);
 
+		mConfig.loadPrefs();
 		int last_status = EmotApplication.getValue(PreferenceConstants.LAST_STATUS_JID+entry.getUser(), -1);
+		Log.i(TAG, "LAST STATUS: "+last_status + " Current status: "+currentStatus );
 		if(currentStatus != StatusMode.available.ordinal() && last_status!=currentStatus){
-			//Log.i(TAG, "AWAY STATUS");
+			Log.i(TAG, "AWAY STATUS");
 			values.put(RosterConstants.LAST_SEEN, getDateTime());
-			EmotApplication.setValue(PreferenceConstants.LAST_STATUS_JID+entry.getUser(), currentStatus);
 		}
+		EmotApplication.setValue(PreferenceConstants.LAST_STATUS_JID+entry.getUser(), currentStatus);
+		
 		if (presence.getType() == Presence.Type.error) {
 			values.put(RosterConstants.STATUS_MESSAGE, presence.getError().toString());
 		} else if(presence.getStatus()!=null){
@@ -1936,26 +1939,26 @@ public class SmackableImp implements Smackable {
 		}
 		values.put(RosterConstants.GROUP, getGroup(entry.getGroups()));
 		VCard vCard = new VCard();
-		////Log.i(TAG, "B4 try catch. user = "+entry.getUser());
+		//Log.i(TAG, "B4 try catch. user = "+entry.getUser());
 
 		try {
 			vCard.load(mXMPPConnection, entry.getUser());
 			byte[] avatar = vCard.getAvatar();
-			////Log.i(TAG, "Avatar = "+avatar);
+			//Log.i(TAG, "Avatar = "+avatar);
 			if(avatar!=null){
 				values.put(RosterConstants.AVATAR, avatar);
 			}
 		} catch (XMPPException e) {
 			//e.printStackTrace();
 		}
-		//Log.i(TAG, entry.getUser() +" presence values = "+presence.getStatus() + " curr status = "+currentStatus+" Presence mode= " + presence.getMode());
+		Log.i(TAG, entry.getUser() +" presence values = "+presence.getStatus() + " curr status = "+currentStatus+" Presence mode= " + presence.getMode());
 		return values;
 	}
 
 	private void deleteRosterEntryFromDB(final String jabberID) {
 		int count = mContentResolver.delete(RosterProvider.CONTENT_URI,
 				RosterConstants.JID + " = ?", new String[] { jabberID });
-		debugLog("deleteRosterEntryFromDB: Deleted " + count + " entries");
+		Log.d(TAG, "deleteRosterEntryFromDB: Deleted " + count + " entries");
 	}
 
 	private void updateRosterEntryInDB(final RosterEntry entry) {
@@ -1997,17 +2000,11 @@ public class SmackableImp implements Smackable {
 			}
 			return StatusMode.available;
 		}
-		return StatusMode.offline;
+		return StatusMode.away;
 	}
 
 	private int getStatusInt(final Presence presence) {
 		return getStatus(presence).ordinal();
-	}
-
-	private void debugLog(String data) {
-		if (LogConstants.LOG_DEBUG) {
-			//Log.d(TAG, data);
-		}
 	}
 
 	@Override
@@ -2029,7 +2026,7 @@ public class SmackableImp implements Smackable {
 	//				try {
 	//					ByteArrayOutputStream stream = new ByteArrayOutputStream();
 	//					bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-	//					//Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
+	//					Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
 	//					byte[] bytes = stream.toByteArray();
 	//					String encodedImage = StringUtils.encodeBase64(bytes);
 	//					vCard.setAvatar(bytes);
@@ -2042,19 +2039,19 @@ public class SmackableImp implements Smackable {
 	//					vCard.save(mXMPPConnection);
 	//					//EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
 	//				}  catch (XMPPException e) {
-	//					//Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+	//					Log.i(TAG, "XMPP EXCEPTION  ----------- ");
 	//					//e.printStackTrace();
 	//				}	catch(Exception e){
-	//					//Log.i(TAG, " EXCEPTION  ------ ");
+	//					Log.i(TAG, " EXCEPTION  ------ ");
 	//					//e.printStackTrace();
 	//				}finally{
 	//					Editor c = EmotApplication.getPrefs().edit();
 	//					c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
 	//					c.commit();
-	//					//Log.i(TAG, "Setting preference value ...");
+	//					Log.i(TAG, "Setting preference value ...");
 	//				}
 	//			}else{
-	//				//Log.i(TAG, "Avatar already updated");
+	//				Log.i(TAG, "Avatar already updated");
 	//			}
 	//		}catch(Exception e){
 	//			//e.printStackTrace();
@@ -2063,7 +2060,7 @@ public class SmackableImp implements Smackable {
 
 	public void setAvatar() {
 		Bitmap bitmap = UpdateProfileScreen.getAvatar();
-		//Log.i(TAG, "BMP: "+bitmap);
+		Log.i(TAG, "BMP: "+bitmap);
 		//new UpdateAvatarTask(bitmap).execute();
 
 
@@ -2084,7 +2081,7 @@ public class SmackableImp implements Smackable {
 						try {
 							ByteArrayOutputStream stream = new ByteArrayOutputStream();
 							bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-							//Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
+							Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
 							byte[] bytes = stream.toByteArray();
 							String encodedImage = StringUtils.encodeBase64(bytes);
 							vCard.setAvatar(bytes);
@@ -2097,19 +2094,19 @@ public class SmackableImp implements Smackable {
 							vCard.save(mXMPPConnection);
 							//EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
 						}  catch (XMPPException e) {
-							//Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+							Log.i(TAG, "XMPP EXCEPTION  ----------- ");
 							//e.printStackTrace();
 						}	catch(Exception e){
-							//Log.i(TAG, " EXCEPTION  ------ ");
+							Log.i(TAG, " EXCEPTION  ------ ");
 							//e.printStackTrace();
 						}finally{
 							Editor c = EmotApplication.getPrefs().edit();
 							c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
 							c.commit();
-							//Log.i(TAG, "Setting preference value ...");
+							Log.i(TAG, "Setting preference value ...");
 						}
 					}else{
-						//Log.i(TAG, "Avatar already updated");
+						Log.i(TAG, "Avatar already updated");
 					}
 				}catch(Exception e){
 					//e.printStackTrace();
@@ -2146,7 +2143,7 @@ public class SmackableImp implements Smackable {
 			try {
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-				//Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
+				Log.i(TAG, "size of bitmap = "+ImageHelper.sizeOf(bmp));
 				byte[] bytes = stream.toByteArray();
 				String encodedImage = StringUtils.encodeBase64(bytes);
 				vCard.setAvatar(bytes);
@@ -2159,18 +2156,18 @@ public class SmackableImp implements Smackable {
 				vCard.save(mXMPPConnection);
 				//EmotApplication.setValue(PreferenceConstants.USER_AVATAR, encodedImage);
 			}  catch (XMPPException e) {
-				//Log.i(TAG, "XMPP EXCEPTION  ----------- ");
+				Log.i(TAG, "XMPP EXCEPTION  ----------- ");
 				//e.printStackTrace();
 				return false;
 			}	catch(Exception e){
-				//Log.i(TAG, " EXCEPTION  ------ ");
+				Log.i(TAG, " EXCEPTION  ------ ");
 				//e.printStackTrace();
 				return false;
 			}finally{
 				Editor c = EmotApplication.getPrefs().edit();
 				c.putBoolean(PreferenceConstants.AVATAR_UPDATED, true);
 				c.commit();
-				//Log.i(TAG, "Setting preference value ...");
+				Log.i(TAG, "Setting preference value ...");
 			}
 
 
@@ -2190,7 +2187,7 @@ public class SmackableImp implements Smackable {
 
 	@Override
 	public void sendChatState(String user, String state) {
-		//Log.i(TAG, "Sending Chat state");
+		Log.i(TAG, "Sending Chat state");
 		final Message newMessage = new Message(user, Message.Type.normal);
 		newMessage.addExtension(new ChatStateExtension(ChatState.valueOf(state)));
 		if (isAuthenticated()) {
@@ -2200,29 +2197,29 @@ public class SmackableImp implements Smackable {
 	private String mGrpMsgIDfrmSender;
 	private Map<String, Boolean> mJoined = new HashMap<String, Boolean>();; 
 	public void sendGroupMessage(String message, String toJID) {
-		//Log.i(TAG, "Sending group message " +message + "jid is " +toJID);
+		Log.i(TAG, "Sending group message " +message + "jid is " +toJID);
 
 		try {
 
-			//Log.i(TAG, "Sending group message " +message + "jid is " +toJID);
+			Log.i(TAG, "Sending group message " +message + "jid is " +toJID);
 			final Message newMessage = new Message(toJID, Message.Type.groupchat);
 			newMessage.setFrom(mConfig.userName+"@emot-net");
 			newMessage.setBody(message);
 			grpSubject = EmotApplication.getValue(toJID, "default");
 			newMessage.addExtension(new DeliveryReceiptRequest());
 			if (isAuthenticated()) {
-				//Log.i(TAG, "mXMPPConnection is " +mXMPPConnection);
+				Log.i(TAG, "mXMPPConnection is " +mXMPPConnection);
 				mGroupChat = new MultiUserChat(mXMPPConnection, toJID);
 				EmotApplication.setLongValue("historySince", System.currentTimeMillis());
-				//Log.i(TAG, "grpsubject in sending is " +grpSubject +"mSmackable is " +this);
+				Log.i(TAG, "grpsubject in sending is " +grpSubject +"mSmackable is " +this);
 				if(mJoined.get(toJID)){
 					addChatMessageToDB(ChatConstants.OUTGOING, mGroupChat.getRoom(), grpSubject,message, ChatConstants.DS_SENT_OR_READ,
 							System.currentTimeMillis(), newMessage.getPacketID(), GROUPCHATTYPE, mConfig.userName+"@conference.emot-net" );
-					//Log.i(TAG, "sending grp name " + mGroupChat.getRoom());
+					Log.i(TAG, "sending grp name " + mGroupChat.getRoom());
 					newMessage.setProperty("roomName", mGroupChat.getRoom());
 					mXMPPConnection.sendPacket(newMessage);
 				}else{
-					//Log.i(TAG, "not joined in group " +toJID);
+					Log.i(TAG, "not joined in group " +toJID);
 					addChatMessageToDB(ChatConstants.OUTGOING, toJID, grpSubject,message, ChatConstants.DS_NEW,
 							System.currentTimeMillis(), newMessage.getPacketID(),GROUPCHATTYPE, mConfig.userName+"@conference.emot-net");
 				}
@@ -2234,11 +2231,11 @@ public class SmackableImp implements Smackable {
 						System.currentTimeMillis(), newMessage.getPacketID(),GROUPCHATTYPE, mConfig.userName+"@conference.emot-net");
 			}
 		} catch (Exception e) {
-			//Log.i(TAG, "Error sending message on group chat");
+			Log.i(TAG, "Error sending message on group chat");
 			//e.printStackTrace();
 		}finally{
 
-			//Log.i(TAG, "Sending message");
+			Log.i(TAG, "Sending message");
 
 		}
 		//final Message newMessage = new Message(toJID, Message.Type.chat);
@@ -2283,8 +2280,8 @@ public class SmackableImp implements Smackable {
 						mGroupChat.join(mConfig.userName + "@conference.emot-net", "", dh, timeout);
 						mJoined.put(grpName, true);
 						RoomInfo info = MultiUserChat.getRoomInfo(mXMPPConnection, grpName);
-						//Log.i(TAG, "Occupants in the group are " +mGroupChat.getMembers().iterator().next().getJid());
-						//Log.i(TAG, "Group subject is " +info.getSubject());
+						Log.i(TAG, "Occupants in the group are " +mGroupChat.getMembers().iterator().next().getJid());
+						Log.i(TAG, "Group subject is " +info.getSubject());
 					}else{
 						try {
 							//doConnect(false);
@@ -2317,7 +2314,7 @@ public class SmackableImp implements Smackable {
 
 	@Override
 	public List<String> getGroupMembers() {
-		//Log.i(TAG, "Called getGroupMembers()");
+		Log.i(TAG, "Called getGroupMembers()");
 		List<String> members = new ArrayList<String>();
 
 		try {
@@ -2329,7 +2326,7 @@ public class SmackableImp implements Smackable {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 		}
-		//Log.i(TAG, "members found to be returned are " +members);
+		Log.i(TAG, "members found to be returned are " +members);
 		members.add(mConfig.userName+"@emot-net");
 		return members;
 	}

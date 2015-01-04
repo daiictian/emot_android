@@ -1,7 +1,7 @@
 package com.emot.androidclient.chat;
 
 import android.os.RemoteException;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 import com.emot.androidclient.service.IXMPPChatService;
 
@@ -13,17 +13,17 @@ public class XMPPChatServiceAdapter {
 
 	public XMPPChatServiceAdapter(IXMPPChatService xmppServiceStub,
 			String jabberID) {
-		//Log.i(TAG, "New XMPPChatServiceAdapter construced");
+		Log.i(TAG, "New XMPPChatServiceAdapter construced");
 		this.xmppServiceStub = xmppServiceStub;
 		this.jabberID = jabberID;
 	}
 
 	public void sendMessage(String user, String message) {
 		try {
-			//Log.i(TAG, "Called sendMessage(): " + jabberID + ": " + message);
+			Log.i(TAG, "Called sendMessage(): " + jabberID + ": " + message);
 			xmppServiceStub.sendMessage(user, message);
 		} catch (RemoteException e) {
-			//Log.e(TAG, "caught RemoteException: " + e.getMessage());
+			Log.e(TAG, "caught RemoteException: " + e.getMessage());
 		}
 	}
 	

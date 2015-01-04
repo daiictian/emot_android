@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 
 import android.graphics.Bitmap;
 import android.os.RemoteException;
-import android.util.Log;
+import com.emot.androidclient.util.Log;
 
 import com.emot.androidclient.service.IXMPPRosterService;
 import com.emot.androidclient.util.ConnectionState;
@@ -19,7 +19,7 @@ public class XMPPRosterServiceAdapter {
 	private IXMPPRosterService xmppServiceStub;
 	
 	public XMPPRosterServiceAdapter(IXMPPRosterService xmppServiceStub) {
-		//Log.i(TAG, "New XMPPRosterServiceAdapter construced");
+		Log.i(TAG, "New XMPPRosterServiceAdapter construced");
 		this.xmppServiceStub = xmppServiceStub;
 	}
 	
@@ -165,7 +165,7 @@ public class XMPPRosterServiceAdapter {
 	
 	public void setAvatar(Bitmap bmp){
 		try {
-			//Log.i(TAG, "cache directory : "+ImageHelper.getCacheDir(EmotApplication.getAppContext()));
+			Log.i(TAG, "cache directory : "+ImageHelper.getCacheDir(EmotApplication.getAppContext()));
 			String filePath = ImageHelper.getCacheDir(EmotApplication.getAppContext());
 			saveBitmap(bmp, "profile", filePath, false);
 			//Save file bmp to file path
@@ -187,7 +187,7 @@ public class XMPPRosterServiceAdapter {
                 return f;
             }
         } catch (Exception e) {
-            //Log.e(TAG, "Could not save bitmap", e);
+            Log.e(TAG, "Could not save bitmap : " + e.getMessage());
         } finally {
             try{
                 out.close();
