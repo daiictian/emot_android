@@ -253,7 +253,7 @@ public class Registration extends ActionBarActivity {
 	  }
 	private void sendRegistrationRequest(){
 		pd.show();
-		
+		pd.setCancelable(false);
 	    
 		mMobileNumber = mEnterMobile.getText().toString().replaceAll("[^\\d.]", "");
 		if(isNumberValid(mEnterMobile.getText().toString(), EmotApplication.getValue(PreferenceConstants.COUNTRY_CODE, ""))){
